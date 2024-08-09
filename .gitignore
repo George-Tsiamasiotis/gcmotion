@@ -1,4 +1,9 @@
-__pycache__/
-Functions/__pycache__/
-Source/__pycache__/
-Wiki.pdf
+# Sphinx
+/docs/build
+/docs/generated
+
+# Python
+/.venv
+__pycache__
+
+/Wiki.pdf
