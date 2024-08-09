@@ -30,6 +30,7 @@ exclude_patterns = ['build', 'Thumbs.db', '.DS_Store']
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
+autodoc_member_order = 'bysource'
 html_theme = 'pydata_sphinx_theme'
 html_theme_options = {
     "secondary_sidebar_items": ["page-toc"],

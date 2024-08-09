@@ -11,14 +11,14 @@
 .. autosummary::
     :toctree:
 
-    efields
-    qfactors
+    efield
+    qfactor
     parabolas
 """
 
 from .particle import Particle
 from .particles import Particles
 
-from . import qfactors, efields, parabolas
+from . import qfactor, efield, parabolas
 
-__all__ = ["Particle", "Particles", "efields", "qfactors", "parabolas"]
+__all__ = ["Particle", "Particles", "efield", "qfactor", "parabolas"]
