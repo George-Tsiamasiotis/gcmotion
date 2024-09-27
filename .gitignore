@@ -6,9 +6,20 @@
 /.venv
 __pycache__
 
+<<<<<<< HEAD
 /Wiki.pdf
 .nvimlog
 Markdowns/FFT sine 1.md
 Markdowns/FFT sine 2.md
 Markdowns/FFT sine 3.md
 Markdowns/Parabolas Derivation.md
+=======
+/Markdowns
+.nvimlog
+
+# Notebooks
+*.ipynb
+Notebook.ipynb
+Collection.ipynb
+/Notebook.ipynb
+>>>>>>> 19a6246 (Squashed commits, ended on FFT)
