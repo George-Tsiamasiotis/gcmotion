@@ -10,7 +10,6 @@ docutils==0.21.2
 flexcache==0.3
 flexparser==0.4
 fonttools==4.54.1
--e git+https://github.com/PlasmaPhy/guiding-center-motion.git@f3e697a94eff1c9102f896e8a5bef010d88ed8af#egg=gcmotion
 idna==3.10
 imagesize==1.4.1
 Jinja2==3.1.4
