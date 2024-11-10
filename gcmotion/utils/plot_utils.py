@@ -36,41 +36,40 @@ def pi_mod(x, lim: list = [-np.pi, np.pi]) -> tuple[np.ndarray, list]:
     return x_plot, lim
 
 
-def yspan(x: np.ndarray):
-    """Calculates the plot span of a bounded array to be plotted,
-    as well as the indexes of its total mimimum and maximum.
+def yspan(x: np.ndarray, psi_wall: float):
+    """Calculates the plot span of a bounded array to be plotted.
 
-    The "zoom out" factor of the plot span can be tweaked in the
-    plot_parameters.py under the name "auto_yaxis_zoom".
+    The "zoom out" and "hardylim" factors of the plot span can
+    be tweaked in the plot_parameters.py under the name
+    "auto_yaxis_zoom".
 
     Parameters
     ----------
     x : np.ndarray
         The array to be plotted.
+    psi_wall : float
+        The tokamak's psi_wall. Needed to
+        calculate the correct hard-y limit.
 
     Returns
     -------
-    2tuple of 2 2typles
-        1st tuple contains the plot limits and 2nd tuple the
-        minimum and maximum indeces
+    2tuple
+        2tuple containing the plot limits.
 
     """
 
     zoomout = config["auto_yaxis_zoom"]
-    hardylim = config["hardylim"]
+    hardylim = config["hardylim"] * psi_wall
 
     xmin = x.min()
     xmax = x.max()
-    minpos = x.argmin()
-    maxpos = x.argmax()
 
     diff = xmax - xmin
     mid = (xmin + xmax) / 2
 
-    lower = mid - zoomout * diff
+    lower = max(0, mid - zoomout * diff)
     higher = min(mid + zoomout * diff, hardylim)
 
     xspan = (lower, higher)
-    minmaxpos = (minpos, maxpos)
 
-    return xspan, minmaxpos
+    return xspan

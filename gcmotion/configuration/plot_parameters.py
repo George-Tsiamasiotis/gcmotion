@@ -126,7 +126,7 @@ energy_contour = {
         "dpi": dpi,
     },
     "auto_yaxis_zoom": 0.75,
-    "hardylim": 3,
+    "hardylim": 4, # times PSI_WALL
     "contour_grid_density" : 200,
     "contour_levels" : 25,
     "contour_cmap" : "plasma",

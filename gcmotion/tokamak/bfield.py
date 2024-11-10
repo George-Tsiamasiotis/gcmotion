@@ -186,6 +186,9 @@ class LAR(MagneticField):
         for key, value in self.__dict__.copy().items():
             self.__setattr__("_" + key, value.magnitude)
 
+        # Flags
+        self.has_i = bool(i.m)
+
     def bigNU(self, psi: float | np.ndarray, theta: float | np.ndarray):
 
         if isinstance(psi, (int, float)):
