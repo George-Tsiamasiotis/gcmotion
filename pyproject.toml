@@ -1,0 +1,33 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "gcmotion"
+version = "0.0.1"
+authors = [
+  { name="George Tsiamasiotis", email="gtsiamasiotis@gmail.com" },
+]
+description = "Package for Guiding Center Motion calculations"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+  "numpy~=2.1",
+  "matplotlib~=3.9",
+  "pyqt6",
+  "scipy~=1.14",
+  #"vpython~=7.6",
+  "tqdm~=4.66",
+  "loguru~=0.7",
+  "pint~=0.24",
+]
+
+
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/PlasmaPhy/gcmotion"
+Issues = "https://github.com/PlasmaPhy/gcmotion/issues"
