@@ -2,18 +2,19 @@ r"""
 About Magnetic field objects
 ----------------------------
 
-A Magnetic Field object is a class instance containing all the information 
-about the magnetic field of the system. It implements all the methods needed 
-buy the solver and other calculations, and is called automatically wherever required.
+A Magnetic Field object is a class instance containing all the information
+about the magnetic field of the system. It implements all the methods needed
+buy the solver and other calculations, and is called automatically wherever
+required.
 
-To add a new magnetic field, simply copy-paste an already existing class
-and fill the :py:meth:`~gcmotion.tokamak.bfield.MagneticField.bigNU()` 
-and :py:meth:`~gcmotion.tokamak.bfield.MagneticField.solverbNU()` methods to fit
-your magnetic field. In case your field has extra parameters you want to pass 
-as arguments, you must also create an 
-:py:meth:`~gcmotion.tokamak.bfield.MagneticField.__init__()` method and declare 
+To add a new magnetic field, simply copy-paste an already existing class and
+fill the :py:meth:`~gcmotion.tokamak.bfield.MagneticField.bigNU()` and
+:py:meth:`~gcmotion.tokamak.bfield.MagneticField.solverbNU()` methods to fit
+your magnetic field. In case your field has extra parameters you want to pass
+as arguments, you must also create an
+:py:meth:`~gcmotion.tokamak.bfield.MagneticField.__init__()` method and declare
 them. A ``__repr__()`` method is also recommended for representing the system's
-magnetic field, but not enforced. To avoid errors, your class should inherit 
+magnetic field, but not enforced. To avoid errors, your class should inherit
 the :py:class:`~gcmotion.tokamak.bfield.MagneticField` class.
 
 The general structure is this::
@@ -22,35 +23,35 @@ The general structure is this::
 
         def __init__(self, *parameters):
             "Parameter setup."
-        
+
         def bigNU(self, psi, theta)
             return (b, g, i)
-    
-        def solverbNU(self, psi, theta): 
+
+        def solverbNU(self, psi, theta):
 
             b, g, i = self.bigNU(psi, theta)
-            
+
             b_der = (b_der_psi, b_der_theta)
             currents = (i, g)
             currents_der = (i_der, g_der)
-            
+
             return b, b_der, currents, currents_der
 
         def __repr__():
             "optional, but recommended"
             return string
 
-.. note:: 
-    The Magnetic Fields's parameters should be Quantites. Conversions to 
-    [NU] and intermediate values must be calculated in 
+.. note::
+    The Magnetic Fields's parameters should be Quantites. Conversions to [NU]
+    and intermediate values must be calculated in
     :py:meth:`~gcmotion.tokamak.bfield.MagneticField.__init__()`.
 
 .. admonition:: For developers
 
     For each attribute that is defined as a Quantity with SI units, another,
-    "hidden" attribite is automatically defined as its magnitude. This hidden 
-    attribute is then used for all the purely numerical calculations. 
-    For example:
+    "hidden" attribite is automatically defined as its magnitude. This hidden
+    attribute is then used for all the purely numerical calculations. For
+    example:
 
     .. code-block:: python
 
@@ -61,14 +62,14 @@ The general structure is this::
             self._i = self.i.magnitude
             self._iNU = self.iNU.magnitude
 
-    Here, :code:`self.i` is a Quantity with units of "Plasma Current", however only
-    :code:`self._i` is used inside the methods. Also, by defining it in 
-    :code:`__init__()` we avoid having to retrieve its magnitude every time
-    a method that needs it is called.
-  
+    Here, :code:`self.i` is a Quantity with units of "Plasma Current", however
+    only :code:`self._i` is used inside the methods. Also, by defining it in
+    :code:`__init__()` we avoid having to retrieve its magnitude every time a
+    method that needs it is called.
+
 .. rubric:: The 'MagneticField' Abstract Base Class
 
-The base class that every other class inherits from. 
+The base class that every other class inherits from.
 This class does nothing, it is only a template.
 
 .. autoclass:: MagneticField
@@ -99,8 +100,9 @@ class MagneticField(ABC):
     def bigNU(
         self, phi: float | np.ndarray, theta: float | np.ndarray
     ) -> float | np.ndarray:
-        r"""Calculates :math:`B(\psi, \theta), I(\psi, \theta), g(\psi, \theta)`.
-        Input and output must be both floats or np.ndarrays, in [NU].
+        r"""Calculates :math:`B(\psi, \theta), I(\psi, \theta), g(\psi,\
+        \theta)`. Input and output must be both floats or np.ndarrays, in
+        [NU].
 
         Used in energy contour plots.
 
@@ -114,7 +116,8 @@ class MagneticField(ABC):
         Returns
         -------
         float | np.ndarray
-            The Calculated :math:`B(\psi, \theta), I(\psi, \theta), g(\psi, \theta)` value(s) in [NU].
+            The Calculated :math:`B(\psi, \theta), I(\psi, \theta), g(\psi,\
+            \theta)` value(s) in [NU].
 
         """
 
@@ -124,19 +127,21 @@ class MagneticField(ABC):
     ) -> tuple[float, float, float]:
         r"""Calculates all the values needed by the solver:
         :math:`B,I,g` (by calling ``self.bigNU()``) and the derivatives
-        :math:`\dfrac{\partial B}{\partial \psi}, \dfrac{\partial B}{\partial \theta}\
-        \dfrac{\partial I}{\partial \psi}` and :math:`\dfrac{\partial g}{\partial \psi}`.
+        :math:`\dfrac{\partial B}{\partial \psi}, \dfrac{\partial B}{\partial\
+        \theta}\ \dfrac{\partial I}{\partial \psi}` and :math:`\dfrac{\partial\
+        g}{\partial \psi}`.
 
         Input and output must be floats, in [NU].
 
         Used inside the solver.
 
         .. warning::
-            The derivatives are calculated with respect to :math:`\psi`,
-            and **not** :math:`\psi_p`, which appear in the differential equations. 
-            This is accounted for inside the solver by multiplying by :math:`q(\psi)`,
-            since :math:`\dfrac{\partial f}{\partial \psi_p} = \dfrac{\partial f}{\partial \psi}\
-            \dfrac{\partial \psi}{\partial \psi_p} = q\dfrac{\partial f}{\partial \psi}`
+            The derivatives are calculated with respect to :math:`\psi`, and
+            **not** :math:`\psi_p`, which appear in the differential equations.
+            This is accounted for inside the solver by multiplying by
+            :math:`q(\psi)`, since :math:`\dfrac{\partial f}{\partial \psi_p}\
+            =\dfrac{\partial f}{\partial \psi}\ \dfrac{\partial \psi}{\partial\
+            \psi_p} = q\dfrac{\partial f}{\partial \psi}`
 
         Parameters
         ----------

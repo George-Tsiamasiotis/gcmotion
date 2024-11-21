@@ -1,5 +1,5 @@
 """
-Logger setup 
+Logger setup
 ------------
 
 Module ``logger_setup.py``

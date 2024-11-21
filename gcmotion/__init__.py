@@ -18,7 +18,6 @@ from gcmotion.plotters.time_evolution import time_evolution
 from gcmotion.plotters.qfactor_profile import qfactor_profile
 from gcmotion.plotters.magnetic_profile import magnetic_profile
 from gcmotion.plotters.electric_profile import electric_profile
-from gcmotion.plotters.tokamak_profile import tokamak_profile
 from gcmotion.plotters.drift import drift
 from gcmotion.plotters.drifts import drifts
 from gcmotion.plotters.energy_contour import energy_contour
@@ -32,7 +31,7 @@ from gcmotion.plotters.collection_energy_contour import collection_energy_contou
 from gcmotion.plotters.collection_drifts import collection_drifts
 from gcmotion.plotters.collection_poloidal_cut import collection_poloidal_cut
 from gcmotion.plotters.collection_parabolas import collection_parabolas
-#import gcmotion.scripts.animation as animation
+# import gcmotion.scripts.animation as animation
 
 __all__ = [
     "logger_setup",
@@ -61,5 +60,5 @@ __all__ = [
     "collection_poloidal_cut",
     "collection_parabolas",
     "events",
-    #"animation",
+    # "animation",
 ]

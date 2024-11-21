@@ -6,6 +6,9 @@
 /.gcmvenv
 __pycache__
 
+# Pytest
+.pytest_cache/
+
 # Build
 /dist
 
@@ -18,3 +21,6 @@ examples/**/**.ipynb
 # log files
 log.txt
 log.log
+
+# Numerical data
+**/**.nc

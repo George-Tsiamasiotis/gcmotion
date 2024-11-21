@@ -5,25 +5,26 @@ the dynamical system:
 .. todo::
     link to a markdown file with the system's formula.
 
-It uses the RK4(5) solving method. The tolerance can be tweaked 
-in gcmotion/configuration/solver_configuration.py.
+It uses the RK4(5) solving method. The tolerance can be tweaked in
+gcmotion/configuration/solver_configuration.py.
 
 The solver only calculates the time evolution of
 :math:`\theta, \psi, \zeta, \rho_{||}`. The rest of the dynamical variables
 are calculated afterwards.
 
 .. important::
-    
+
     The solver expects the input to be purely numerical quantites, in [**NU**],
-    and returns the solution also in [**NU**]. The conversion to SI units is handled
-    by the particle's :py:meth:`~gcmotion.classes.particle.Particle.run` method.
+    and returns the solution also in [**NU**]. The conversion to SI units is
+    handled by the particle's
+    :py:meth:`~gcmotion.classes.particle.Particle.run` method.
 
 .. tip::
-    When setting up the analytical function dSdt to pass to the solver,
-    it is better to use Python's built-in mathematical functions by importing
-    the ``math`` module, instead of their ``numpy``
-    counterparts. Python's functions are much faster than numpy's when calculating
-    single values (often by a factor of 10 or more).
+    When setting up the analytical function dSdt to pass to the solver, it is
+    better to use Python's built-in mathematical functions by importing the
+    ``math`` module, instead of their ``numpy`` counterparts. Python's
+    functions are much faster than numpy's when calculating single values
+    (often by a factor of 10 or more).
 
 Example
 -------
@@ -31,10 +32,10 @@ Example
 This is how ``orbit`` is called inside the class :py:class:`Particle`:
 
 .. code-block:: python
-    
+
     parameters = Parameters(
         theta0 = self.theta0.magnitude,
-        psi0   = self.psi0NU.magnitude,            
+        psi0   = self.psi0NU.magnitude,
         zeta0  = self.zeta0.magnitude,
         rho0   = self.rho0NU.magnitude,
         mu     = self.muNU.magnitude,
@@ -108,11 +109,12 @@ def orbit(
                 as np.ndarrays in [NU].
 
             #. A np.ndarray containing the evaluation times in [NU].
-                This is useful in the case a terminating event is used, since the
-                orbit is terminated earlier.
+                This is useful in the case a terminating event is used, since
+                the orbit is terminated earlier..
 
-            #. 2 lists containing the time positions and values of the found events in [NU].
-                If more than 1 event is used, the lists are nested.
+            #. 2 lists containing the time positions and values of the found
+                events in [NU]. If more than 1 event is used, the lists are
+                nested.
 
             #. The solver status message.
 
@@ -142,10 +144,12 @@ def orbit(
     solverbNU = bfield.solverbNU
     solverPhiderNU = efield.solverPhiderNU
 
-    logger.debug(f"\tSolver: Using i={bfield.iNU:.4g~P}, g={bfield.gNU:.4g~P}")  # fmt: skip
-    logger.debug(f"\tSolver: (t0, tf, steps)=({t[0]:.4g}, {t[-1]:.4g}, {len(t)})")  # fmt: skip
-    logger.debug(f"\tSolver: theta0={S0[0]:.4g}, psi0={S0[1]:.4g}, zeta0={S0[2]:.4g}, rho0={S0[3]:.4g}")  # fmt: skip
-    logger.debug(f"\tSolver: mu={mu:.4g}")  # fmt: skip
+    logger.debug(f"\tSolver: Using i={bfield.iNU:.4g~P}, g={bfield.gNU:.4g~P}")
+    logger.debug(f"\tSolver: (t0, tf, steps)=({
+                 t[0]:.4g}, {t[-1]:.4g}, {len(t)})")
+    logger.debug(f"\tSolver: theta0={S0[0]:.4g}, psi0={
+                 S0[1]:.4g}, zeta0={S0[2]:.4g}, rho0={S0[3]:.4g}")
+    logger.debug(f"\tSolver: mu={mu:.4g}")
 
     def dSdt(t, S):
         """Sets the diff equations system to pass to scipy.
@@ -226,18 +230,16 @@ def orbit(
         ],
     )
 
-    # fmt: off
     return Solution(
-        theta    = theta,
-        psi      = psi,
-        zeta     = zeta,
-        rho      = rho,
-        psip     = psip,
-        Ptheta   = Ptheta,
-        Pzeta    = Pzeta,
-        t_eval   = t_eval,
-        t_events = t_events,
-        y_events = y_events,
-        message  = message,
+        theta=theta,
+        psi=psi,
+        zeta=zeta,
+        rho=rho,
+        psip=psip,
+        Ptheta=Ptheta,
+        Pzeta=Pzeta,
+        t_eval=t_eval,
+        t_events=t_events,
+        y_events=y_events,
+        message=message,
     )
-    # fmt: on

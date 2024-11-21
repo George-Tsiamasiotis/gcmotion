@@ -1,23 +1,23 @@
 r"""
-Events are used by SciPy's ``solve_ivp`` solver to locate where certain conditions
-are met during the solving, and optionally terminate the solving after a certain
-amount of times those conditions are found. More info 
-`here <https://docs.scipy.org/doc/scipy/reference/generated/scipy.integrate.solve_ivp.html>`_.
+Events are used by SciPy's ``solve_ivp`` solver to locate where certain
+conditions are met during the solving, and optionally terminate the solving
+after a certain amount of times those conditions are found. More info `here
+<https://docs.scipy.org/doc/scipy/reference/generated/scipy.integrate.solve_ivp.html>`_.
 
-Events are *function handles* of **analytical** funtions, and they trigger when their
-``return`` expression is equal to 0. Since ``solve_ivp`` uses a root find algorithm to 
-locate the exact position of the event, the expressions must be 0 **and** change sings 
-around the root.
+Events are *function handles* of **analytical** funtions, and they trigger when
+their ``return`` expression is equal to 0. Since ``solve_ivp`` uses a root find
+algorithm to locate the exact position of the event, the expressions must be 0
+**and** change sings around the root.
 
-We can use multiple events, and the solver will return a list with the triggered positions
-for each of them.
+We can use multiple events, and the solver will return a list with the
+triggered positions for each of them.
 
 Example
 -------
 
-This event triggers whenever :math:`\theta` takes the value "theta0" and terminates 
-after "terminal" triggers, which we can pass as arguments. The ``direction``
-parameter only checks the **sign** of the direction.
+This event triggers whenever :math:`\theta` takes the value "theta0" and
+terminates after "terminal" triggers, which we can pass as arguments. The
+``direction`` parameter only checks the **sign** of the direction.
 
 .. code-block:: python
 
@@ -31,7 +31,7 @@ parameter only checks the **sign** of the direction.
 
         return event
 
-To use an event in a particle, you must pass it to its 
+To use an event in a particle, you must pass it to its
 :py:meth:`~gcmotion.classes.particle.Particle.run` method as such:
 
 .. code-block:: python
@@ -42,7 +42,7 @@ To use an event in a particle, you must pass it to its
 This event will stop the solver after :math:`\theta` was taken its initial
 value 8 times, regardless if the particle turns out to be passing or trapped.
 Note that this does **not** mean 8 periods, since the motion is multi-
-periodic. 
+periodic.
 
 .. rubric:: Availiable events
     :heading-level: 4
@@ -64,15 +64,16 @@ def when_theta(theta0, terminal, pole: int | float = pi / 2):
     Setting ``terminal=0`` makes the event non-terminal.
 
     .. note::
-        By taking the mod(2π) of the particle's theta during the orbit calculation,
-        we can find when it returns to its original value even if the particle is
-        not trapped. That however creates problem in the (very common) case that our
-        theta0 is 2κπ, since these points are a pole to the mod(2π) function and the
-        event funtion is no longer analytical and continuous. To circumvent this problem,
-        we can add any number to both runtime-theta and event theta, for example π/2, so
-        the pole is now at κπ, and since we try to minimize their difference, this change
-        does not affect the event locator. This number, reasonably called "pole" can
-        be set to any number not-too-close to any initial theta0.
+        By taking the mod(2π) of the particle's theta during the orbit
+        calculation, we can find when it returns to its original value even if
+        the particle is not trapped. That however creates problem in the (very
+        common) case that our theta0 is 2κπ, since these points are a pole to
+        the mod(2π) function and the event funtion is no longer analytical and
+        continuous. To circumvent this problem, we can add any number to both
+        runtime-theta and event theta, for example π/2, so the pole is now at
+        κπ, and since we try to minimize their difference, this change does not
+        affect the event locator. This number, reasonably called "pole" can be
+        set to any number not-too-close to any initial theta0.
 
     Parameters
     ----------
@@ -93,7 +94,10 @@ def when_theta(theta0, terminal, pole: int | float = pi / 2):
 
     # Warn about pole position
     if abs(pole - theta0) < 1e-3:
-        string = "Warning. Pole dangerously close to an initial θ. Event might not trigger."
+        string = (
+            "Warning. Pole dangerously close to an initial θ. "
+            + "Event might not trigger."
+        )
         print(string)
         logger.warning(string)
 

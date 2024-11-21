@@ -1,6 +1,5 @@
-# fmt: off
-figsize = (16, 9) # Global window size
-dpi = 90 # Global dpi
+figsize = (16, 9)  # Global window size
+dpi = 90  # Global dpi
 
 time_evolution = {
 
@@ -11,16 +10,16 @@ time_evolution = {
     },
 
     "scatter_args": {
-        "s" : 0.2,
-        "color" : "blue",
-        "marker" : "o",
+        "s": 0.2,
+        "color": "blue",
+        "marker": "o",
     },
 
-    "labelpad" : 45,
-    "loc" : "bottom",
+    "labelpad": 45,
+    "loc": "bottom",
     "ylabel_args": {
         "rotation": 0,
-        "fontsize" : 15,
+        "fontsize": 15,
     },
 }
 
@@ -96,8 +95,8 @@ drift = {
     },
 
     "scatter_args": {
-        "s" : 0.1,
-        "color" : "red",
+        "s": 0.1,
+        "color": "red",
     },
     "hardylim": 3,
     "yfontsize": 16,
@@ -112,8 +111,8 @@ drifts = {
     },
 
     "scatter_args": {
-        "s" : 0.1,
-        "color" : "red",
+        "s": 0.1,
+        "color": "red",
     },
     "hardylim": 3,
     "yfontsize": 16,
@@ -126,35 +125,36 @@ energy_contour = {
         "dpi": dpi,
     },
     "auto_yaxis_zoom": 0.75,
-    "hardylim": 4, # times PSI_WALL
-    "contour_grid_density" : 200,
-    "contour_levels" : 25,
-    "contour_cmap" : "plasma",
-    "locator": "log", # "log" or anything else for default
-    "log_base": 1.04, # Values closer to 1 seem to space out contour lines more evenly
+    "hardylim": 4,  # times PSI_WALL
+    "contour_grid_density": 200,
+    "contour_levels": 25,
+    "contour_cmap": "plasma",
+    "locator": "log",  # "log" or anything else for default
+    # Values closer to 1 seem to space out contour lines more evenly
+    "log_base": 1.04,
     "cbar_color": "red",
 }
 
 parabolas = {
-    
+
     "parabolas_normal_kw": {
-        "color" : "b",
-        "linewidth" : 0.6,
+        "color": "b",
+        "linewidth": 0.6,
     },
 
     "parabolas_dashed_kw": {
-        "color" : "b",
-        "linewidth" : 0.6,
+        "color": "b",
+        "linewidth": 0.6,
     },
 }
 
 orbit_point = {
 
     "orbit_point_kw": {
-        "s" : 15,
-        "marker" : "o",
-        "edgecolor" : "k",
-        "facecolor" : "red",
+        "s": 15,
+        "marker": "o",
+        "edgecolor": "k",
+        "facecolor": "red",
     },
 }
 
@@ -163,13 +163,13 @@ torus2d = {
     "wall_points": 2000,
 
     "torus2d_wall_kw": {
-        "color" : "k",
-        "s" : 0.5,
+        "color": "k",
+        "s": 0.5,
     },
-    
+
     "torus2d_orbit_kw": {
-        "color" : "blue",
-        "s" : 0.07,
+        "color": "blue",
+        "s": 0.07,
     },
 }
 
@@ -180,24 +180,24 @@ torus3d = {
     "wall_points": 301,
 
     "torus3d_wall_kw": {
-        "color" : "cyan",
-        "alpha" : 0.3,
+        "color": "cyan",
+        "alpha": 0.3,
     },
 
     "torus3d_orbit_kw": {
-        "color" : "red",
-        "alpha" : 0.6,
-        "linewidth" : 0.2,
+        "color": "red",
+        "alpha": 0.6,
+        "linewidth": 0.2,
     },
 }
 
 poloidal_cut = {
-    "ylim": 1.1, #times the minor radius
+    "ylim": 1.1,  # times the minor radius
     "wall_points": 2000,
 
     "orbit_kw": {
-        "color" : "blue",
-        "s" : 0.05,
+        "color": "blue",
+        "s": 0.05,
         "marker": "."
     },
 
@@ -209,7 +209,7 @@ poloidal_cut = {
     },
 
     "wall_kw": {
-        "color" : "k",
-        "s" : 0.5,
+        "color": "k",
+        "s": 0.5,
     },
 }
