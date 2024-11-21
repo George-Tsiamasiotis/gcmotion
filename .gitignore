@@ -6,6 +6,9 @@
 /.gcmvenv
 __pycache__
 
+# Pytest
+.pytest_cache/
+
 # Build
 /dist
 

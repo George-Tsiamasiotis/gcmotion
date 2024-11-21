@@ -2,19 +2,19 @@ r"""
 About q-Factor objects
 ----------------------
 
-A q-Factor object is a class instance containing all the information about the 
+A q-Factor object is a class instance containing all the information about the
 q-factor profile of the system. It implements all the methods needed buy the
 solver and other calculations, and is called automatically wherever required.
 
-To add a new q-factor, simply copy-paste an already existing class
-and fill the :py:meth:`~gcmotion.tokamak.qfactor.QFactor.solverqNU()` 
-and :py:meth:`~gcmotion.tokamak.qfactor.QFactor.psipNU()` methods to fit
-your q-factor. In case your q factor has extra parameters you want to pass 
-as arguments, you must also create an 
-:py:meth:`~gcmotion.tokamak.qfactor.QFactor.__init__()` method and declare 
+To add a new q-factor, simply copy-paste an already existing class and fill the
+:py:meth:`~gcmotion.tokamak.qfactor.QFactor.solverqNU()` and
+:py:meth:`~gcmotion.tokamak.qfactor.QFactor.psipNU()` methods to fit your
+q-factor. In case your q factor has extra parameters you want to pass as
+arguments, you must also create an
+:py:meth:`~gcmotion.tokamak.qfactor.QFactor.__init__()` method and declare
 them. A ``__repr__()`` method is also recommended for representing the system's
-qfactor, but not enforced. To avoid errors, your class should inherit 
-the :py:class:`~gcmotion.tokamak.qfactor.QFactor` class.
+qfactor, but not enforced. To avoid errors, your class should inherit the
+:py:class:`~gcmotion.tokamak.qfactor.QFactor` class.
 
 The general structure is this::
 
@@ -35,17 +35,17 @@ The general structure is this::
             "optional, but recommended"
             return string
 
-.. note:: 
-    The Qfactor's parameters should be Quantites. Conversions to [NU] and 
-    intermediate values must be calculated in 
+.. note::
+    The Qfactor's parameters should be Quantites. Conversions to [NU] and
+    intermediate values must be calculated in
     :py:meth:`~gcmotion.tokamak.qfactor.QFactor.__init__()`.
 
 .. admonition:: For developers
 
     For each attribute that is defined as a Quantity with SI units, another,
-    "hidden" attribite is automatically defined as its magnitude. This hidden 
-    attribute is then used for all the purely numerical calculations. 
-    For example:
+    "hidden" attribite is automatically defined as its magnitude. This hidden
+    attribute is then used for all the purely numerical calculations. For
+    example:
 
     .. code-block:: python
 
@@ -54,15 +54,15 @@ The general structure is this::
             ...
             self._psi_wall = self.psi_wall.magnitude
 
-    Here, :code:`self.psi_wall` is a Quantity with units of "Magnetic flux", however only
-    :code:`self._psi_wall` is used inside the methods. Also, by defining it in 
-    :code:`__init__()` we avoid having to retrieve its magnitude every time
-    a method that needs it is called.
+    Here, :code:`self.psi_wall` is a Quantity with units of "Magnetic flux",
+    however only :code:`self._psi_wall` is used inside the methods. Also, by
+    defining it in :code:`__init__()` we avoid having to retrieve its magnitude
+    every time a method that needs it is called.
 
 .. rubric:: The 'QFactor' Abstract Base Class
 
-The base class that every other class inherits from. This class 
-does nothing, it is only a template.
+The base class that every other class inherits from. This class does nothing,
+it is only a template.
 
 .. autoclass:: QFactor
     :member-order: bysource
@@ -149,12 +149,14 @@ class Unity(QFactor):
 
 class Parabolic(QFactor):
     r"""Initializes an object q with
-    :math:`q(\psi) = q_0 + (q_{wall}-q_0)\bigg(\dfrac{\psi}{\psi_{wall}}\bigg)^2`
+    :math:`q(\psi) = q_0 + (q_{wall}-q_0)\bigg(\dfrac{\psi}{\psi_{wall}}\
+    \bigg)^2`
 
     :math:`\psi_p(\psi)` is calculated from:
 
     :math:`\psi_p(\psi) = \dfrac{\psi_{wall}}{\sqrt{q_0 (q_{wall}-q_0)}}\
-    \arctan\bigg( \dfrac{\psi\sqrt{q_{wall}-q_0}}{\psi_{wall}\sqrt{q_0}} \bigg)`
+    \arctan\bigg( \dfrac{\psi\sqrt{q_{wall}-q_0}}{\psi_{wall}\sqrt{q_0}}\
+    \bigg)`
 
     """
 
@@ -218,16 +220,17 @@ class Parabolic(QFactor):
 
 class Hypergeometric(QFactor):
     r"""Initializes an object q with:
-    :math:`q(\psi) = q_0\bigg\{ 1 + \bigg[ \bigg(\dfrac{q_{wall}}{q_0}\bigg)^n -1 \bigg] \
+    :math:`q(\psi) = q_0\bigg\{ 1 + \bigg[ \bigg(\dfrac{q_{wall}}{q_0}\
+    \bigg)^n -1 \bigg] \
     \bigg( \dfrac{\psi}{\psi_{wall}} \bigg)^n \bigg\}^{1/n}`.
-    
+
     :math:`\psi_p(\psi)` is calculated from:
 
     :math:`\psi_p(\psi) = \dfrac{\psi}{q_0} \phantom{1}_2 F_1\
     \bigg[ \dfrac{1}{n}, \dfrac{1}{n}, 1+\dfrac{1}{n},
     \bigg(1 - \bigg( \dfrac{q_{wall}}{q_0} \bigg)^n\bigg)
     \bigg( \dfrac{\psi}{\psi_{wall}} \bigg)^n \bigg]`,
-    
+
     where :math:`\phantom{1}_2 F_1` the hypergeometric function.
 
     """

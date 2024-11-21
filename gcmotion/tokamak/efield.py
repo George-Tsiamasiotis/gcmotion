@@ -2,19 +2,20 @@
 About Electric field objects
 ----------------------------
 
-An Electric Field object is a class instance containing all the information 
-about the electric field of the system. It implements all the methods needed 
-buy the solver and other calculations, and is called automatically wherever required.
+An Electric Field object is a class instance containing all the information
+about the electric field of the system. It implements all the methods needed
+buy the solver and other calculations, and is called automatically wherever
+required.
 
-To add a new electic field, simply copy-paste an already existing class
-and fill the :py:meth:`~gcmotion.tokamak.efield.ElectricField.solverPhiderNU()` ,
+To add a new electic field, simply copy-paste an already existing class and
+fill the :py:meth:`~gcmotion.tokamak.efield.ElectricField.solverPhiderNU()` ,
 :py:meth:`~gcmotion.tokamak.efield.ElectricField.PhiNU()` and
-:py:meth:`~gcmotion.tokamak.efield.ElectricField.Er()` methods to fit
-your electric field. In case your field has extra parameters you want to pass 
-as arguments, you must also create an 
-:py:meth:`~gcmotion.tokamak.efield.ElectricField.__init__()` method and declare 
+:py:meth:`~gcmotion.tokamak.efield.ElectricField.Er()` methods to fit your
+electric field. In case your field has extra parameters you want to pass as
+arguments, you must also create an
+:py:meth:`~gcmotion.tokamak.efield.ElectricField.__init__()` method and declare
 them. A ``__repr__()`` method is also recommended for representing the system's
-electric field, but not enforced. To avoid errors, your class should inherit 
+electric field, but not enforced. To avoid errors, your class should inherit
 the :py:class:`~gcmotion.tokamak.efield.ElectricField` class.
 
 The general structure is this::
@@ -23,12 +24,12 @@ The general structure is this::
 
         def __init__(self, *parameters):
             "Parameter setup."
-    
-        def solverPhiderNU(self, psi, theta): 
+
+        def solverPhiderNU(self, psi, theta):
             return [Phi_der_psip, Phi_der_theta]
-    
+
         def PhiNU(self, psi, theta):
-            return Phi    
+            return Phi
 
         def Er(self, psi, theta):
             return Er
@@ -37,17 +38,18 @@ The general structure is this::
             "optional, but recommended"
             return string
 
-.. note:: 
-    The Electric Fields's parameters should be Quantites. Conversions to 
-    [NU] and intermediate values must be calculated in 
+.. note::
+
+    The Electric Fields's parameters should be Quantites. Conversions to [NU]
+    and intermediate values must be calculated in
     :py:meth:`~gcmotion.tokamak.efield.ElectricField.__init__()`.
 
 .. admonition:: For developers
 
     For each attribute that is defined as a Quantity with SI units, another,
-    "hidden" attribite is automatically defined as its magnitude. This hidden 
-    attribute is then used for all the purely numerical calculations. 
-    For example:
+    "hidden" attribite is automatically defined as its magnitude. This hidden
+    attribute is then used for all the purely numerical calculations. For
+    example:
 
     .. code-block:: python
 
@@ -57,14 +59,14 @@ The general structure is this::
             self._rpeak = self.rpeak.magnitude
 
     Here, :code:`self.rpeak` is a Quantity with units of "meters", however only
-    :code:`self._rpeak` is used inside the methods. Also, by defining it in 
-    :code:`__init__()` we avoid having to retrieve its magnitude every time
-    a method that needs it is called.
+    :code:`self._rpeak` is used inside the methods. Also, by defining it in
+    :code:`__init__()` we avoid having to retrieve its magnitude every time a
+    method that needs it is called.
 
 .. rubric:: The 'ElectricField' Abstract Base Class
 
-The base class that every other class inherits from is ``ElectricField``. 
-This class does nothing, it is only a template.
+The base class that every other class inherits from is ``ElectricField``. This
+class does nothing, it is only a template.
 
 .. autoclass:: ElectricField
     :member-order: bysource
@@ -97,11 +99,12 @@ class ElectricField(ABC):
         Used inside the solver.
 
         .. warning::
-            The derivatives are calculated with respect to :math:`\psi`,
-            and **not** :math:`\psi_p`, which appear in the differential equations. 
-            This is accounted for inside the solver by multiplying by :math:`q(\psi)`,
-            since :math:`\dfrac{\partial f}{\partial \psi_p} = \dfrac{\partial f}{\partial \psi}\
-            \dfrac{\partial \psi}{\partial \psi_p} = q\dfrac{\partial f}{\partial \psi}`
+            The derivatives are calculated with respect to :math:`\psi`, and
+            **not** :math:`\psi_p`, which appear in the differential equations.
+            This is accounted for inside the solver by multiplying by
+            :math:`q(\psi)`, since :math:`\dfrac{\partial f}{\partial \psi_p}=\
+            \dfrac{\partial f}{\partial \psi}\ \dfrac{\partial \psi}{\partial\
+            \psi_p} = q\dfrac{\partial f}{\partial \psi}`
 
         Parameters
         ----------
@@ -297,5 +300,6 @@ class Radial(ElectricField):
     def __repr__(self):
         return (
             "Radial: "
-            + f"Ea={self.Ea:.4g~P}, peak={self.rpeak:.4g~P}, rw={self.rw:.4g~P}."
+            + f"Ea={self.Ea:.4g~P}, peak={self.rpeak:.4g~P}, "
+            + f"rw={self.rw:.4g~P}."
         )
