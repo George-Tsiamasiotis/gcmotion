@@ -1,14 +1,13 @@
 import numpy as np
 
-from gcmotion.configuration.plot_parameters import energy_contour as config
+from gcmotion.configuration.plot_parameters import AutoYspan
+from gcmotion.utils.logger_setup import logger
 
 
-def pi_mod(x, lim: list = [-np.pi, np.pi]) -> tuple[np.ndarray, list]:
+def _pi_mod(x, lim: list = [-np.pi, np.pi]) -> tuple[np.ndarray, list]:
     """Mods an array between [0,2π] or [-π,π].
 
-    .. note::
-        array limits must be expressed as multiples of
-        ``np.pi``.
+    Array limits must be expressed as multiples of π.
 
     Parameters
     ----------
@@ -24,9 +23,8 @@ def pi_mod(x, lim: list = [-np.pi, np.pi]) -> tuple[np.ndarray, list]:
 
     """
     if (lim != [0, 2 * np.pi]) and (lim != [-np.pi, np.pi]):
-        print("x_lim must be either [0,2*np.pi] or [-np.pi,np.pi].")
-        print("Defaulting to [-π, π].")
-        return pi_mod(x, lim=[-np.pi, np.pi])
+        logger.info("[mod 2π]Defaulting to [-π, π].")
+        return _pi_mod(x, lim=[-np.pi, np.pi])
 
     if lim == [0, 2 * np.pi]:
         x_plot = np.mod(x, 2 * np.pi)
@@ -36,7 +34,7 @@ def pi_mod(x, lim: list = [-np.pi, np.pi]) -> tuple[np.ndarray, list]:
     return x_plot, lim
 
 
-def yspan(x: np.ndarray, psi_wall: float):
+def _auto_yspan(array: np.ndarray, psi_wall: float):
     """Calculates the plot span of a bounded array to be plotted.
 
     The "zoom out" and "hardylim" factors of the plot span can
@@ -57,12 +55,13 @@ def yspan(x: np.ndarray, psi_wall: float):
         2tuple containing the plot limits.
 
     """
+    config = AutoYspan()
 
-    zoomout = config["auto_yaxis_zoom"]
-    hardylim = config["hardylim"] * psi_wall
+    zoomout = config.zoomout
+    hardylim = config.hardylim * psi_wall
 
-    xmin = x.min()
-    xmax = x.max()
+    xmin = array.min()
+    xmax = array.max()
 
     diff = xmax - xmin
     mid = (xmin + xmax) / 2

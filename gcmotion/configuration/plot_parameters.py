@@ -1,215 +1,159 @@
-figsize = (16, 9)  # Global window size
-dpi = 90  # Global dpi
+from dataclasses import dataclass
+from numpy import pi
 
-time_evolution = {
+figsize = 16, 9  # Global window size
+dpi = 100  # Global dpi
 
-    "fig_parameters": {
-        "figsize": figsize,
-        "dpi": dpi,
-        "sharex": True,
-    },
 
-    "scatter_args": {
-        "s": 0.2,
-        "color": "blue",
-        "marker": "o",
-    },
+@dataclass()
+class ProfileEnergyContourConfig:
+    # Figure keywords
+    figsize: tuple = figsize
+    dpi: int = dpi
+    layout: str = "constrained"
+    facecolor: str = "lightskyblue"
+    projection: str | None = None  # None = default
+    # Default parameter values
+    thetalim: tuple = (-pi, pi)
+    psilim: tuple = (0, 1.2)  # times psi_wall
+    levels: int = 30
+    E_units: str = "keV"
+    flux_units: str = "Tesla * meter^2"
+    canmon_units: str = "NUCanonical_momentum"
+    potential: bool = True
+    wall: bool = True
+    cursor: bool = True  # Mild performance hit
+    show: bool = True
+    # Colorbar
+    numticks: int = 10
+    cbarlabelsize: int = 12
 
-    "labelpad": 45,
-    "loc": "bottom",
-    "ylabel_args": {
-        "rotation": 0,
-        "fontsize": 15,
-    },
-}
 
-qfactor_profile = {
-    "figsize": (16, 6),
+@dataclass()
+class ProfilePzetaContourConfig:
+    # Figure keywords
+    figsize: tuple = figsize
+    dpi: int = dpi
+    layout: str = "constrained"
+    facecolor: str = "lightskyblue"
+    # Default parameter values
+    zetalim: tuple = (-pi, pi)
+    psilim: tuple = (0, 1.2)  # times psi_wall
+    levels: int = 30
+    Pzeta_units: str = "Tesla * meter^2"
+    flux_units: str = "Tesla * meter^2"
+    potential: bool = True
+    wall: bool = True
+    cursor: bool = True  # Mild performance hit
+    show: bool = True
+    # Colorbar
+    numticks: int = 10
+    cbarlabelsize: int = 12
 
-    "plot_params": {
-        "color": "b",
-        "linewidth": 2,
-    },
 
-    "vline_params": {
-        "color": "r",
-        "linewidth": 2,
-    }
-}
+@dataclass
+class QfactorProfileConfig:
+    # Figure keywords
+    figsize: tuple = (16, 5)
+    dpi: int = dpi
+    layout: str = "constrained"
+    facecolor: str = "lightskyblue"
+    titlesize: float = 20
+    titlecolor: str = "blue"
+    # Default parameter values
+    span: tuple = (0, 1.1)
+    show: bool = True
+    # Plot options
+    points: int = 200
+    wall_color: str = "red"
+    qwall_color: str = "black"
+    qwall_style: str = "--"
+    psip_wall_color: str = "black"
+    psip_wall_style: str = "--"
+    labelsize: float = 10
+    ax_title_size: float = 20
 
-magnetic_profile = {
-    "figsize": (16, 6),
-    "grid_density": 100,
 
-    "bcontour_params": {
-        "levels": 100,
-        "cmap": "PuBuGn",
-    },
+@dataclass
+class MagneticProfileConfig:
+    # Figure keywords
+    figsize: tuple = (16, 10)
+    dpi: int = dpi
+    layout: str = "constrained"
+    facecolor: str = "lightskyblue"
+    titlesize: float = 20
+    titlecolor: str = "blue"
+    # Default parameter values
+    span: tuple = (0, 1.1)
+    units: str = "NU"
+    plot_derivatives: bool = True
+    coord: str = "r"  # psi / r
+    show: bool = True
+    # Contour options
+    grid_density: int = 200
+    levels: int = 20
+    bcmap: str = "inferno"
+    icmap: str = "viridis"
+    gcmap: str = "viridis"
+    locator: str = ""
+    log_base: float = 1.00001
+    # 2d plot options
+    current_color: str = "b"
+    derivative_color: str = "r"
+    linewidth: float = 2
+    # Label options
+    labelsize: float = 15
+    ax_title_size: float = 20
+    ax_title_pad: float = 25
 
-    "icontour_params": {
-        "levels": 100,
-        "cmap": "YlOrRd",
-    },
 
-    "gcontour_params": {
-        "levels": 100,
-        "cmap": "Purples",
-    },
-}
+@dataclass()
+class ParticleEvolutionConfig:
+    # Figure keywords
+    figsize: tuple = figsize
+    dpi: int = dpi
+    layout: str = "constrained"
+    facecolor: str = "lightskyblue"
+    titlesize: float = 20
+    titlecolor: str = "blue"
+    # Default parameter values
+    which: str = "all"
+    units: str = "SI"
+    percentage: int = 100
+    show: bool = True
+    # Scatter kw
+    s: float = 0.2
+    color: str = "blue"
+    marker: str = "o"
+    labelsize: int = 10
+    labelpad: float = 8
 
-electric_profile = {
-    "figsize": (16, 6),
-    "grid_density": 200,
 
-    "aspect_ratio": 0.5,
+@dataclass()
+class ParticlePoloidalDrift:
+    # Figure keywords
+    figsize: tuple = figsize
+    dpi: int = dpi
+    layout: str = "constrained"
+    facecolor: str = "lightskyblue"
+    # Default parameter values
+    projection: str | None = None  # None = default
+    thetalim: tuple = (-pi, pi)
+    psilim: str | tuple = "auto"  # times psi_wall, or "auto"
+    levels: int = 30
+    E_units: str = "keV"
+    flux_units: str = "Tesla * meter^2"
+    potential: bool = True
+    initial: bool = True
+    wall: bool = True
+    cursor: bool = True  # Mild performance hit
+    show: bool = True
+    # Colorbar
+    numticks: int = 10
+    cbarlabelsize: int = 12
 
-    "contour_params": {
-        "levels": 100,
-        "cmap": "PuBuGn",
-    },
 
-    "plot_params": {
-        "color": "b",
-        "linewidth": 2,
-    },
-
-    "vline_params": {
-        "color": "r",
-        "linewidth": 2,
-    }
-}
-
-tokamak_profile = {
-    "figsize": figsize,
-    "contour_params": {
-        "levels": 100,
-        "cmap": "winter",
-    },
-}
-
-drift = {
-
-    "fig_parameters": {
-        "figsize": figsize,
-        "dpi": dpi,
-    },
-
-    "scatter_args": {
-        "s": 0.1,
-        "color": "red",
-    },
-    "hardylim": 3,
-    "yfontsize": 16,
-    "xfontsize": 12,
-}
-
-drifts = {
-
-    "fig_parameters": {
-        "figsize": figsize,
-        "dpi": dpi,
-    },
-
-    "scatter_args": {
-        "s": 0.1,
-        "color": "red",
-    },
-    "hardylim": 3,
-    "yfontsize": 16,
-    "xfontsize": 12,
-}
-energy_contour = {
-
-    "fig_parameters": {
-        "figsize": figsize,
-        "dpi": dpi,
-    },
-    "auto_yaxis_zoom": 0.75,
-    "hardylim": 4,  # times PSI_WALL
-    "contour_grid_density": 200,
-    "contour_levels": 25,
-    "contour_cmap": "plasma",
-    "locator": "log",  # "log" or anything else for default
-    # Values closer to 1 seem to space out contour lines more evenly
-    "log_base": 1.04,
-    "cbar_color": "red",
-}
-
-parabolas = {
-
-    "parabolas_normal_kw": {
-        "color": "b",
-        "linewidth": 0.6,
-    },
-
-    "parabolas_dashed_kw": {
-        "color": "b",
-        "linewidth": 0.6,
-    },
-}
-
-orbit_point = {
-
-    "orbit_point_kw": {
-        "s": 15,
-        "marker": "o",
-        "edgecolor": "k",
-        "facecolor": "red",
-    },
-}
-
-torus2d = {
-
-    "wall_points": 2000,
-
-    "torus2d_wall_kw": {
-        "color": "k",
-        "s": 0.5,
-    },
-
-    "torus2d_orbit_kw": {
-        "color": "blue",
-        "s": 0.07,
-    },
-}
-
-torus3d = {
-    # Higher rstride/cstride and lower points give better performance
-    "rstride": 5,
-    "cstride": 5,
-    "wall_points": 301,
-
-    "torus3d_wall_kw": {
-        "color": "cyan",
-        "alpha": 0.3,
-    },
-
-    "torus3d_orbit_kw": {
-        "color": "red",
-        "alpha": 0.6,
-        "linewidth": 0.2,
-    },
-}
-
-poloidal_cut = {
-    "ylim": 1.1,  # times the minor radius
-    "wall_points": 2000,
-
-    "orbit_kw": {
-        "color": "blue",
-        "s": 0.05,
-        "marker": "."
-    },
-
-    "axis_size": 60,
-    "axis_kwargs": {
-        "facecolor": "r",
-        "edgecolor": "k",
-        "linewidths": 2,
-    },
-
-    "wall_kw": {
-        "color": "k",
-        "s": 0.5,
-    },
-}
+@dataclass
+class AutoYspan:
+    zoomout: float = 0.75
+    hardylim: float = 3  # times psi_wall

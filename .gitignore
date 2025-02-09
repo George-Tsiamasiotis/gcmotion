@@ -1,16 +1,17 @@
-# Sphinx
-/docs/_build
-
 # Python
 /.venv
 /.gcmvenv
 __pycache__
 
+# Build
+/dist
+
 # Pytest
 .pytest_cache/
 
-# Build
-/dist
+# Sphinx
+docs/build/*
+docs/source/reference/generated
 
 # User space
 usr/
@@ -19,8 +20,8 @@ usr/
 examples/**/**.ipynb
 
 # log files
-log.txt
-log.log
+**/log.txt
+**/log.log
 
 # Numerical data
 **/**.nc

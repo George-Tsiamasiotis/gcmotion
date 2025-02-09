@@ -1,149 +1,223 @@
 r"""
-Events are used by SciPy's ``solve_ivp`` solver to locate where certain
-conditions are met during the solving, and optionally terminate the solving
-after a certain amount of times those conditions are found. More info `here
-<https://docs.scipy.org/doc/scipy/reference/generated/scipy.integrate.solve_ivp.html>`_.
+======
+Events
+======
 
-Events are *function handles* of **analytical** funtions, and they trigger when
-their ``return`` expression is equal to 0. Since ``solve_ivp`` uses a root find
-algorithm to locate the exact position of the event, the expressions must be 0
-**and** change sings around the root.
+Defines the event constructor, which creates SciPy-ready event functions. Note
+that since the solver only solves for "theta", "psi", "zeta" and "rho", these
+are the only ones that can be tracked. The Canonical momenta and psip are
+calculated afterwards.
+"""
 
-We can use multiple events, and the solver will return a list with the
-triggered positions for each of them.
+from math import sin
+from pint import Quantity
 
-Example
--------
+_variable_indeces = {
+    "theta": 0,
+    "psi": 1,
+    "zeta": 2,
+    "rho": 3,
+}
 
-This event triggers whenever :math:`\theta` takes the value "theta0" and
-terminates after "terminal" triggers, which we can pass as arguments. The
-``direction`` parameter only checks the **sign** of the direction.
 
-.. code-block:: python
+class _Event:
+    r"""Constructs an event function handle, with the signature Scipy expects.
 
-    def when_theta_trapped(theta0, terminal):
+    Might be more pythonic to do this with a decorator but this seems more
+    readable.
 
+    Parameters
+    ----------
+    variable: {"theta", "psi", "zeta", "rho"}
+        The tracked variable.
+    terminal: int
+        After how many occurences to terminate the solver. As SciPy defines it:
+        terminal=0: Do not terminate the solver (still tracks occurences).
+        terminal>=1: Stop the solver after "terminal" occurences
+    direction: float
+        Direction of a zero crossing. If direction is positive, event will only
+        trigger when going from negative to positive, and vice versa if
+        direction is negative. If 0, then either direction will trigger event.
+        Implicitly 0 if not assigned. Note that this is not necessarily the
+        direction of zero crossing of the variable itself, but the event's
+        analytical expression. Defaults to 0.
+
+    """
+
+    def __init__(self, variable: str, terminal: int, direction: float):
+        self.index = _variable_indeces[variable]
+        self.terminal = terminal
+        self.direction = direction
+        self.name = "when_" + variable
+        self.variable = variable
+
+    def __call__(self, root: float | Quantity):
+        r"""Sets up the event and its attributes and returns it."""
+
+        if isinstance(root, Quantity):
+            if self.variable == "psi":
+                root = root.to("NUMagnetic_flux").m
+            elif self.variable == "rho":
+                root = root.to("NUmeters").m
+
+        # PERF: This function seems to always work for both bounded and
+        # unbounded variables. It treats all variables as angles, which means
+        # that a lost particle with a rising psi will also trigger. This
+        # doesn't make much sense but we don't really care about such particles
+        # do we... Apart from theta and zeta, we expect the variables to be
+        # bounded.
         def event(t, S):
-            return S[0] - theta0
+            # OPTIM:
+            return sin(0.5 * (S[self.index] - root))
 
-        event.terminal = terminal
-        event.direction = 1
+        event.root = root
+        event.name = self.name
+        event.terminal = self.terminal
+        event.direction = self.direction
+        event.variable = self.variable
 
         return event
 
-To use an event in a particle, you must pass it to its
-:py:meth:`~gcmotion.classes.particle.Particle.run` method as such:
 
-.. code-block:: python
-
-    >>> events = [gcm.events.when_theta(theta0, 8)]
-    >>> cwp.run(events=events)
-
-This event will stop the solver after :math:`\theta` was taken its initial
-value 8 times, regardless if the particle turns out to be passing or trapped.
-Note that this does **not** mean 8 periods, since the motion is multi-
-periodic.
-
-.. rubric:: Availiable events
-    :heading-level: 4
-
-"""
-
-from numpy import pi
-
-from gcmotion.utils.logger_setup import logger
-
-
-def when_theta(theta0, terminal, pole: int | float = pi / 2):
-    r"""
-    Triggers when :math:`\theta` mod :math:`2\pi` is equal to ``theta_0`` and
-    terminates after ``terminal`` times (Starting position included).
-
-    Can stop both trapped and passing orbits.
-
-    Setting ``terminal=0`` makes the event non-terminal.
-
-    .. note::
-        By taking the mod(2π) of the particle's theta during the orbit
-        calculation, we can find when it returns to its original value even if
-        the particle is not trapped. That however creates problem in the (very
-        common) case that our theta0 is 2κπ, since these points are a pole to
-        the mod(2π) function and the event funtion is no longer analytical and
-        continuous. To circumvent this problem, we can add any number to both
-        runtime-theta and event theta, for example π/2, so the pole is now at
-        κπ, and since we try to minimize their difference, this change does not
-        affect the event locator. This number, reasonably called "pole" can be
-        set to any number not-too-close to any initial theta0.
+def when_theta(
+    root,
+    terminal: int = 0,
+    direction: float = 0,
+):
+    r"""Occurs at :math:`\theta` = ``root``.
 
     Parameters
     ----------
-    theta0 : float
-        The :math:`\theta` value that triggers the event.
-    terminal : int
-        The event's termination number.
-    pole : float, optional
-        The modulo pole. Must be different than **ANY** of the
-        initial theta0s. Defaults to π/2.
+    root: int | Quantity
+        The :math:`\theta` value to be tracked.
+    terminal: int, optional
+        After how many occurences to terminate the solver. As SciPy defines it:
 
-    Returns
-    -------
-    event : function handle
-        The event function handle to be passed to solve_ivp.
+        #. terminal=0: Do not terminate the solver (still tracks occurences).
+
+        #. terminal>=1: Stop the solver after "terminal" occurences
+
+        Defaults to 0.
+    direction: float, optional
+        Direction of a zero crossing. If direction is positive, event will only
+        trigger when going from negative to positive, and vice versa if
+        direction is negative. If 0, then either direction will trigger event.
+        Implicitly 0 if not assigned. Note that this is not necessarily the
+        direction of zero crossing of the variable itself, but the event's
+        analytical expression. Defaults to 0.
 
     """
-
-    # Warn about pole position
-    if abs(pole - theta0) < 1e-3:
-        string = (
-            "Warning. Pole dangerously close to an initial θ. "
-            + "Event might not trigger."
-        )
-        print(string)
-        logger.warning(string)
-
-    def event(t, S):
-        new = S[0] + pole
-        new0 = theta0 + pole
-        return new % (2 * pi) - new0  # * (new % (2 * pi) - new0)
-
-    if terminal != 0:
-        event.terminal = terminal
-
+    event = _Event(
+        variable="theta",
+        terminal=terminal,
+        direction=direction,
+    )(root)
     return event
 
 
-def when_psi(psi0, terminal):
-    r"""
-    Triggers when :math:`\psi` is equal to ``\psi0`` and
-    terminates after ``terminal`` times (Starting position included).
-
-    .. note::
-        This event is used to stop the solver from calculating
-        unecessarily long orbits, when 1 should be enough. Since :math:`\psi`
-        seems to mostly be a well behaved periodic function and stays bounded
-        even for the nastiest initial conditions, its a good enough critirion
-        for stopping the solver. In case it fails, the solver will just keep
-        going, so no harm is done.
-
-    Setting ``terminal=0`` makes the event non-terminal.
+def when_psi(
+    root,
+    terminal: int = 0,
+    direction: float = 0,
+):
+    r"""Occurs at :math:`\psi` = ``root``.
 
     Parameters
     ----------
-    psi0 : float
-        The :math:`\theta` value that triggers the event.
-    terminal : int
-        The event's termination number.
+    root: int | Quantity
+        The :math:`\psi` value to be tracked.
+    terminal: int, optional
+        After how many occurences to terminate the solver. As SciPy defines it:
 
-    Returns
-    -------
-    event : function handle
-        The event function handle to be passed to solve_ivp.
+        #. terminal=0: Do not terminate the solver (still tracks occurences).
+
+        #. terminal>=1: Stop the solver after "terminal" occurences
+
+        Defaults to 0.
+    direction: float, optional
+        Direction of a zero crossing. If direction is positive, event will only
+        trigger when going from negative to positive, and vice versa if
+        direction is negative. If 0, then either direction will trigger event.
+        Implicitly 0 if not assigned. Note that this is not necessarily the
+        direction of zero crossing of the variable itself, but the event's
+        analytical expression. Defaults to 0.
+
     """
+    event = _Event(
+        variable="psi",
+        terminal=terminal,
+        direction=direction,
+    )(root)
+    return event
 
-    def event(t, S):
-        return S[1] - psi0
 
-    if terminal != 0:
-        event.terminal = terminal
+def when_zeta(
+    root,
+    terminal: int = 0,
+    direction: float = 0,
+):
+    r"""Occurs at :math:`\zeta` = ``root``.
 
+    Parameters
+    ----------
+    root: int | Quantity
+        The :math:`\zeta` value to be tracked.
+    terminal: int, optional
+        After how many occurences to terminate the solver. As SciPy defines it:
+
+        #. terminal=0: Do not terminate the solver (still tracks occurences).
+
+        #. terminal>=1: Stop the solver after "terminal" occurences
+
+        Defaults to 0.
+    direction: float, optional
+        Direction of a zero crossing. If direction is positive, event will only
+        trigger when going from negative to positive, and vice versa if
+        direction is negative. If 0, then either direction will trigger event.
+        Implicitly 0 if not assigned. Note that this is not necessarily the
+        direction of zero crossing of the variable itself, but the event's
+        analytical expression. Defaults to 0.
+
+    """
+    event = _Event(
+        variable="zeta",
+        terminal=terminal,
+        direction=direction,
+    )(root)
+    return event
+
+
+def when_rho(
+    root,
+    terminal: int = 0,
+    direction: float = 0,
+):
+    r"""Occurs at :math:`\rho_{||}` = ``root``.
+
+    Parameters
+    ----------
+    root: int | Quantity
+        The :math:`\rho_{||}` value to be tracked.
+    terminal: int, optional
+        After how many occurences to terminate the solver. As SciPy defines it:
+
+        #. terminal=0: Do not terminate the solver (still tracks occurences).
+
+        #. terminal>=1: Stop the solver after "terminal" occurences
+
+        Defaults to 0.
+    direction: float, optional
+        Direction of a zero crossing. If direction is positive, event will only
+        trigger when going from negative to positive, and vice versa if
+        direction is negative. If 0, then either direction will trigger event.
+        Implicitly 0 if not assigned. Note that this is not necessarily the
+        direction of zero crossing of the variable itself, but the event's
+        analytical expression. Defaults to 0.
+
+    """
+    event = _Event(
+        variable="rho",
+        terminal=terminal,
+        direction=direction,
+    )(root)
     return event

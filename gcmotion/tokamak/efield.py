@@ -1,81 +1,12 @@
-"""
-About Electric field objects
-----------------------------
-
-An Electric Field object is a class instance containing all the information
-about the electric field of the system. It implements all the methods needed
-buy the solver and other calculations, and is called automatically wherever
-required.
-
-To add a new electic field, simply copy-paste an already existing class and
-fill the :py:meth:`~gcmotion.tokamak.efield.ElectricField.solverPhiderNU()` ,
-:py:meth:`~gcmotion.tokamak.efield.ElectricField.PhiNU()` and
-:py:meth:`~gcmotion.tokamak.efield.ElectricField.Er()` methods to fit your
-electric field. In case your field has extra parameters you want to pass as
-arguments, you must also create an
-:py:meth:`~gcmotion.tokamak.efield.ElectricField.__init__()` method and declare
-them. A ``__repr__()`` method is also recommended for representing the system's
-electric field, but not enforced. To avoid errors, your class should inherit
-the :py:class:`~gcmotion.tokamak.efield.ElectricField` class.
-
-The general structure is this::
-
-    class MyElectricField(ElectricField):
-
-        def __init__(self, *parameters):
-            "Parameter setup."
-
-        def solverPhiderNU(self, psi, theta):
-            return [Phi_der_psip, Phi_der_theta]
-
-        def PhiNU(self, psi, theta):
-            return Phi
-
-        def Er(self, psi, theta):
-            return Er
-
-        def __repr__():
-            "optional, but recommended"
-            return string
-
-.. note::
-
-    The Electric Fields's parameters should be Quantites. Conversions to [NU]
-    and intermediate values must be calculated in
-    :py:meth:`~gcmotion.tokamak.efield.ElectricField.__init__()`.
-
-.. admonition:: For developers
-
-    For each attribute that is defined as a Quantity with SI units, another,
-    "hidden" attribite is automatically defined as its magnitude. This hidden
-    attribute is then used for all the purely numerical calculations. For
-    example:
-
-    .. code-block:: python
-
-        def __init__(...):
-            self.rpeak = (self.a * self.peak).to("meters")
-            ...
-            self._rpeak = self.rpeak.magnitude
-
-    Here, :code:`self.rpeak` is a Quantity with units of "meters", however only
-    :code:`self._rpeak` is used inside the methods. Also, by defining it in
-    :code:`__init__()` we avoid having to retrieve its magnitude every time a
-    method that needs it is called.
-
-.. rubric:: The 'ElectricField' Abstract Base Class
-
-The base class that every other class inherits from is ``ElectricField``. This
-class does nothing, it is only a template.
-
-.. autoclass:: ElectricField
-    :member-order: bysource
-    :members: __init__, solverPhiderNU, PhiNU, Er
-
+r"""
+Defines the ElectricField Base class and all available electric field
+configurations.
 """
 
 import pint
 import numpy as np
+
+from termcolor import colored
 from scipy.special import erf
 from math import sqrt, exp
 from abc import ABC, abstractmethod
@@ -98,7 +29,7 @@ class ElectricField(ABC):
 
         Used inside the solver.
 
-        .. warning::
+        .. important::
             The derivatives are calculated with respect to :math:`\psi`, and
             **not** :math:`\psi_p`, which appear in the differential equations.
             This is accounted for inside the solver by multiplying by
@@ -123,9 +54,10 @@ class ElectricField(ABC):
     @abstractmethod
     def PhiNU(
         self, psi: float | np.ndarray, theta: float | np.ndarray
-    ) -> float | np.ndarray:
+    ) -> np.ndarray:
         r"""Calculates :math:`\Phi(\psi, theta)`.
-        Input and output must can be both floats or np.ndarrays, in [NU].
+        Input can be either a float or a np.ndarray, but output is always
+        np.ndarray, in [NU].
 
         Used in energy contour plots.
 
@@ -138,7 +70,7 @@ class ElectricField(ABC):
 
         Returns
         -------
-        float | np.ndarray
+        np.ndarray
             The Calculated :math:`\Phi` value(s).
 
         """
@@ -175,39 +107,58 @@ class Nofield(ElectricField):
         pass
 
     def solverPhiderNU(self, psi: float, theta: float) -> tuple[float, float]:
+        r"""Always returns `(0,0)`."""
         return (0, 0)
 
     def PhiNU(
         self, psi: float | np.ndarray, theta: float | np.ndarray
     ) -> float | np.ndarray:
-
-        if isinstance(psi, (int, float)):
-            return 0
-        elif isinstance(psi, np.ndarray):
-            return 0 * psi
+        r"""Always returns a zero array in the same shape as `psi`."""
+        return 0 * psi
 
     def Er(self, psi: np.ndarray) -> np.ndarray:
+        r"""Always returns a zero array in the same shape as `psi`."""
         return 0 * psi
 
     def __repr__(self):
-        return "No electric field,"
+        return colored("No electric field", "light_blue")
 
 
 class Radial(ElectricField):
     r"""Initializes an electric field of the form:
-    :math:`E(r) = -E_{peak}\exp\bigg[-\dfrac{(r-r_{peak})^2}{r_{w}^2})\bigg]`
+
+    .. math::
+
+        E(r) = -E_{peak}\exp\bigg[-\dfrac{(r-r_{peak})^2}{r_{w}^2})\bigg]
 
     with
 
-    :math:`\Phi(\psi) = E_{peak} \sqrt{\dfrac{\pi\psi_{wall}}{2}}\
-    \bigg[ \text{erf} \bigg( \
-    \dfrac{\sqrt{\psi} - \sqrt{\psi_{peak}}}{\sqrt{\psi_w}}\bigg) \
-    + \text{erf} \bigg( \sqrt{\dfrac{\psi_{peak}}{\psi_w}} \bigg) \
-    \bigg]`
+    .. math::
 
-    where
+        \Phi(\psi) = E_{peak} \sqrt{\dfrac{\pi\psi_{wall}}{2}}\
+        \bigg[ \text{erf} \bigg( \
+        \dfrac{\sqrt{\psi} - \sqrt{\psi_{peak}}}{\sqrt{\psi_w}}\bigg) \
+        + \text{erf} \bigg( \sqrt{\dfrac{\psi_{peak}}{\psi_w}} \bigg) \
+        \bigg]
 
-    :math:`\psi_w = r_w^2/2` and :math:`\psi_{peak} = r_{peak}^2/2`
+    where :math:`\psi_w = r_w^2/2` and :math:`\psi_{peak} = r_{peak}^2/2`
+
+    Parameters
+    ----------
+
+    a : Quantity
+        The tokamak's minor radius in [m].
+    Ea : Quantity
+        The Electric field magnitude in [V/m].
+    B0 : Quantity
+        The Magnetic field's strength in [T].
+    peak : float
+        The Electric field's peak point with respect to
+        :math:`\psi_{wall}`.
+    rw : float
+        The Electric field's waist width relative to :math:`r_{wall}`,
+        defined as:
+        :math:`r_{waist} = \alpha\cdot \text{rw}`.
 
     """
 
@@ -219,26 +170,7 @@ class Radial(ElectricField):
         peak: float,
         rw: float,
     ):
-        r"""Initializes the field's parameters.
-
-        Parameters
-        ----------
-
-        a : Quantity
-            The tokamak's minor radius in [m].
-        Ea : Quantity
-            The Electric field magnitude in [V/m].
-        B0 : Quantity
-            The Magnetic field's strength in [T].
-        peak : float
-            The Electric field's peak point with respect to
-            :math:`\psi_{wall}`.
-        rw : float
-            The Electric field's waist width relative to :math:`r_{wall}`,
-            defined as:
-            :math:`r_{waist} = \alpha\cdot \text{rw}`.
-
-        """
+        r"""Initializes the field's parameters."""
 
         # SI Quantities
         self.a = a.to("meters")
@@ -299,7 +231,7 @@ class Radial(ElectricField):
 
     def __repr__(self):
         return (
-            "Radial: "
-            + f"Ea={self.Ea:.4g~P}, peak={self.rpeak:.4g~P}, "
-            + f"rw={self.rw:.4g~P}."
+            colored("Radial", "light_blue")
+            + f": Ea={self.Ea:.4g~}, peak={self.rpeak:.4g~}, "
+            + f"rw={self.rw:.4g~}."
         )

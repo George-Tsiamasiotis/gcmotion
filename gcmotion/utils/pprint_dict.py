@@ -37,6 +37,7 @@ def pprint_dict(d: dict, everything: bool = False, units: str = ""):
 
     res = []
 
+    # Terrible
     if units in ["NU", "SI"]:  # Add only one of the unit systems
         for key, value in d.items():
             if isinstance(value, Quantity):

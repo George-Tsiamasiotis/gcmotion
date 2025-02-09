@@ -1,6 +1,7 @@
 """
+============
 Logger setup
-------------
+============
 
 Module ``logger_setup.py``
 
@@ -11,29 +12,55 @@ the session.
 
 Here is how to supress and re-enable the logger:
 
-.. code-block:: python
-
-    >>> from gcmotion.utils.logger_setup import logger
-    >>> ...
-    >>> logger.disable("gcmotion")
-    >>> function() # function that logs stuff but we want to disable
-    >>> logger.enable("gcmotion")
-    >>> ...
+>>> from gcmotion.utils.logger_setup import logger
+>>> ...
+>>> logger.disable("gcmotion")
+>>> function() # function that logs stuff but we want to disable
+>>> logger.enable("gcmotion")
+>>> ...
 
 """
 
 from loguru import logger
+from gcmotion.configuration.scripts_configuration import LoggerConfig
+
+
+# Grab Configuration
+config = LoggerConfig()
+
+fmt_prefix = ""
+if config.module_prefix:
+    fmt_prefix += "|{module}|"
+if config.file_prefix:
+    fmt_prefix += "|{file}|"
+if config.name_prefix:
+    fmt_prefix += "|{name}|"
+del config.file_prefix, config.module_prefix, config.name_prefix
+
+# Specify datetime format
+if config.format in ["timedelta", ""]:
+
+    def fmt(record):
+        mins = record["elapsed"].seconds // 60
+        secs = record["elapsed"].seconds % 60
+        msecs = int(record["elapsed"].microseconds / 1000)
+        return (
+            f"{fmt_prefix}"
+            f"<green>T+{mins}:{secs}:{msecs:04d}</>"
+            " |{level: ^7}| {message}\n"
+        )
+
+    config.format = fmt
+
+else:
+    config.format = (
+        fmt_prefix + "<green>{time:HH:mm:ss:SSS}</> |{level: ^7}| {message}"
+    )
 
 
 # Setup logger
 logger.remove()  # Removes the default one which prints on sys.stderr
-
-
-# Format template
-fmt = "{time:HH:mm:ss:SSS} |{level: ^7}| {message}"
-
-level = "DEBUG"
-
-logger.add("log.log", format=fmt, level=level, mode="w")
-
-logger.info(f"Logger added on {level} level.")
+logger.add(**vars(config))
+logger.opt(colors=True).info(
+    f"<green>======Logger added on {config.level} level.======</>"
+)

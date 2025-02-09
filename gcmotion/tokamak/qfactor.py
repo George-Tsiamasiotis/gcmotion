@@ -1,83 +1,24 @@
 r"""
-About q-Factor objects
-----------------------
-
-A q-Factor object is a class instance containing all the information about the
-q-factor profile of the system. It implements all the methods needed buy the
-solver and other calculations, and is called automatically wherever required.
-
-To add a new q-factor, simply copy-paste an already existing class and fill the
-:py:meth:`~gcmotion.tokamak.qfactor.QFactor.solverqNU()` and
-:py:meth:`~gcmotion.tokamak.qfactor.QFactor.psipNU()` methods to fit your
-q-factor. In case your q factor has extra parameters you want to pass as
-arguments, you must also create an
-:py:meth:`~gcmotion.tokamak.qfactor.QFactor.__init__()` method and declare
-them. A ``__repr__()`` method is also recommended for representing the system's
-qfactor, but not enforced. To avoid errors, your class should inherit the
-:py:class:`~gcmotion.tokamak.qfactor.QFactor` class.
-
-The general structure is this::
-
-    class MyQFactor(QFactor):
-
-        def __init__(self, *parameters):
-            "Parameter setup."
-
-        def solverqNU(self, psi):
-            "Returns the value q(ψ)."
-            return q
-
-        def psipNU(self, psi):
-            "Returns the value ψ_p(ψ)."
-            return pisp
-
-        def __repr__():
-            "optional, but recommended"
-            return string
-
-.. note::
-    The Qfactor's parameters should be Quantites. Conversions to [NU] and
-    intermediate values must be calculated in
-    :py:meth:`~gcmotion.tokamak.qfactor.QFactor.__init__()`.
-
-.. admonition:: For developers
-
-    For each attribute that is defined as a Quantity with SI units, another,
-    "hidden" attribite is automatically defined as its magnitude. This hidden
-    attribute is then used for all the purely numerical calculations. For
-    example:
-
-    .. code-block:: python
-
-        def __init__(...):
-            self.psi_wall = (B0 * a**2 / 2).to("Magnetic_flux")
-            ...
-            self._psi_wall = self.psi_wall.magnitude
-
-    Here, :code:`self.psi_wall` is a Quantity with units of "Magnetic flux",
-    however only :code:`self._psi_wall` is used inside the methods. Also, by
-    defining it in :code:`__init__()` we avoid having to retrieve its magnitude
-    every time a method that needs it is called.
-
-.. rubric:: The 'QFactor' Abstract Base Class
-
-The base class that every other class inherits from. This class does nothing,
-it is only a template.
-
-.. autoclass:: QFactor
-    :member-order: bysource
-    :members: __init__, solverqNU, psipNU
-
+Defines the QFactor Base class and all available q-factor configurations.
 """
 
+import os
 import pint
 import numpy as np
-from math import sqrt, atan
-from scipy.special import hyp2f1
+import xarray as xr
+
+
 from abc import ABC, abstractmethod
+from termcolor import colored
+from math import sqrt, atan, asinh
+from scipy.special import hyp2f1
+from scipy.interpolate import UnivariateSpline
+
+from gcmotion.utils.logger_setup import logger
+
 
 # Quantity alias for type annotations
-type Quantity = pint.UnitRegistry.Quantity
+type Quantity = pint.Quantity
 
 
 class QFactor(ABC):
@@ -90,7 +31,7 @@ class QFactor(ABC):
     @abstractmethod
     def solverqNU(self, psi: float) -> float:
         r"""Calculates :math:`q(\psi)`.
-        Input and output must both be floats, in [NU].
+        Input must be float, in [NU].
 
         Used inside the solver.
 
@@ -109,25 +50,84 @@ class QFactor(ABC):
     @abstractmethod
     def psipNU(self, psi: float | np.ndarray) -> float | np.ndarray:
         r"""Calculates :math:`\psi_p(\psi)`.
-        Input and output must can be both floats or np.ndarrays, in [NU].
-
-        Used in calculating :math:`\psi_p`'s time evolution from :math:`\psi`,
-        :math:`\psi_{p,wall}`, etc.
+        Input and output are both floats or np.ndarrays, in [NU].
 
         Parameters
         ----------
         psi : float | np.ndarray
-            Value(s) of ψ.
+            Value(s) of :math:`\psi` in NU.
 
         Returns
         -------
         float | np.ndarray
-            Calculated :math:`\psi_p(\psi)`.
+            Calculated :math:`\psi_p(\psi)` in NU.
 
         """
 
 
-# ====================================================
+class NumericalQFactor(QFactor):
+    r"""Numerical QFactor base class.
+
+    Opens the dataset and creates the splines needed for the querry methods.
+
+    ``solverq`` and ``psipNU`` work identically to the analytic QFactor
+    methods.
+
+    Parameters
+    ----------
+    filename : str
+        The "\*.nc" file located at gcmotion/tokamak/reconstructed.
+
+    """
+
+    def __init__(self, filename: str):
+        # Open the dataset
+        parent = os.path.dirname(__file__)
+        path = os.path.join(parent, "reconstructed", filename)
+        try:
+            dataset = xr.open_dataset(path)
+            self.dataset = dataset
+            logger.info("Dataset initialized correctly.")
+        except FileNotFoundError:
+            logger.error("Error opening Dataset.")
+            raise FileNotFoundError(f"No file found at '{path}'")
+
+        # Extract the arrays
+        psi_values = dataset.psi.data
+        q_values = dataset.q.data
+
+        # Extrapolate psi to containn psi=0
+        psi_values = np.insert(psi_values, 0, 0)
+
+        # Extrapolate q to contain the value q(psi=0), which is the same as
+        # q[1], to avoid errors when integrating.
+        q_values = np.insert(q_values, 0, q_values[0])
+
+        # Create q spline
+        self.qspline = UnivariateSpline(x=psi_values, y=q_values)
+
+        # Create psip spline
+        iota_values = 1 / q_values
+        iota_spline = UnivariateSpline(x=psi_values, y=iota_values)
+        self.psip_spline = iota_spline.antiderivative(n=1)
+
+        # Calculate useful attributes
+        self.q0 = q_values[0]
+        self.q_wall = q_values[-1]
+
+        self.is_numerical = True
+
+    def solverqNU(self, psi: float) -> float:
+        return self.qspline(psi)
+
+    def psipNU(self, psi: float | np.ndarray) -> float | np.ndarray:
+        if isinstance(psi, float):
+            return float(self.psip_spline(psi))
+        elif isinstance(psi, np.ndarray):
+            return self.psip_spline(psi)
+
+
+# ============================================================================
 
 
 class Unity(QFactor):
@@ -135,28 +135,49 @@ class Unity(QFactor):
     and :math:`\psi_p=\psi`."""
 
     def __init__(self):
+        self.is_analytic = True
         pass
 
     def solverqNU(self, psi):
-        return 1
+        r"""Always returns 1."""
+        return psi / psi
 
     def psipNU(self, psi):
+        """Always returns `psi`."""
         return psi
 
     def __repr__(self):
-        return "Unity"
+        return colored("Unity", "light_blue")
 
 
 class Parabolic(QFactor):
     r"""Initializes an object q with
-    :math:`q(\psi) = q_0 + (q_{wall}-q_0)\bigg(\dfrac{\psi}{\psi_{wall}}\
-    \bigg)^2`
+
+    .. math::
+
+        q(\psi) = q_0 + (q_{wall}-q_0)\bigg(\dfrac{\psi}{\psi_{wall}}\
+        \bigg)^2
 
     :math:`\psi_p(\psi)` is calculated from:
 
-    :math:`\psi_p(\psi) = \dfrac{\psi_{wall}}{\sqrt{q_0 (q_{wall}-q_0)}}\
-    \arctan\bigg( \dfrac{\psi\sqrt{q_{wall}-q_0}}{\psi_{wall}\sqrt{q_0}}\
-    \bigg)`
+    .. math::
+
+        \psi_p(\psi) = \dfrac{\psi_{wall}}{\sqrt{q_0 (q_{wall}-q_0)}}\
+        \arctan\bigg( \dfrac{\psi\sqrt{q_{wall}-q_0}}{\psi_{wall}\sqrt{q_0}}\
+        \bigg)
+
+    Parameters
+    ----------
+    a : Quantity
+        float The tokamak's minor radius in [m].
+    B0 : Quantity
+        The Magnetic field's strength in [T]
+    q0 : float
+        q-value at the magnetic axis.
+    q_wall : float
+        q_value at the wall.
+    n : int
+        Order of equillibrium (1: peaked, 2: round, 4: flat).
 
     """
 
@@ -167,21 +188,6 @@ class Parabolic(QFactor):
         q0: float,
         q_wall: float,
     ):
-        r"""Parameters initialization.
-
-        Parameters
-        ----------
-        a : Quantity
-            float The tokamak's minor radius in [m].
-        B0 : Quantity
-            The Magnetic field's strength in [T]
-        q0 : float
-            q-value at the magnetic axis.
-        q_wall : float
-            q_value at the wall.
-        n : int
-            Order of equillibrium (1: peaked, 2: round, 4: flat).
-        """
 
         # SI Quantities
         self.B0 = B0.to("Tesla")
@@ -190,14 +196,17 @@ class Parabolic(QFactor):
         self.psi_wallNU = self.psi_wall.to("NUMagnetic_flux")
 
         # Unitless quantities, makes it a bit faster if defined here
-        self._psi_wall = self.psi_wall.magnitude
-        self._psi_wallNU = self.psi_wallNU.magnitude
+        for key, value in self.__dict__.copy().items():
+            self.__setattr__("_" + key, value.magnitude)
+
         self.sra = sqrt(q0)
         self.srb = sqrt(q_wall - q0)
 
         # Purely Numerical Parameters
         self.q0 = q0
         self.q_wall = q_wall
+
+        self.is_analytic = True
 
     def solverqNU(self, psi):
         return (
@@ -215,24 +224,44 @@ class Parabolic(QFactor):
             )
 
     def __repr__(self):
-        return "Parabolic: " + f"q0={self.q0:.4g}, q_wall={self.q_wall:.4g}."
+        return (
+            colored("Parabolic", "light_blue")
+            + f": q0={self.q0:.4g}, q_wall={self.q_wall:.4g}."
+        )
 
 
 class Hypergeometric(QFactor):
     r"""Initializes an object q with:
-    :math:`q(\psi) = q_0\bigg\{ 1 + \bigg[ \bigg(\dfrac{q_{wall}}{q_0}\
-    \bigg)^n -1 \bigg] \
-    \bigg( \dfrac{\psi}{\psi_{wall}} \bigg)^n \bigg\}^{1/n}`.
+
+    .. math::
+
+        q(\psi) = q_0\bigg\{ 1 + \bigg[ \bigg(\dfrac{q_{wall}}{q_0}\
+        \bigg)^n -1 \bigg] \
+        \bigg( \dfrac{\psi}{\psi_{wall}} \bigg)^n \bigg\}^{1/n}
 
     :math:`\psi_p(\psi)` is calculated from:
 
-    :math:`\psi_p(\psi) = \dfrac{\psi}{q_0} \phantom{1}_2 F_1\
-    \bigg[ \dfrac{1}{n}, \dfrac{1}{n}, 1+\dfrac{1}{n},
-    \bigg(1 - \bigg( \dfrac{q_{wall}}{q_0} \bigg)^n\bigg)
-    \bigg( \dfrac{\psi}{\psi_{wall}} \bigg)^n \bigg]`,
+    .. math::
+
+        \psi_p(\psi) = \dfrac{\psi}{q_0} \phantom{1}_2 F_1\
+        \bigg[ \dfrac{1}{n}, \dfrac{1}{n}, 1+\dfrac{1}{n},
+        \bigg(1 - \bigg( \dfrac{q_{wall}}{q_0} \bigg)^n\bigg)
+        \bigg( \dfrac{\psi}{\psi_{wall}} \bigg)^n \bigg]
 
     where :math:`\phantom{1}_2 F_1` the hypergeometric function.
 
+    Parameters
+    ----------
+    a : Quantity
+        float The tokamak's minor radius in [m].
+    B0 : Quantity
+        The Magnetic field's strength in [T].
+    q0 : float
+        q-value at the magnetic axis.
+    q_wall : float
+        q_value at the wall.
+    n : int
+        Order of equillibrium (1: peaked, 2: round, 4: flat).
     """
 
     def __init__(
@@ -243,21 +272,6 @@ class Hypergeometric(QFactor):
         q_wall: float,
         n: int,
     ):
-        r"""Parameters initialization.
-
-        Parameters
-        ----------
-        a : Quantity
-            float The tokamak's minor radius in [m].
-        B0 : Quantity
-            The Magnetic field's strength in [T].
-        q0 : float
-            q-value at the magnetic axis.
-        q_wall : float
-            q_value at the wall.
-        n : int
-            Order of equillibrium (1: peaked, 2: round, 4: flat).
-        """
 
         # SI Quantities
         self.B0 = B0.to("Tesla")
@@ -275,6 +289,8 @@ class Hypergeometric(QFactor):
         self.q0 = q0
         self.q_wall = q_wall
         self.n = n
+
+        self.is_analytic = True
 
     def solverqNU(self, psi):
         return self.q0 * (
@@ -297,6 +313,119 @@ class Hypergeometric(QFactor):
 
     def __repr__(self):
         return (
-            "Hypergeometric: "
-            + f"q0={self.q0:.4g}, q_wall={self.q_wall:.4g}, n={self.n:.4g}."
+            colored("Hypergeometric", "light_blue")
+            + f": q0={self.q0:.4g}, q_wall={self.q_wall:.4g}, n={self.n:.4g}."
+        )
+
+
+class SmartPositive(NumericalQFactor):
+    r"""Initializes an object q with numerical data from the Smart Tokamak with
+    **Positive** Triangularity.
+
+    The dataset must be stored in
+    *./gcmotion/tokamak/reconstructed/smart_positive.nc*.
+
+    """
+
+    def __init__(self):
+        filename = "smart_positive.nc"
+        super().__init__(filename=filename)
+
+    def __repr__(self):
+        return (
+            colored("Smart - Positive", "light_blue")
+            + f": q0={self.q0:.4g}, q_wall={self.q_wall:.4g}."
+        )
+
+
+class SmartNegative(NumericalQFactor):
+    r"""Initializes an object q with numerical data from the Smart Tokamak with
+    **Negative** Triangularity.
+
+    The dataset must be stored in
+    *./gcmotion/tokamak/reconstructed/smart_negative.nc*.
+
+    """
+
+    def __init__(self):
+        filename = "smart_negative.nc"
+        super().__init__(filename=filename)
+
+    def __repr__(self):
+        return (
+            colored("Smart - Negative", "light_blue")
+            + f": q0={self.q0:.4g}, q_wall={self.q_wall:.4g}."
+        )
+
+
+class DivertorNegative(NumericalQFactor):
+    r"""Initializes an object q with numerical data from the Divertor Tokamak
+    with **Negative** Triangularity.
+
+    The dataset must be stored in
+    *./gcmotion/tokamak/reconstructed/divertor.nc*.
+
+    """
+
+    def __init__(self):
+        filename = "divertor_negative.nc"
+        super().__init__(filename=filename)
+
+    def __repr__(self):
+        return (
+            colored("Divertor - Negative", "light_blue")
+            + f": q0={self.q0:.4g}, q_wall={self.q_wall:.4g}."
+        )
+
+
+class Chris(QFactor):
+    r"""Chris's thesis qfactor."""
+
+    def __init__(self, B0: Quantity, a: Quantity, q0: float, q_wall: float):
+
+        # SI Quantities
+        self.B0 = B0.to("Tesla")
+        self.a = a.to("meters")
+        self.psi_wall = (B0 * a**2 / 2).to("Magnetic_flux")
+
+        # [NU] Conversions
+        self.psi_wallNU = self.psi_wall.to("NUMagnetic_flux")
+
+        # Unitless quantities, makes it a bit faster if defined here
+        for key, value in self.__dict__.copy().items():
+            self.__setattr__("_" + key, value.magnitude)
+
+        # Purely Numerical Quantities
+        self.q0 = q0
+        self.q_wall = q_wall
+
+        self.is_analytic = True
+
+    def solverqNU(self, psi: float):
+
+        return self.q0 * (
+            1
+            + (-1 + (self.q_wall / self.q0) ** 2) * (psi / self._psi_wall) ** 2
+        ) ** (1 / 2)
+
+    def psipNU(self, psi: float):
+        if isinstance(psi, (int, float)):
+            sinh = asinh(
+                (psi * sqrt(-1 + (self.q_wall / self.q0) ** 2))
+                / self._psi_wall
+            )
+        else:
+            sinh = np.arcsinh(
+                (psi * sqrt(-1 + (self.q_wall / self.q0) ** 2))
+                / self._psi_wall
+            )
+        return (
+            self._psi_wall
+            / (self.q0 * sqrt(-1 + (self.q_wall / self.q0) ** 2))
+        ) * sinh
+
+    def __repr__(self):
+        return (
+            colored("Chris's q-factor", "light_blue")
+            + f": q0={self.q0:.4g}, q_wall={self.q_wall:.4g}"
         )

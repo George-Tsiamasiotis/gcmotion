@@ -2,13 +2,9 @@ all: docs
 
 .PHONY: all docs clean-docs clean
 
-docs: clean-docs
-	sphinx-build -M html . _build
+docs: clean
+	mkdir -p build/html build/doctrees
+	sphinx-build -WT --keep-going -b html -d build/doctrees source build/html
 
-live:
-	sphinx-autobuild . _build/html
-
-clean-docs:
-	rm -fr ./_build/*
-
-clean: clean-docs
+clean:
+	rm -fr build/* source/reference/generated
