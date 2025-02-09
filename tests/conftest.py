@@ -1,7 +1,21 @@
 import gcmotion as gcm
 import numpy as np
 import pytest
+import os
 from pathlib import Path
+
+
+@pytest.fixture(scope="session")
+def datasets_exist():
+    r"""Returns True if all datasets exists. pytest must run from rootdir."""
+    dataset1 = Path("gcmotion/tokamak/reconstructed/smart_negative.nc")
+    dataset2 = Path("gcmotion/tokamak/reconstructed/smart_positive.nc")
+    dataset3 = Path("gcmotion/tokamak/reconstructed/divertor_negative.nc")
+    return (
+        os.path.isfile(dataset1)
+        and os.path.isfile(dataset2)
+        and os.path.isfile(dataset3)
+    )
 
 
 @pytest.fixture(scope="session")
