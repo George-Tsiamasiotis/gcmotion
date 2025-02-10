@@ -52,6 +52,7 @@ def fp_ic_scan(
     theta_lim: list = [np.pi, np.pi],
     psi_lim: list = [0.01, 1.8],
     tol: float = 1e-8,
+    psi_dot_scaling_factor: float = 70,
 ):
     r"""
     Function that finds fixed points candidates to used as initial conditions for the
@@ -113,14 +114,18 @@ def fp_ic_scan(
         for j in range(grid_shape[1]):
             if method == "differential evolution":
                 system_values[i, j] = system(
-                    theta_grid[i, j], psi_grid[i, j], profile, method=method
+                    theta_grid[i, j],
+                    psi_grid[i, j],
+                    profile,
+                    method=method,
+                    psi_dot_scaling_factor=psi_dot_scaling_factor,
                 )
             elif method == "fsolve":
                 theta_dot, psi_dot = system(
                     theta_grid[i, j], psi_grid[i, j], profile, method=method
                 )
                 system_values[i, j] = (
-                    theta_dot**2 + (30 * psi_dot) ** 2
+                    theta_dot**2 + (psi_dot_scaling_factor * psi_dot) ** 2
                 )  # 60, 70, 80 worked (between 60 - 120 in general) for LAR, SMART PT
                 # 30 for SMART NT
 

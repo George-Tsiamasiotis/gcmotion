@@ -26,17 +26,6 @@ class ProfileEnergyContourConfig:
     show: bool = True
     # Fixed points parameters
     plot_fixed_points: bool = False
-    fp_method: str = "differential evolution"
-    dist_tol: float = 1e-3
-    fp_ic_scan_tol: float = 5 * 1e-8
-    ic_fp_theta_grid_density: int = 800
-    ic_fp_psi_grid_density: int = 800
-    fp_random_init_cond: bool = False
-    fixed_points_info: bool = False
-    fixed_points_ic_info: bool = False
-    plot_fp_init_cond: bool = False
-    fp_LAR_thetas: bool = False
-    fp_only_confined: bool = False
     # Colorbar
     numticks: int = 10
     cbarlabelsize: int = 12
