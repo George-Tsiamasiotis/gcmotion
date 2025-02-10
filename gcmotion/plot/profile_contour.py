@@ -73,21 +73,8 @@ def profile_Energy_contour(profile: Profile, **kwargs):
 
         fixed_points_plot(
             profile=profile,
-            method=config.fp_method,
-            theta_lim=[1.01 * config.thetalim[0], 1.01 * config.thetalim[1]],
-            psi_lim=config.psilim,
-            dist_tol=config.dist_tol,
-            fp_ic_scan_tol=config.fp_ic_scan_tol,
-            ic_theta_grid_density=config.ic_fp_theta_grid_density,
-            ic_psi_grid_density=config.ic_fp_psi_grid_density,
-            random_init_cond=config.fp_random_init_cond,
-            _internal_call=True,
-            info=config.fixed_points_info,
-            ic_info=config.fixed_points_ic_info,
-            plot_init_cond=config.plot_fp_init_cond,
-            LAR_thetas=config.fp_LAR_thetas,
-            only_confined=config.fp_only_confined,
             ax=contourax,
+            **kwargs,
         )
 
     # Draw the contour and get the contour object
@@ -105,7 +92,6 @@ def profile_Energy_contour(profile: Profile, **kwargs):
 
     # Add the title on the cbar's ax
     cbar.ax.set_title(label=f"Energy [{config.E_units}]", size=config.cbarlabelsize)
-    print(config.flux_units)
     if config.show:
         logger.info("--> Energy contour successfully plotted.")
         plt.show()

@@ -6,30 +6,15 @@ each particle has a different :math:`P_{\zeta0}`.
 
 import numpy as np
 from collections import deque
+from gcmotion.utils.logger_setup import logger
 
 from gcmotion.utils.XO_points_classification import XO_points_classification as xoc
 from gcmotion.scripts.fixed_points import fixed_points
 from gcmotion.utils.points_psi_to_P_theta import points_psi_to_P_theta
+from gcmotion.configuration.fixed_points_bifurcation_parameters import BifurcationConfig
 
 
-def bifurcation(
-    profiles: list | deque,
-    theta_lim: list = [-np.pi, np.pi],
-    psi_lim: list = [0.01, 1.3],
-    method: str = "fsolve",
-    dist_tol: float = 1e-3,
-    fp_ic_scan_tol: float = 5 * 1e-8,
-    ic_theta_grid_density: int = 400,
-    ic_psi_grid_density: int = 400,
-    random_fp_init_cond: bool = False,
-    fp_info: bool = False,
-    bif_info: bool = False,
-    fp_ic_info: bool = False,
-    fp_only_confined: bool = False,
-    calc_energies: bool = False,
-    energy_units: str = "NUJoule",
-    LAR_thetas: bool = False,
-):
+def bifurcation(profiles: list | deque, **kwargs):
     r"""
     Function that calculates all the fixed points of the GC Hamiltonian for multiple profiles
     with different :math:`\P_{\zeta}`'s and returns all the information in lists. Most of its
@@ -39,10 +24,12 @@ def bifurcation(
         ----------
         profiles : list, deque
             List of profile objects that contain Tokamak and Particle information.
-        theta_lim : list, optional
+        Other Parameters
+        ----------
+        thetalim : list, optional
             Limits of the of the :math:`\theta`, :math:`\psi` search area with respect
             to the :math:`\theta` variable. Defaults to [-:math:`\pi`, :math:`\pi`].
-        psi_lim : list, optional
+        psilim : list, optional
             Limits of the of the :math:`\theta`, :math:`\psi` search area with respect
             to the :math:`\psi` variable. Defaults to [0.01 , 1.8]. CUTION: The limits are given
             normalized to :math:`\psi_{wall}`.
@@ -88,6 +75,9 @@ def bifurcation(
         LAR_thetas : bool, optional
             Boolean determining weather the theta values for which fixed points occur are to be
             considered known (LAR thetas are 0 and :math:`\pi`). Defaults to ``False``.
+        energies_info : bool, optional
+            Boolean determining weather information on the fixed points' energies is to be printed.
+            Defaults to ``True``.
 
     Returns
     -------
@@ -97,6 +87,13 @@ def bifurcation(
         fixed, all the :math:`P_{theta}`'s fixed and the number of fixed points found for
         each :math:`P_{\zeta}`.
     """
+
+    # Unpack parameters
+    config = BifurcationConfig()
+    for key, value in kwargs.items():
+        setattr(config, key, value)
+
+    # print(f"\n\nCONFIG_CLASS_BIF:{vars(config)}\n\n")
 
     first_profile = profiles[0]
     last_profile = profiles[-1]
@@ -127,31 +124,23 @@ def bifurcation(
 
         current_P_zeta = profile.PzetaNU
 
-        current_num_of_fp, current_fp, _ = fixed_points(
-            profile=profile,
-            Q=profile.Q,
-            method=method,
-            theta_lim=theta_lim,
-            psi_lim=psi_lim,
-            dist_tol=dist_tol,
-            fp_ic_scan_tol=fp_ic_scan_tol,
-            ic_theta_grid_density=ic_theta_grid_density,
-            ic_psi_grid_density=ic_psi_grid_density,
-            random_init_cond=random_fp_init_cond,
-            info=fp_info,
-            ic_info=fp_ic_info,
-            LAR_thetas=LAR_thetas,
-            only_confined=fp_only_confined,
+        current_num_of_fp, current_fp, _ = fixed_points(profile=profile, **kwargs)
+
+        logger.info(
+            f"Calculated fixed points ['NUMagnetic_flux'] for bifurcation script with Pz={current_P_zeta}"
         )
 
         # CAUTION: The xoc function takes in psis_fixed but returns also psis_fixed
         current_X_points, current_O_points = xoc(
             unclassified_fixed_points=current_fp,
             profile=profile,
-            to_P_thetas=not calc_energies,
+            to_P_thetas=not config.calc_energies,
+        )
+        logger.info(
+            f"Classified fixed points ['NUCanonical_momentum'] for bifurcation script with Pz={current_P_zeta}"
         )
 
-        if calc_energies:
+        if config.calc_energies:
 
             # Convert deque to numpy arrays for easy manipulation
             current_X_thetas, current_X_psis = (
@@ -167,19 +156,27 @@ def bifurcation(
             current_O_energies = profile.findEnergy(
                 psi=profile.Q(current_O_psis, "NUMagnetic_flux"),
                 theta=np.array(current_O_thetas),
-                units=energy_units,
+                units=config.energy_units,
                 potential=True,
             )
 
             current_X_energies = profile.findEnergy(
                 psi=profile.Q(current_X_psis, "NUMagnetic_flux"),
                 theta=np.array(current_X_thetas),
-                units=energy_units,
+                units=config.energy_units,
                 potential=True,
             )
 
             O_energies.append(current_O_energies)
             X_energies.append(current_X_energies)
+
+            if config.energies_info:
+                print(f"X energies {X_energies}\n\n")
+                print(f"O energies {O_energies}\n\n")
+
+            logger.info(
+                f"Calculated energies ['{config.energy_units}'] of fixed points for bifurcation script with Pz={current_P_zeta}"
+            )
 
             # Turn psis to P_thetas after having calculated the energy
             current_X_points = points_psi_to_P_theta(current_X_points, profile=profile)
@@ -194,7 +191,7 @@ def bifurcation(
             zip(*current_O_points) if current_O_points else ([], [])
         )
 
-        if bif_info:
+        if config.bif_info:
             print(
                 f"\nCurrent Step: {idx+1}/{N} ({100*(idx+1)/N:.1f}%) at P_z = {current_P_zeta} with {current_num_of_fp} fixed points"
             )

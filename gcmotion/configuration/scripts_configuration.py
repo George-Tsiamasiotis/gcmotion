@@ -9,7 +9,7 @@ class LoggerConfig:
     level: str = "TRACE"
     mode: str = "w"  # (w)rite / (a)ppend
     format: str = "timedelta"  # timedelta / default
-    colorize: bool = True
+    colorize: bool = False
     backtrace: bool = True
     # format prefixes
     module_prefix: bool = False

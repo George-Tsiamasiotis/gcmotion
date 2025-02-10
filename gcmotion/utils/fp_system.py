@@ -7,7 +7,9 @@ from gcmotion.entities.profile import Profile
 
 
 # System of equations to be solved
-def system(theta: float, psi: float, profile: Profile, method: str):
+def system(
+    theta: float, psi: float, profile: Profile, method: str, psi_dot_scaling_factor: float = 70
+):
     r"""
     Function that calculates the time derivatives of the :math:`\theta` and :math:`\psi`
     variables, based on White's equations. It will be used in the :py:func:`single_fixed_point`
@@ -53,7 +55,7 @@ def system(theta: float, psi: float, profile: Profile, method: str):
     Pzeta0 = profile.PzetaNU.m
     Pzeta = Pzeta0
 
-    psi = max(psi, 1e-12)
+    psi = max(psi, 1e-8)
 
     # Object methods calls
     q = solverqNU(psi)
@@ -72,7 +74,7 @@ def system(theta: float, psi: float, profile: Profile, method: str):
     # Intermediate values
     rho = (Pzeta + psi_p) / g
     par = mu + rho**2 * b
-    bracket1 = -par * b_der_psi + phi_der_psi
+    bracket1 = par * b_der_psi + phi_der_psi
     bracket2 = par * b_der_theta + phi_der_theta
     D = g * q + i + rho * (g * i_der - i * g_der)
 
@@ -81,7 +83,7 @@ def system(theta: float, psi: float, profile: Profile, method: str):
     psi_dot = -q * g / D * bracket2
 
     if method == "differential evolution":
-        return theta_dot**2 + (70 * psi_dot) ** 2
+        return theta_dot**2 + (psi_dot_scaling_factor * psi_dot) ** 2
 
     elif method == "fsolve":
         return [theta_dot, psi_dot]

@@ -88,8 +88,8 @@ def XO_points_classification(
             O_points.append(fixed_point)
 
     if to_P_thetas:
-        # We have XO points, each, of the form [thetaXO, psiXO] and we will transform them
-        # to [thetaXO, P_theta_XO], if asked
+        # We have XO points, each, of the form [thetaXO, psiXO(NUMagnetic_flux)] and
+        # we will transform them to [thetaXO, P_theta_XO(NUCanonical_momentum)], if asked
         X_points = points_psi_to_P_theta(X_points, profile=profile)
         O_points = points_psi_to_P_theta(O_points, profile=profile)
 
