@@ -10,9 +10,6 @@ Q = div_init.QuantityConstructor()
 # Intermediate Quantities
 R = div_init.R
 a = div_init.a
-B0 = div_init.B0
-i = Q(0, "NUPlasma_current")
-g = Q(1, "NUPlasma_current")
 
 # Construct a Tokamak
 tokamak = gcm.Tokamak(
