@@ -8,9 +8,10 @@ from pathlib import Path
 @pytest.fixture(scope="session")
 def datasets_exist():
     r"""Returns True if all datasets exists. pytest must run from rootdir."""
-    dataset1 = Path("gcmotion/tokamak/reconstructed/smart_negative.nc")
-    dataset2 = Path("gcmotion/tokamak/reconstructed/smart_positive.nc")
-    dataset3 = Path("gcmotion/tokamak/reconstructed/divertor_negative.nc")
+    reconstructed_path = gcm.__path__[0] + "/tokamak/reconstructed/"
+    dataset1 = Path(reconstructed_path + "/smart_negative.nc")
+    dataset2 = Path(reconstructed_path + "/smart_positive.nc")
+    dataset3 = Path(reconstructed_path + "/divertor_negative.nc")
     return (
         os.path.isfile(dataset1)
         and os.path.isfile(dataset2)
