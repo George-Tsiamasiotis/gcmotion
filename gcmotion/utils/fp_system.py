@@ -55,7 +55,7 @@ def system(
     Pzeta0 = profile.PzetaNU.m
     Pzeta = Pzeta0
 
-    psi = max(psi, 1e-8)
+    psi = max(psi, 1e-3)  # Should become small for Pzetas close to 0 because psi-->0
 
     # Object methods calls
     q = solverqNU(psi)

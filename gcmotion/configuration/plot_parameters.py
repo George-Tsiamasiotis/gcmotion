@@ -24,8 +24,6 @@ class ProfileEnergyContourConfig:
     wall: bool = True
     cursor: bool = True  # Mild performance hit
     show: bool = True
-    # Fixed points parameters
-    plot_fixed_points: bool = False
     # Colorbar
     numticks: int = 10
     cbarlabelsize: int = 12
