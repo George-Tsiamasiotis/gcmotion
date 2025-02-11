@@ -12,19 +12,25 @@ def test_quantity_reference(reference_path):
 
 
 @pytest.mark.filterwarnings("ignore:numpy.ndarray size changed")
-def test_qfactor_reference(reference_path):
-    doctest_results = doctest.testfile(
-        filename=str(reference_path / "qfactor.rst"), verbose=V
-    )
-    assert doctest_results[0] == 0
+def test_qfactor_reference(reference_path, datasets_exist):
+    if datasets_exist:
+        doctest_results = doctest.testfile(
+            filename=str(reference_path / "qfactor.rst"), verbose=V
+        )
+        assert doctest_results[0] == 0
+    else:
+        pytest.skip("Datasets not found.")
 
 
 @pytest.mark.filterwarnings("ignore:numpy.ndarray size changed")
-def test_bfield_reference(reference_path):
-    doctest_results = doctest.testfile(
-        filename=str(reference_path / "bfield.rst"), verbose=V
-    )
-    assert doctest_results[0] == 0
+def test_bfield_reference(reference_path, datasets_exist):
+    if datasets_exist:
+        doctest_results = doctest.testfile(
+            filename=str(reference_path / "bfield.rst"), verbose=V
+        )
+        assert doctest_results[0] == 0
+    else:
+        pytest.skip("Datasets not found.")
 
 
 def test_efield_reference(reference_path):
@@ -35,8 +41,11 @@ def test_efield_reference(reference_path):
 
 
 @pytest.mark.filterwarnings("ignore:numpy.ndarray size changed")
-def test_initializers_reference(reference_path):
-    doctest_results = doctest.testfile(
-        filename=str(reference_path / "initializers.rst"), verbose=V
-    )
-    assert doctest_results[0] == 0
+def test_initializers_reference(reference_path, datasets_exist):
+    if datasets_exist:
+        doctest_results = doctest.testfile(
+            filename=str(reference_path / "initializers.rst"), verbose=V
+        )
+        assert doctest_results[0] == 0
+    else:
+        pytest.skip("Datasets not found.")

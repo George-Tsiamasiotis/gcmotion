@@ -74,15 +74,19 @@ def particle_poloidal_drift(particle: Particle, **kwargs):
     fig = plt.figure(**fig_kw)
     driftax = fig.add_subplot(projection=config.projection)
 
+    psi = particle.psi.to(config.flux_units)
+
     # Set up ylim now to pass to contour as well
+    psi_wall = particle.profile.psi_wall.to(config.flux_units)
     if config.psilim == "auto":
-        psi = particle.psi.to(config.flux_units)
-        psi_wall = particle.profile.psi_wall.to(config.flux_units)
         lim = _auto_yspan(psi.m, psi_wall.m)
         limNU = particle.Q(lim, config.flux_units).to("NUMagnetic_flux")
         contour_kw = {**kwargs, "psilim": limNU}
     else:
-        contour_kw = kwargs
+        limNU = particle.Q(config.psilim, config.flux_units).to(
+            "NUMagnetic_flux"
+        )
+        contour_kw = {**kwargs, "psilim": limNU}
     # ==============
     # Energy Contour
     # ==============

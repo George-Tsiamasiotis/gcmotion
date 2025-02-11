@@ -10,9 +10,6 @@ Q = smart_init.QuantityConstructor()
 # Intermediate Quantities
 R = smart_init.R
 a = smart_init.a
-B0 = smart_init.B0
-i = Q(0, "NUPlasma_current")
-g = Q(1, "NUPlasma_current")
 
 # Construct a Tokamak
 tokamak = gcm.Tokamak(

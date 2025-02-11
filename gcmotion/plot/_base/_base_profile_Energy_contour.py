@@ -149,12 +149,12 @@ def _base_profile_Energy_contour(profile: Profile, ax: Axes, **kwargs):
         )
         ax.add_patch(rect)
 
+    ax_lim = ax.get_ylim()
     if config.wall and config.projection == "polar":
         wall_pos = profile.Q(1, "psi_wall").to(config.flux_units).m
-        ax_lim = ax.get_ylim()[1]
         x = np.linspace(0, 2 * np.pi, 100)
         y_lower = np.linspace(wall_pos, wall_pos, 100)
-        y_upper = np.linspace(ax_lim, ax_lim, 100)
+        y_upper = np.linspace(ax_lim[1], ax_lim[1], 100)
 
         ax.fill_between(
             x=x, y1=y_lower, y2=y_upper, color="k", alpha=0.15, zorder=2
@@ -213,6 +213,7 @@ def _base_profile_Energy_contour(profile: Profile, ax: Axes, **kwargs):
 
         ax.format_coord = cursor_format
 
+    ax.set_ylim(ax_lim)
     # Return the contour object
     logger.info("\t--> Contour object succesfully created and returned.")
     return C
