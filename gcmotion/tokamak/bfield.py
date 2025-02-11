@@ -31,9 +31,7 @@ class MagneticField(ABC):
         """
 
     @abstractmethod
-    def bigNU(
-        self, phi: float | np.ndarray, theta: float | np.ndarray
-    ) -> float | np.ndarray:
+    def bigNU(self, phi: float | np.ndarray, theta: float | np.ndarray) -> float | np.ndarray:
         r"""Calculates :math:`B(\psi, \theta), I(\psi, \theta), g(\psi,\
         \theta)`. Input and output must be both floats or np.ndarrays, in
         [NU].
@@ -56,9 +54,7 @@ class MagneticField(ABC):
         """
 
     @abstractmethod
-    def solverbNU(
-        self, psi: float, theta: float
-    ) -> tuple[float, float, float]:
+    def solverbNU(self, psi: float, theta: float) -> tuple[float, float, float]:
         r"""Calculates all the values needed by the solver:
         :math:`B,I,g` (by calling ``self.bigNU()``) and the derivatives
         :math:`\dfrac{\partial B}{\partial \psi}, \dfrac{\partial B}{\partial\
@@ -135,8 +131,6 @@ class NumericalMagneticField(MagneticField):
         psi_values = dataset.psi.data
         theta_values = dataset.boozer_theta.data
         b_values = dataset.b_field_norm.data.T
-        db_dpsi_values = dataset.db_dpsi_norm.data.T
-        db_dtheta_values = dataset.db_dtheta_norm.data.T
         i_values = dataset.I_norm.data
         g_values = dataset.g_norm.data
 
@@ -146,17 +140,18 @@ class NumericalMagneticField(MagneticField):
             y=psi_values,
             z=b_values,
         )
-        self.db_dpsi_spline = RectBivariateSpline(
-            x=theta_values,
-            y=psi_values,
-            z=db_dpsi_values,
+        # NOTE: Do not use the dataset bfield derivatives. They introduce small
+        # non-Hamiltonian terms, resulting in a noticeable fluxuation and even
+        # loss of Energy, due to error propagation through 2 different splines.
+        # Use the derivatives calculated from the bfield spline instead.
+        self.db_dpsi_spline = self.b_spline.partial_derivative(
+            dx=0,
+            dy=1,
         )
-        self.db_dtheta_spline = RectBivariateSpline(
-            x=theta_values,
-            y=psi_values,
-            z=db_dtheta_values,
+        self.db_dtheta_spline = self.b_spline.partial_derivative(
+            dx=1,
+            dy=0,
         )
-
         self.i_spline = UnivariateSpline(
             x=psi_values,
             y=i_values,
@@ -313,8 +308,7 @@ class LAR(MagneticField):
 
     def __repr__(self):
         return (
-            colored("LAR", "light_blue")
-            + f": B0={self.B0:.4g~}, I={self.i:.4g~}, g={self.g:.4g~}."
+            colored("LAR", "light_blue") + f": B0={self.B0:.4g~}, I={self.i:.4g~}, g={self.g:.4g~}."
         )
 
 
@@ -334,9 +328,7 @@ class SmartPositive(NumericalMagneticField):
         self.plain_name = "Smart - Positive"
 
     def __repr__(self):
-        return (
-            colored("Smart - Positive", "light_blue") + f": B0={self.B0:.4g~}."
-        )
+        return colored("Smart - Positive", "light_blue") + f": B0={self.B0:.4g~}."
 
 
 class SmartNegative(NumericalMagneticField):
@@ -355,9 +347,7 @@ class SmartNegative(NumericalMagneticField):
         self.plain_name = "Smart - Negative"
 
     def __repr__(self):
-        return (
-            colored("Smart - Negative", "light_blue") + f": B0={self.B0:.4g~}."
-        )
+        return colored("Smart - Negative", "light_blue") + f": B0={self.B0:.4g~}."
 
 
 class DivertorNegative(NumericalMagneticField):
@@ -376,7 +366,4 @@ class DivertorNegative(NumericalMagneticField):
         self.plain_name = "Divertor - Negative"
 
     def __repr__(self):
-        return (
-            colored("Divertor - Negative", "light_blue")
-            + f": B0={self.B0:.4g~}."
-        )
+        return colored("Divertor - Negative", "light_blue") + f": B0={self.B0:.4g~}."

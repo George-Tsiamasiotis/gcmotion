@@ -51,7 +51,7 @@ def fixed_points_Energy_contour(profile: Profile, **kwargs):
         The contour's grid density. Defaults to 200.
 
     """
-    logger.info("==> Plotting profile's energy contour...")
+    logger.info("==> Plotting profile's energy contour with fixed points...")
 
     # Unpack parameters
     config = ProfileEnergyContourConfig()
@@ -93,8 +93,8 @@ def fixed_points_Energy_contour(profile: Profile, **kwargs):
     # Add the title on the cbar's ax
     cbar.ax.set_title(label=f"Energy [{config.E_units}]", size=config.cbarlabelsize)
     if config.show:
-        logger.info("--> Energy contour successfully plotted.")
+        logger.info("--> Energy contour with fixed points successfully plotted.")
         plt.show()
     else:
-        logger.info("--> Energy contour returned without plotting")
+        logger.info("--> Energy contour with fixed points returned without plotting")
         plt.clf()
