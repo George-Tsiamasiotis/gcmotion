@@ -88,6 +88,8 @@ def fixed_points_Energy_contour(profile: Profile, **kwargs):
     # Now that the colorbar is created, pass its "ax" to be customized
     _base_contour_colorbar(ax=cbar.ax, contour=Contour, numticks=10)
 
+    contourax.set_ylim(profile.Q(config.psilim, "NUpsi_wall").to(config.flux_units))
+
     # Add the title on the cbar's ax
     cbar.ax.set_title(label=f"Energy [{config.E_units}]", size=config.cbarlabelsize)
     if config.show:

@@ -23,6 +23,7 @@ class FixedPointsConfig:
 @dataclass()
 class FixedPointsPlotConfig:
     fp_plot_init_cond: bool = False
+    flux_units: str = "Tesla * meter^2"
 
 
 @dataclass()
