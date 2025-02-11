@@ -83,7 +83,7 @@ def particle_poloidal_drift(particle: Particle, **kwargs):
         limNU = particle.Q(lim, config.flux_units).to("NUMagnetic_flux")
         contour_kw = {**kwargs, "psilim": limNU}
     else:
-        limNU = particle.Q(config.psi_lim, config.flux_units).to(
+        limNU = particle.Q(config.psilim, config.flux_units).to(
             "NUMagnetic_flux"
         )
         contour_kw = {**kwargs, "psilim": limNU}
