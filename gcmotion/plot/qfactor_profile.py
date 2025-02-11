@@ -16,7 +16,6 @@ from gcmotion.entities.particle import Particle
 from gcmotion.configuration.plot_parameters import QfactorProfileConfig
 
 
-# TODO: write other parameters
 def qfactor_profile(entity: Tokamak | Profile | Particle, **kwargs):
     r"""Plots :math:`q(\psi)` and :math:`\psi_p(\psi)`.
 

@@ -57,6 +57,11 @@ def profile_Energy_contour(profile: Profile, **kwargs):
     for key, value in kwargs.items():
         setattr(config, key, value)
 
+    # Make fig more square
+    if config.projection == "polar":
+        logger.debug("\tPolar projection.")
+        config.figsize = (1.2 * config.figsize[1], config.figsize[1])
+
     # Create figure
     fig_kw = {
         "figsize": config.figsize,
@@ -137,6 +142,10 @@ def profile_Pzeta_contour(profile, **kwargs):
     }
     fig = plt.figure(**fig_kw)
     contourax = fig.subplots()
+
+    # Make fig more square
+    if config.projection == "polar":
+        config.figsize = (1.2 * config.figsize[1], config.figsize[1])
 
     # Draw the contour and get the contour object
     logger.debug("\tCalling base contour...")
