@@ -1,5 +1,4 @@
 import matplotlib.pyplot as plt
-from gcmotion.plotters.fixed_points_plot import fixed_points_plot
 
 from gcmotion.entities.profile import Profile
 from gcmotion.plot._base._base_profile_Energy_contour import (
@@ -68,17 +67,10 @@ def profile_Energy_contour(profile: Profile, **kwargs):
     fig = plt.figure(**fig_kw)
     contourax = fig.add_subplot(projection=config.projection)
 
-    # Here will go fixed points plot
-    if config.plot_fixed_points:
-
-        fixed_points_plot(
-            profile=profile,
-            ax=contourax,
-            **kwargs,
-        )
-
     # Draw the contour and get the contour object
-    Contour = _base_profile_Energy_contour(profile=profile, ax=contourax, **kwargs)
+    Contour = _base_profile_Energy_contour(
+        profile=profile, ax=contourax, **kwargs
+    )
 
     # ========
     # Colorbar
@@ -91,7 +83,10 @@ def profile_Energy_contour(profile: Profile, **kwargs):
     _base_contour_colorbar(ax=cbar.ax, contour=Contour, numticks=10)
 
     # Add the title on the cbar's ax
-    cbar.ax.set_title(label=f"Energy [{config.E_units}]", size=config.cbarlabelsize)
+    cbar.ax.set_title(
+        label=f"Energy [{config.E_units}]", size=config.cbarlabelsize
+    )
+    print(config.flux_units)
     if config.show:
         logger.info("--> Energy contour successfully plotted.")
         plt.show()
@@ -145,7 +140,9 @@ def profile_Pzeta_contour(profile, **kwargs):
 
     # Draw the contour and get the contour object
     logger.debug("\tCalling base contour...")
-    Contour = _base_profile_Pzeta_contour(profile=profile, ax=contourax, **kwargs)
+    Contour = _base_profile_Pzeta_contour(
+        profile=profile, ax=contourax, **kwargs
+    )
 
     # Colorbar
     # 'cax=None' creates a new axes for the colorbar, by stealing space from
@@ -154,10 +151,14 @@ def profile_Pzeta_contour(profile, **kwargs):
 
     # Now that the colorbar is created, pass its "ax" to be customized
     logger.debug("\tCalling base cbar...")
-    _base_contour_colorbar(ax=cbar.ax, contour=Contour, numticks=config.numticks)
+    _base_contour_colorbar(
+        ax=cbar.ax, contour=Contour, numticks=config.numticks
+    )
 
     # Add the title on the cbar's ax
-    cbar.ax.set_title(label=f"Pzeta [{config.flux_units}]", size=config.cbarlabelsize)
+    cbar.ax.set_title(
+        label=f"Pzeta [{config.flux_units}]", size=config.cbarlabelsize
+    )
 
     if config.show:
         logger.info("--> Pzeta Contour successfully plotted.")
