@@ -179,8 +179,8 @@ class NumericalMagneticField(MagneticField):
         da = dataset.b_field_norm
         mins = da.where(da == da.min(), drop=True).squeeze()
         maxs = da.where(da == da.max(), drop=True).squeeze()
-        self.Bmin = Q(mins.values, "Tesla")
-        self.Bmax = Q(maxs.values, "Tesla")
+        self.Bmin = Q(mins.values, "NUTesla").to("Tesla")
+        self.Bmax = Q(maxs.values, "NUTesla").to("Tesla")
         self.theta_min = float(mins.boozer_theta.values.flatten()[0])
         self.theta_max = float(maxs.boozer_theta.values.flatten()[0])
 
@@ -275,6 +275,25 @@ class LAR(MagneticField):
         self.has_i = bool(i.m)
         self.plain_name = "LAR"
         self.is_analytic = True
+
+        # Minimum/Maximum values and locations
+        Q = pint.UnitRegistry.Quantity
+        try:
+            self.psi_wall = Q(1, "psi_wall")
+            self.theta_min, self.theta_max = 0, np.pi
+            self.psi_min = self.psi_max = self.psi_wall.to("NUMagnetic_flux").m
+
+            _BminNU = self.bigNU(psi=self.psi_min, theta=self.theta_min)[0]
+            _BmaxNU = self.bigNU(psi=self.psi_max, theta=self.theta_max)[0]
+            self.Bmin = Q(_BminNU, "NUTesla").to("Tesla")
+            self.Bmax = Q(_BmaxNU, "NUTesla").to("Tesla")
+
+        except UndefinedUnitError:
+            logger.warning(
+                "psi coordinates of Bmin and Bmax cannot be defined. "
+                "Ensure that the Quantity Constructor has been instantiated "
+                "correctly first."
+            )
 
     def bigNU(self, psi: float | np.ndarray, theta: float | np.ndarray):
 
