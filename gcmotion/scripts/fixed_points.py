@@ -7,15 +7,64 @@ import numpy as np
 import pint
 from itertools import product
 from gcmotion.utils.logger_setup import logger
+from collections import deque
 
 from gcmotion.entities.profile import Profile
-from gcmotion.utils.distinctify import distinctify
 from gcmotion.utils.fp_ic_scan import fp_ic_scan as ic_scanner
 from gcmotion.utils.single_fixed_point import fixed_point
 from gcmotion.configuration.fixed_points_bifurcation_parameters import FixedPointsConfig
 
 # Quantity alias for type annotations
 type Quantity = pint.UnitRegistry.Quantity
+
+
+def _distinctify(points: np.ndarray | list | deque, tol: float):
+    r"""
+    Simple function that determines which elements [,] of a list of lists of len 2 [[,],[,],[,]...]
+    can be considered distinct from one another. In this project's context, it is used to
+    determine which points [x,y] can be considered distinct.
+
+        Parameters
+        ----------
+        points : np.ndarray | list | deque
+            Iterable (np.ndarray, list, deque) that contains sublists that are to be examined for uniquness.
+        tol : list
+            If two sublists have both elements that are less than tol (tolerance) apart, they
+            are considered idenical.
+
+        Returns
+        -------
+        List that contains only the distinct sublists/points.
+
+
+    """
+
+    if isinstance(points, deque):
+        points = np.array(points)
+
+    def are_considered_equal(sublist1, sublist2, tol=tol):
+        return abs(sublist1[0] - sublist2[0]) <= tol and abs(sublist1[1] - sublist2[1]) <= tol
+
+    distinct_points = np.empty((points.shape[0], points.shape[1]))
+    distinct_points[:] = np.nan
+
+    idx = 0
+
+    for point in points:
+
+        is_unique = True
+        for distinct in distinct_points:
+            if are_considered_equal(distinct, point):
+                is_unique = False
+                break
+
+        if is_unique:
+            distinct_points[idx] = point
+            idx += 1
+
+    distinct_points = distinct_points[~np.isnan(distinct_points).any(axis=1)]
+
+    return distinct_points
 
 
 def _set_up_fixed_points(
@@ -236,7 +285,7 @@ def fixed_points(profile: Profile, **kwargs):
     )
     # If the fixed points that were found have identical values-->
     # find out how many distinct fixed points were located
-    distinct_fixed_points = distinctify(fixed_points, tol=config.dist_tol)
+    distinct_fixed_points = _distinctify(fixed_points, tol=config.dist_tol)
     num_of_dfp = distinct_fixed_points.shape[0]
 
     logger.info(
