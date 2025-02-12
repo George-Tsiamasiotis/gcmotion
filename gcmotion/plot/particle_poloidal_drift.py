@@ -7,8 +7,8 @@ from dataclasses import asdict
 
 from gcmotion.entities.particle import Particle
 from gcmotion.configuration.plot_parameters import ParticlePoloidalDrift
-from gcmotion.plot._base._base_profile_Energy_contour import (
-    _base_profile_Energy_contour,
+from gcmotion.plot._base._base_profile_energy_contour import (
+    _base_profile_energy_contour,
 )
 from gcmotion.plot._base._base_contour_colorbar import _base_contour_colorbar
 from gcmotion.plot._base._base_particle_poloidal_drift import (
@@ -95,7 +95,7 @@ def particle_poloidal_drift(particle: Particle, **kwargs):
     # ==============
     # Draw the contour and get the contour object
     logger.debug("\tCalling base contour...")
-    Contour = _base_profile_Energy_contour(
+    Contour = _base_profile_energy_contour(
         profile=particle.profile, ax=driftax, **asdict(config)
     )
 

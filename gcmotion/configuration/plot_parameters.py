@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from numpy import pi
 
-figsize = 16, 9  # Global window size
+figsize = 13, 7  # Global window size
 dpi = 100  # Global dpi
 
 
@@ -54,7 +54,7 @@ class ProfilePzetaContourConfig:
 @dataclass
 class QfactorProfileConfig:
     # Figure keywords
-    figsize: tuple = (16, 5)
+    figsize: tuple = (13, 5)
     dpi: int = dpi
     layout: str = "constrained"
     facecolor: str = "lightskyblue"
@@ -77,7 +77,7 @@ class QfactorProfileConfig:
 @dataclass
 class MagneticProfileConfig:
     # Figure keywords
-    figsize: tuple = (16, 10)
+    figsize: tuple = (13, 7)
     dpi: int = dpi
     layout: str = "constrained"
     facecolor: str = "lightskyblue"
