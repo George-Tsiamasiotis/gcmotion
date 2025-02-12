@@ -3,7 +3,7 @@ from gcmotion.plot.fixed_points_profile_contour import (
     fixed_points_Energy_contour,
 )
 from gcmotion.plot.profile_contour import (
-    profile_Energy_contour,
+    profile_energy_contour,
 )
 
 

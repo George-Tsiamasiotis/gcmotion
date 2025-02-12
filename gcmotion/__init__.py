@@ -1,3 +1,5 @@
+import matplotlib
+
 # Utilities
 # Import the logger first
 from gcmotion.utils import logger_setup
@@ -23,6 +25,7 @@ from gcmotion.entities.particle import Particle
 # Scripts
 from gcmotion.scripts import events
 
+
 # main namespace
 __all__ = [
     "logger_setup",
@@ -43,3 +46,5 @@ __all__ = [
     # Scripts
     "events",
 ]
+
+matplotlib.use("gtk3agg")
