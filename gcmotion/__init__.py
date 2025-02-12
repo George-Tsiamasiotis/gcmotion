@@ -47,4 +47,4 @@ __all__ = [
     "events",
 ]
 
-matplotlib.use("gtk3agg")
+# matplotlib.use("gtk3agg")
