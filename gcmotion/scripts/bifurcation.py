@@ -1,7 +1,5 @@
-r""" Function that calculates the fixed points and the number of fixed points for multiple
-particles in a Collection form :py:class:`~gcmotion.classes.collection.Collection`, where 
-each particle has a different :math:`P_{\zeta0}`.
-
+r""" Function that calculates the fixed points, the number of fixed points, and their energies
+for multiple profiles , where each particle has a different :math:`P_{\zeta}`.
 """
 
 import numpy as np
@@ -78,6 +76,9 @@ def bifurcation(profiles: list | deque, **kwargs):
         energies_info : bool, optional
             Boolean determining weather information on the fixed points' energies is to be printed.
             Defaults to ``True``.
+        which_COM : str, optional
+            Determines with regard to which COM (:math:`\mu` or :math:`P_{zeta}`) will the bifurcation
+            analysis take place.
 
     Returns
     -------
@@ -93,14 +94,18 @@ def bifurcation(profiles: list | deque, **kwargs):
     for key, value in kwargs.items():
         setattr(config, key, value)
 
-    # print(f"\n\nCONFIG_CLASS_BIF:{vars(config)}\n\n")
-
     first_profile = profiles[0]
     last_profile = profiles[-1]
 
     # Check if the partcles have different Pzeta0's
-    if first_profile.PzetaNU == last_profile.PzetaNU:
-        print(r"Each profile in the collection must have different $P_{\zeta0}$")
+    if first_profile.PzetaNU == last_profile.PzetaNU and config.which_COM == "Pzeta":
+        print(f"\n\nEach profile in the list must have different Pzeta\n\n")
+        return
+    elif first_profile.muNU == last_profile.muNU and config.which_COM == "mu":
+        print(f"\n\nEach profile in the list must have different mu\n\n")
+        return
+    elif config.which_COM not in ["mu", "Pzeta"]:
+        print("\n\n'which_COM' argumet must either be 'mu' or 'Pzeta'.\n\n")
         return
 
     num_of_XP = deque([])
@@ -119,30 +124,32 @@ def bifurcation(profiles: list | deque, **kwargs):
     X_energies = deque([])
 
     N = len(profiles)
+    selected_COMNU_str = config.which_COM + "NU"
 
     for idx, profile in enumerate(profiles):
 
-        current_P_zeta = profile.PzetaNU
+        current_COMNU = getattr(profile, selected_COMNU_str, "PzetaNU")
 
         current_num_of_fp, current_fp, _ = fixed_points(profile=profile, **kwargs)
 
         logger.info(
-            f"Calculated fixed points ['NUMagnetic_flux'] for bifurcation script with Pz={current_P_zeta}"
+            f"Calculated fixed points ['NUMagnetic_flux'] for bifurcation script with {selected_COMNU_str}={current_COMNU}"
         )
 
-        # CAUTION: The xoc function takes in psis_fixed but returns also psis_fixed
+        # CAUTION: The xoc function takes in psis_fixed but can return P_thetas_fixed
+        # if asked
         current_X_points, current_O_points = xoc(
             unclassified_fixed_points=current_fp,
             profile=profile,
             to_P_thetas=not config.calc_energies,
         )
         logger.info(
-            f"Classified fixed points ['NUCanonical_momentum'] for bifurcation script with Pz={current_P_zeta}"
+            f"Classified fixed points ['NUCanonical_momentum'] for bifurcation script with {selected_COMNU_str}={current_COMNU}"
         )
 
         if config.calc_energies:
 
-            # Convert deque to numpy arrays for easy manipulation
+            # Unpack points
             current_X_thetas, current_X_psis = (
                 zip(*current_X_points) if current_X_points else ([], [])
             )
@@ -175,7 +182,7 @@ def bifurcation(profiles: list | deque, **kwargs):
                 print(f"O energies {O_energies}\n\n")
 
             logger.info(
-                f"Calculated energies ['{config.energy_units}'] of fixed points for bifurcation script with Pz={current_P_zeta}"
+                f"Calculated energies ['{config.energy_units}'] of fixed points for bifurcation script with {selected_COMNU_str}={current_COMNU}"
             )
 
             # Turn psis to P_thetas after having calculated the energy
@@ -193,7 +200,7 @@ def bifurcation(profiles: list | deque, **kwargs):
 
         if config.bif_info:
             print(
-                f"\nCurrent Step: {idx+1}/{N} ({100*(idx+1)/N:.1f}%) at P_z = {current_P_zeta} with {current_num_of_fp} fixed points"
+                f"\nCurrent Step: {idx+1}/{N} ({100*(idx+1)/N:.1f}%) at {selected_COMNU_str} = {current_COMNU} with {current_num_of_fp} fixed points"
             )
             print(f"Current Fixed Points: {current_fp}\n")
             print(

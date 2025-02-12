@@ -32,6 +32,7 @@ class BifurcationConfig:
     calc_energies: bool = False
     energy_units: str = "keV"
     energies_info: bool = False
+    which_COM: str = "Pzeta"
 
 
 @dataclass()
