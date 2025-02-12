@@ -25,10 +25,6 @@ from gcmotion.entities.particle import Particle
 # Scripts
 from gcmotion.scripts import events
 
-# TEMP
-from gcmotion.scripts.contour_freq import _contour_set, _unpack_paths
-from gcmotion.scripts.utils.contour_segment import ContourSegment
-
 
 # main namespace
 __all__ = [
@@ -49,10 +45,6 @@ __all__ = [
     "Particle",
     # Scripts
     "events",
-    # TEMP
-    "_contour_set",
-    "ContourSegment",
-    "_unpack_paths",
 ]
 
 matplotlib.use("gtk3agg")
