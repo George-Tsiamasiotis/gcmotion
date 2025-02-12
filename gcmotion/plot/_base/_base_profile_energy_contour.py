@@ -11,7 +11,7 @@ from gcmotion.plot._base._config import _ProfileEnergyContourConfig
 from gcmotion.entities.profile import Profile
 
 
-def _base_profile_Energy_contour(profile: Profile, ax: Axes, **kwargs):
+def _base_profile_energy_contour(profile: Profile, ax: Axes, **kwargs):
     r"""Base plotting function. Only draws upon a given axis without showing
     any figures.
 
@@ -48,24 +48,28 @@ def _base_profile_Energy_contour(profile: Profile, ax: Axes, **kwargs):
     # or zoom to a certain area with respect to Ptheta.
     thetalim = profile.Q(config.thetalim, "radians")
     psilim = profile.Q(config.psilim, "psi_wall").to(config.flux_units)
-    psigrid, thetagrid = np.meshgrid(
+    ycoordgrid, thetagrid = np.meshgrid(
         np.linspace(psilim[0], psilim[1], config.grid_density),
         np.linspace(thetalim[0], thetalim[1], config.grid_density),
     )
 
     # Calculate Energy values
     Energy = profile.findEnergy(
-        psigrid,
+        ycoordgrid,
         thetagrid.m,
         config.E_units,
         potential=config.potential,
     )
 
+    if config.ycoord.lower() == "ptheta":
+        ycoordgrid = profile.findPtheta(ycoordgrid, "NUcanmom").m
+        ycoordgrid = profile.Q(ycoordgrid, "NUcanmom")
+
     # Define data to be plotted
     # Take only the magnitudes to supress warnings
     data = {
         "theta": thetagrid.m,
-        "flux": psigrid.m,
+        "flux": ycoordgrid.m,
         "Energy": Energy.m,
     }
 
@@ -100,7 +104,10 @@ def _base_profile_Energy_contour(profile: Profile, ax: Axes, **kwargs):
 
     # Setup labels.
     # Also add a second axis for Ptheta
-    ax.set_ylabel(rf"$\psi$ [{psigrid.units:.4g~P}]", size=config.labelsize)
+    ylabel = r"\psi" if config.ycoord == "psi" else r"P_\theta"
+    ax.set_ylabel(
+        rf"${ylabel}$ [{ycoordgrid.units:.4g~P}]", size=config.labelsize
+    )
     ax.set_xlabel(r"$\theta$ [radians]", size=config.labelsize)
     ax.tick_params(labelsize=config.ticksize)
     ax.set_xticks(
@@ -112,7 +119,11 @@ def _base_profile_Energy_contour(profile: Profile, ax: Axes, **kwargs):
     ax.yaxis.set_major_locator(ticker.MaxNLocator(config.ticknum))
 
     # Add secondary axes with Ptheta
-    twin_ax_condition = bool(config.Pthetaax and config.projection is None)
+    twin_ax_condition = bool(
+        config.Pthetaax
+        and config.projection is None
+        and not (config.ycoord.lower() == "ptheta")
+    )
     if twin_ax_condition:
         logger.debug("\t\tAdding secondary Ptheta ax.")
         ax2 = ax.twinx()
@@ -143,7 +154,7 @@ def _base_profile_Energy_contour(profile: Profile, ax: Axes, **kwargs):
                 profile.Q(1, "psi_wall").to(config.flux_units).m,
             ),
             width=abs(thetalim[1].m - thetalim[0].m),
-            height=psigrid[0][-1].m,
+            height=ycoordgrid[0][-1].m,
             alpha=0.2,
             color="k",
         )
@@ -177,7 +188,7 @@ def _base_profile_Energy_contour(profile: Profile, ax: Axes, **kwargs):
     cursory = data["flux"][0]
     cursorz = data["Energy"]
     values = RectBivariateSpline(cursorx, cursory, cursorz)
-    flux_label = f"{psigrid.units:~P}"
+    flux_label = f"{ycoordgrid.units:~P}"
 
     # Always add the main axes cursor, but the twin ax cursor is added only if
     # the projection is rectilinear (the default).

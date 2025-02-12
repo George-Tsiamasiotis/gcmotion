@@ -19,5 +19,5 @@ class LoggerConfig:
 
 @dataclass
 class SolverConfig:
-    atol: float = 1e-8  # Scipy's default is 1e-6
-    rtol: float = 1e-6  # Scipy's default is 1e-3
+    atol: float = 1e-9  # Scipy's default is 1e-6
+    rtol: float = 1e-8  # Scipy's default is 1e-3

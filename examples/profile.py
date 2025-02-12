@@ -37,5 +37,5 @@ print(profile)
 
 # Some Plots
 gplt.qfactor_profile(profile)
-gplt.profile_Energy_contour(profile)
-gplt.profile_Energy_contour(profile, projection="polar")
+gplt.profile_energy_contour(profile)
+gplt.profile_energy_contour(profile, projection="polar")

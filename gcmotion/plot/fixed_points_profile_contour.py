@@ -2,11 +2,8 @@ import matplotlib.pyplot as plt
 from gcmotion.plotters.fixed_points_plot import fixed_points_plot
 
 from gcmotion.entities.profile import Profile
-from gcmotion.plot._base._base_profile_Energy_contour import (
-    _base_profile_Energy_contour,
-)
-from gcmotion.plot._base._base_profile_Pzeta_contour import (
-    _base_profile_Pzeta_contour,
+from gcmotion.plot._base._base_profile_energy_contour import (
+    _base_profile_energy_contour,
 )
 from gcmotion.plot._base._base_contour_colorbar import _base_contour_colorbar
 from gcmotion.configuration.plot_parameters import (
@@ -17,7 +14,7 @@ from gcmotion.configuration.plot_parameters import (
 from gcmotion.utils.logger_setup import logger
 
 
-def fixed_points_Energy_contour(profile: Profile, **kwargs):
+def fixed_points_energy_contour(profile: Profile, **kwargs):
     r"""Plots the Profile's energy contour plot.
 
     Parameters
@@ -76,7 +73,7 @@ def fixed_points_Energy_contour(profile: Profile, **kwargs):
     )
 
     # Draw the contour and get the contour object
-    Contour = _base_profile_Energy_contour(profile=profile, ax=contourax, **kwargs)
+    Contour = _base_profile_energy_contour(profile=profile, ax=contourax, **kwargs)
 
     # ========
     # Colorbar

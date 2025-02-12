@@ -3,11 +3,12 @@ Plots the particle's poloidal drift on top of the energy contour plot.
 """
 
 import matplotlib.pyplot as plt
+from dataclasses import asdict
 
 from gcmotion.entities.particle import Particle
 from gcmotion.configuration.plot_parameters import ParticlePoloidalDrift
-from gcmotion.plot._base._base_profile_Energy_contour import (
-    _base_profile_Energy_contour,
+from gcmotion.plot._base._base_profile_energy_contour import (
+    _base_profile_energy_contour,
 )
 from gcmotion.plot._base._base_contour_colorbar import _base_contour_colorbar
 from gcmotion.plot._base._base_particle_poloidal_drift import (
@@ -64,6 +65,10 @@ def particle_poloidal_drift(particle: Particle, **kwargs):
     for key, value in kwargs.items():
         setattr(config, key, value)
 
+    # Make fig more square
+    if config.projection == "polar":
+        config.figsize = (1.2 * config.figsize[1], config.figsize[1])
+
     # Create figure
     fig_kw = {
         "figsize": config.figsize,
@@ -77,23 +82,21 @@ def particle_poloidal_drift(particle: Particle, **kwargs):
     psi = particle.psi.to(config.flux_units)
 
     # Set up ylim now to pass to contour as well
-    psi_wall = particle.profile.psi_wall.to(config.flux_units)
+    psi_wall = particle.profile.psi_wall.to("psi_wall")
     if config.psilim == "auto":
-        lim = _auto_yspan(psi.m, psi_wall.m)
-        limNU = particle.Q(lim, config.flux_units).to("NUMagnetic_flux")
-        contour_kw = {**kwargs, "psilim": limNU}
-    else:
-        limNU = particle.Q(config.psilim, config.flux_units).to(
-            "NUMagnetic_flux"
-        )
-        contour_kw = {**kwargs, "psilim": limNU}
+        logger.trace(f"psilim passed: {config.psilim}")
+        config.psilim = particle.Q(
+            _auto_yspan(psi.to("psi_wall").m, psi_wall.m)
+        ).m
+        logger.trace(f"Auto psilim: {config.psilim}")
+
     # ==============
     # Energy Contour
     # ==============
     # Draw the contour and get the contour object
     logger.debug("\tCalling base contour...")
-    Contour = _base_profile_Energy_contour(
-        profile=particle.profile, ax=driftax, **contour_kw
+    Contour = _base_profile_energy_contour(
+        profile=particle.profile, ax=driftax, **asdict(config)
     )
 
     # ==============
@@ -119,13 +122,6 @@ def particle_poloidal_drift(particle: Particle, **kwargs):
     cbar.ax.set_title(
         label=f"Energy [{config.E_units}]", size=config.cbarlabelsize
     )
-
-    if config.psilim != "auto":
-        driftax.set_ylim(
-            particle.Q(config.psilim, "NUpsi_wall").to(config.flux_units)
-        )
-    else:
-        driftax.set_ylim(lim)
 
     if config.show:
         logger.info("--> Particle Poloidal Drift successfully plotted.")

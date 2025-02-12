@@ -1,6 +1,8 @@
 from dataclasses import dataclass
-from collections import deque
 import numpy as np
+
+figsize = 13, 7  # Global window size
+dpi = 100  # Global dpi
 
 
 @dataclass()
@@ -32,10 +34,18 @@ class BifurcationConfig:
     calc_energies: bool = False
     energy_units: str = "keV"
     energies_info: bool = False
+    which_COM: str = "Pzeta"
 
 
 @dataclass()
 class BifurcationPlotConfig:
+    # Figure keywords
+    figsize: tuple = figsize
+    dpi: int = dpi
+    layout: str = "constrained"
+    facecolor: str = "lightskyblue"
+    sharex: bool = True
+    # Bifurcation keywords
     thetalim: tuple = (-np.pi, np.pi)
     psilim: tuple = (0, 1.8)
     plot_energy_bif: bool = True
