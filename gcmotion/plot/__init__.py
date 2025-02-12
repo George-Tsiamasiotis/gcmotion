@@ -1,6 +1,6 @@
 # Profile related plots
 from gcmotion.plot.profile_contour import (
-    profile_Energy_contour,
+    profile_energy_contour,
 )
 
 # Particle related plots
@@ -14,8 +14,7 @@ from gcmotion.plot.particle_poloidal_drift import particle_poloidal_drift
 __all__ = [
     "qfactor_profile",
     "magnetic_profile",
-    "profile_Energy_contour",
-    # "profile_Pzeta_contour",
+    "profile_energy_contour",
     "particle_evolution",
     "particle_poloidal_drift",
 ]

@@ -15,6 +15,7 @@ class _ProfileEnergyContourConfig:
     thetalim: tuple = (-np.pi, np.pi)
     psilim: tuple = (0, 1.2)
     levels: int = 30
+    ycoord: str = "psi"  # "psi" or "Ptheta"
     flux_units: str = "Tesla * meters^2"
     canmon_units: str = "NUCanonical_momentum"
     E_units: str = "keV"

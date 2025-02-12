@@ -1,11 +1,11 @@
 import matplotlib.pyplot as plt
 
 from gcmotion.entities.profile import Profile
-from gcmotion.plot._base._base_profile_Energy_contour import (
-    _base_profile_Energy_contour,
+from gcmotion.plot._base._base_profile_energy_contour import (
+    _base_profile_energy_contour,
 )
-from gcmotion.plot._base._base_profile_Pzeta_contour import (
-    _base_profile_Pzeta_contour,
+from gcmotion.plot._base._base_profile_pzeta_contour import (
+    _base_profile_pzeta_contour,
 )
 from gcmotion.plot._base._base_contour_colorbar import _base_contour_colorbar
 from gcmotion.configuration.plot_parameters import (
@@ -16,7 +16,7 @@ from gcmotion.configuration.plot_parameters import (
 from gcmotion.utils.logger_setup import logger
 
 
-def profile_Energy_contour(profile: Profile, **kwargs):
+def profile_energy_contour(profile: Profile, **kwargs):
     r"""Plots the Profile's energy contour plot.
 
     Parameters
@@ -32,6 +32,8 @@ def profile_Energy_contour(profile: Profile, **kwargs):
         The :math:`\psi` span in units of *psi_wall*. Defaults to [0, 1.2].
     levels : int, optional
         The number of contour lines. Defaults to 25.
+    ycoord: {"psi", "Ptheta"}, optional
+        Which coordinate to use for the y axis. Defaults to "psi".
     flux_units : str, optional
         The units of the psi/Ptheta axis. Can be "Magnetic_flux"(same as "Tesla
         * meters^2"), "NUmagnetic_flux" (same as "NUTesla * NUmeters^2"),
@@ -57,6 +59,11 @@ def profile_Energy_contour(profile: Profile, **kwargs):
     for key, value in kwargs.items():
         setattr(config, key, value)
 
+    # Make fig more square
+    if config.projection == "polar":
+        logger.debug("\tPolar projection.")
+        config.figsize = (1.2 * config.figsize[1], config.figsize[1])
+
     # Create figure
     fig_kw = {
         "figsize": config.figsize,
@@ -68,7 +75,7 @@ def profile_Energy_contour(profile: Profile, **kwargs):
     contourax = fig.add_subplot(projection=config.projection)
 
     # Draw the contour and get the contour object
-    Contour = _base_profile_Energy_contour(
+    Contour = _base_profile_energy_contour(
         profile=profile, ax=contourax, **kwargs
     )
 
@@ -86,7 +93,6 @@ def profile_Energy_contour(profile: Profile, **kwargs):
     cbar.ax.set_title(
         label=f"Energy [{config.E_units}]", size=config.cbarlabelsize
     )
-    print(config.flux_units)
     if config.show:
         logger.info("--> Energy contour successfully plotted.")
         plt.show()
@@ -95,7 +101,7 @@ def profile_Energy_contour(profile: Profile, **kwargs):
         plt.clf()
 
 
-def profile_Pzeta_contour(profile, **kwargs):
+def profile_pzeta_contour(profile, **kwargs):
     r"""Plots the Profile's :math:`P_\zeta` contour plot.
 
     Parameters
@@ -138,9 +144,13 @@ def profile_Pzeta_contour(profile, **kwargs):
     fig = plt.figure(**fig_kw)
     contourax = fig.subplots()
 
+    # Make fig more square
+    if config.projection == "polar":
+        config.figsize = (1.2 * config.figsize[1], config.figsize[1])
+
     # Draw the contour and get the contour object
     logger.debug("\tCalling base contour...")
-    Contour = _base_profile_Pzeta_contour(
+    Contour = _base_profile_pzeta_contour(
         profile=profile, ax=contourax, **kwargs
     )
 

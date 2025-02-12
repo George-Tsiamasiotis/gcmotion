@@ -11,7 +11,7 @@ from gcmotion.plot._base._config import _ProfilePzetaContourConfig
 from gcmotion.entities.profile import Profile
 
 
-def _base_profile_Pzeta_contour(profile: Profile, ax: Axes, **kwargs):
+def _base_profile_pzeta_contour(profile: Profile, ax: Axes, **kwargs):
     r"""Base plotting function. Only draws upon a given axis without showing
     any figures.
 
