@@ -47,4 +47,5 @@ __all__ = [
     "events",
 ]
 
-matplotlib.use("gtk3agg")
+# Uncomment to switch from pygt6 (default) backend. Requires PyGObject
+# matplotlib.use("gtk3agg")
