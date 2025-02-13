@@ -1,4 +1,4 @@
-"""
+r"""
 Simple script that calculates the RW,LW,MA parabolas diagram (constant :math:`\mu` slices
 in the :math:`\theta`,:math:`P_{\zeta}`,E COM space).
 """
@@ -68,7 +68,11 @@ def calc_parabolas(profile: Profile, **kwargs):
     logger.info(f"Unpacked parabolas Pzetalim={config.Pzetalim}")
 
     # Get intermediate values
-    BminNU = bfield.Bmin.to("NUTesla").m
+    try:
+        BminNU = bfield.Bmin.to("NUTesla").m[0]  # List if numerical
+    except:
+        BminNU = bfield.Bmin.to("NUTesla").m
+
     BmaxNU = bfield.Bmax.to("NUTesla").m
     B0NU = bfield.B0.to("NUTesla").m
     muB0NU = muNU * B0NU
@@ -97,10 +101,11 @@ def calc_parabolas(profile: Profile, **kwargs):
     # Calculate the LAR trapped-passing boundary
     LAR_tpb_O = np.array([])
     LAR_tpb_X = np.array([])
+    x_LAR = np.linspace(PzetasNU[np.argmin(y_L)], PzetasNU[np.argmin(y_MA)], config.Pzeta_density)
 
     if not bfield.plain_name == "LAR":
         print(
-            "\nWARNING: Can not calculate LAR trapped-passing boundary analyticlly,"
+            "\nWARNING: Can not calculate LAR trapped-passing boundary analytically,"
             "for non LAR equilibrium. Returning empty LAR_tpb...\n"
         )
     else:
@@ -108,10 +113,6 @@ def calc_parabolas(profile: Profile, **kwargs):
         #                        and                        E_X/μΒ0=B(θ=π,psi)/B0
         # Also ψp=ψ and Pz=-ψp=-ψ --> ψ=-ψpw*x where x=Pz/ψpw.
         # So E_O/μΒ0=B(θ=0,-ψpw*x)/B0 and E_X/μΒ0=B(θ=π,-ψpw*x)/B0
-
-        x_LAR = np.linspace(
-            PzetasNU[np.argmin(y_L)], PzetasNU[np.argmin(y_MA)], config.Pzeta_density
-        )
 
         LAR_tpb_X, _, _ = bfield.bigNU(-x_LAR * psi_wallNU, 0)  # E_O(x)
         LAR_tpb_O, _, _ = bfield.bigNU(-x_LAR * psi_wallNU, np.pi)  # E_X(x)
