@@ -189,6 +189,11 @@ def fixed_points(profile: Profile, **kwargs):
             Density of the :math:`\theta`, :math:`\psi` 2D grid to be scanned for initial conditiond
             (fixed points candidates) with respect to the :math:`\psi` variable. It is passed into
             :py:func:`fp_ic_scan` Defaults to 400.
+        psi_dot_scaling_factor : float,optional
+            Scaling factor that is used in the sum of squares of the time derivatives of the
+            :math:`\theta` and :math:`\psi` values like so -->
+            :math:`\dot{\theta}^2` + (psi_dot_scaling_factor:math:`\dot{\psi})^2` because physiacally
+            the time derivative of :math:`\psi` is quite smaller than that of :math:`\theta`. Defaults to 70.
         random_init_cond : bool, optional
             Boolean determining weather random initial conditions are to be used instead of those
             provided by :py:func:`fp_ic_scan`. Defaults to ``False``.
