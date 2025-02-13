@@ -378,6 +378,28 @@ class SmartNegative(NumericalMagneticField):
         )
 
 
+class DivertorPositive(NumericalMagneticField):
+    r"""Initializes a bfield object with numerical data from the Divertor
+    Tokamak with **Positive** Triangularity.
+
+    The dataset must be stored in
+    *./gcmotion/tokamak/reconstructed/divertor_positive.nc*.
+
+    """
+
+    def __init__(self):
+        filename = "divertor_negative.nc"
+        super().__init__(filename=filename)
+
+        self.plain_name = "Divertor - Positive"
+
+    def __repr__(self):
+        return (
+            colored("Divertor - Positive", "light_blue")
+            + f": B0={self.B0:.4g~}."
+        )
+
+
 class DivertorNegative(NumericalMagneticField):
     r"""Initializes a bfield object with numerical data from the Divertor
     Tokamak with **Negative** Triangularity.
