@@ -1,8 +1,18 @@
+from gcmotion.utils.logger_setup import logger
 import matplotlib
+
+# gtk3agg backend needs PyGObject, which needs a C compiler to be installed.
+try:
+    import gi
+except ModuleNotFoundError:
+    logger.warning("PyGobject not found. Using default backend")
+    pass
+else:
+    logger.info("PyGObject availiable. using 'gtk3agg' backend")
+    matplotlib.use("gtk3agg")
 
 # Utilities
 # Import the logger first
-from gcmotion.utils import logger_setup
 from gcmotion.utils.quantity_constructor import QuantityConstructor
 from gcmotion.utils.get_size import get_size
 
@@ -26,12 +36,7 @@ from gcmotion.entities.particle import Particle
 from gcmotion.scripts import events
 
 # TEMP
-from gcmotion.scripts.contour_freq import (
-    omegas,
-    _contour_set,
-    _filter_paths,
-    _segment_omega,
-)
+from gcmotion.scripts.frequency_analysis import frequency_analysis
 from gcmotion.scripts.utils.contour_segment import ContourSegment
 
 
@@ -54,12 +59,5 @@ __all__ = [
     "Particle",
     # Scripts
     "events",
-    # TEMP
-    "omegas",
-    "_contour_set",
-    "ContourSegment",
-    "_unpack_paths",
-    "_contour_omega_theta",
+    "frequency_analysis",
 ]
-
-matplotlib.use("gtk3agg")

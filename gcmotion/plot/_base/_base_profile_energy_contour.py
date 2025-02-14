@@ -63,7 +63,7 @@ def _base_profile_energy_contour(profile: Profile, ax: Axes, **kwargs):
 
     if config.ycoord.lower() == "ptheta":
         ycoordgrid = profile.findPtheta(ycoordgrid, "NUcanmom").m
-        ycoordgrid = profile.Q(ycoordgrid, "NUcanmom")
+        ycoordgrid = profile.Q(ycoordgrid, "NUcanmom").to(config.canmon_units)
 
     # Define data to be plotted
     # Take only the magnitudes to supress warnings
@@ -83,7 +83,7 @@ def _base_profile_energy_contour(profile: Profile, ax: Axes, **kwargs):
         if config.locator == "log"
         else ticker.MaxNLocator(nbins=config.levels)
     )
-    locator.MAXTICKS = 4000
+    locator.MAXTICKS = 10000
     log_msg = f"\t\tContour locator: {type(locator).__name__} "
     if config.locator == "log":
         log_msg += f"with base {config.log_base:.20g}"
@@ -100,11 +100,19 @@ def _base_profile_energy_contour(profile: Profile, ax: Axes, **kwargs):
         C = ax.contour("theta", "ycoord", "Energy", data=data, **kw)
         logger.debug("\t\tContour mode: lines")
     else:
-        C = ax.contourf("theta", "ycoord", "Energy", data=data, **kw)
+        C = ax.contourf(
+            "theta",
+            "ycoord",
+            "Energy",
+            data=data,
+            linewidths=config.linewidths,
+            **kw,
+        )
         logger.debug("\t\tContour mode: filled")
 
     # Store grid inside C to use in contour freq
     C.data = data
+    C.ylim = (ycoordgrid.m[0][0], ycoordgrid.m[0][-1])
 
     # Setup labels.
     # Also add a second axis for Ptheta
