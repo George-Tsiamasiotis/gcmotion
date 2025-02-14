@@ -114,8 +114,8 @@ def calc_parabolas(profile: Profile, **kwargs):
         # Also ψp=ψ and Pz=-ψp=-ψ --> ψ=-ψpw*x where x=Pz/ψpw.
         # So E_O/μΒ0=B(θ=0,-ψpw*x)/B0 and E_X/μΒ0=B(θ=π,-ψpw*x)/B0
 
-        LAR_tpb_X, _, _ = bfield.bigNU(-x_LAR * psi_wallNU, 0)  # E_O(x)
-        LAR_tpb_O, _, _ = bfield.bigNU(-x_LAR * psi_wallNU, np.pi)  # E_X(x)
+        LAR_tpb_O, _, _ = bfield.bigNU(-x_LAR * psi_wallNU, 0)  # E_O(x)
+        LAR_tpb_X, _, _ = bfield.bigNU(-x_LAR * psi_wallNU, np.pi)  # E_X(x)
 
         LAR_tpb_O /= B0NU  # E_O/μΒ0
         LAR_tpb_X /= B0NU  # E_X/μΒ0
