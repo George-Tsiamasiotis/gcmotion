@@ -97,8 +97,6 @@ def orbit(
     solverbNU = bfield.solverbNU
     solverPhiderNU = efield.solverPhiderNU
 
-    logger.trace("\torbit() | Unpacked Parameters.")
-
     def dSdt(t, S):
         """Sets the diff equations system to pass to scipy.
 
@@ -146,8 +144,6 @@ def orbit(
         dense_output=True,
     )
 
-    logger.trace("\torbit() | Solver returned.")
-
     theta = sol.y[0]
     psi = sol.y[1]
     zeta = sol.y[2]
@@ -162,7 +158,6 @@ def orbit(
     psip = qfactor.psipNU(psi)
     Ptheta = psi + rho * i
     Pzeta = rho * g - psip
-    logger.trace("\torbit() | Calculated psip, Ptheta and Pzeta. Returning.")
 
     # Pack results and return them
     Solution = namedtuple(

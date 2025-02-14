@@ -238,11 +238,6 @@ class Particle:
         logger.info(
             f"'t_eval' percentage calculated: {self.orbit_percentage:.4g}%"
         )
-        logger.trace(f"{self.theta0=}, {self.theta[-1].m % (2*3.1415)=}")
-        logger.trace(f"t_events = {self.t_events}")
-        logger.trace(
-            f"len(t_events)= {len(np.array(self.t_events.m).flatten())}"
-        )
 
         self.solver_output = (
             colored("\nSolver output: ", "red") + f"{message}\n"
