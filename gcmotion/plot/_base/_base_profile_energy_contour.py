@@ -69,7 +69,7 @@ def _base_profile_energy_contour(profile: Profile, ax: Axes, **kwargs):
     # Take only the magnitudes to supress warnings
     data = {
         "theta": thetagrid.m,
-        "flux": ycoordgrid.m,
+        "ycoord": ycoordgrid.m,
         "Energy": Energy.m,
     }
 
@@ -83,6 +83,7 @@ def _base_profile_energy_contour(profile: Profile, ax: Axes, **kwargs):
         if config.locator == "log"
         else ticker.MaxNLocator(nbins=config.levels)
     )
+    locator.MAXTICKS = 4000
     log_msg = f"\t\tContour locator: {type(locator).__name__} "
     if config.locator == "log":
         log_msg += f"with base {config.log_base:.20g}"
@@ -96,11 +97,14 @@ def _base_profile_energy_contour(profile: Profile, ax: Axes, **kwargs):
 
     # Contour plot
     if config.mode == "lines":
-        C = ax.contour("theta", "flux", "Energy", data=data, **kw)
+        C = ax.contour("theta", "ycoord", "Energy", data=data, **kw)
         logger.debug("\t\tContour mode: lines")
     else:
-        C = ax.contourf("theta", "flux", "Energy", data=data, **kw)
+        C = ax.contourf("theta", "ycoord", "Energy", data=data, **kw)
         logger.debug("\t\tContour mode: filled")
+
+    # Store grid inside C to use in contour freq
+    C.data = data
 
     # Setup labels.
     # Also add a second axis for Ptheta
@@ -185,10 +189,10 @@ def _base_profile_energy_contour(profile: Profile, ax: Axes, **kwargs):
     # we have to transform data from one ax to the other. This little manouver
     # is a bit costly but I haven't found a better way.
     cursorx = data["theta"][:, 0]
-    cursory = data["flux"][0]
+    cursory = data["ycoord"][0]
     cursorz = data["Energy"]
     values = RectBivariateSpline(cursorx, cursory, cursorz)
-    flux_label = f"{ycoordgrid.units:~P}"
+    ycoord_label = f"{ycoordgrid.units:~P}"
 
     # Always add the main axes cursor, but the twin ax cursor is added only if
     # the projection is rectilinear (the default).
@@ -204,8 +208,8 @@ def _base_profile_energy_contour(profile: Profile, ax: Axes, **kwargs):
             x /= np.pi
             return (
                 f"θ={x:.4g}π,  "
-                + f"ψ={y:.4g} {flux_label},  "
-                + f"Ρθ = {Ptheta:.4g} {flux_label},  "
+                + f"ψ={y:.4g} {ycoord_label},  "
+                + f"Ρθ = {Ptheta:.4g} {ycoord_label},  "
                 + f"Energy = {z:.4g} {config.E_units}"
             )
 
@@ -218,7 +222,7 @@ def _base_profile_energy_contour(profile: Profile, ax: Axes, **kwargs):
             x /= np.pi
             return (
                 f"θ={x:.4g}π,  "
-                + f"ψ={y:.4g} {flux_label},  "
+                + f"ψ={y:.4g} {ycoord_label},  "
                 + f"Energy = {z:.4g} {config.E_units}"
             )
 
