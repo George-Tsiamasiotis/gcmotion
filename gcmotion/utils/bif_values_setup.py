@@ -11,7 +11,7 @@ def set_up_bif_plot_values(
     y_values: list | deque | np.ndarray,
     which_COM: str,
     tilt_energies: bool = False,
-    output_energy_units: str = "NUJoule",
+    input_energy_units: str = "NUJoule",
 ):
     r"""
     Simple function that sets up the values of the desired quantity in a bifurcation plot.
@@ -24,11 +24,11 @@ def set_up_bif_plot_values(
     selected_COMNU_str = which_COM + "NU"
 
     # For the mu bifurcation we need to subtract mu*B0 from each energy
-    if tilt_energies:
+    if tilt_energies and which_COM == "mu":
         for i, profile in enumerate(profiles):
             selected_com = getattr(profile, selected_COMNU_str, "PzetaNU")
             mu = profile.muNU
-            muB0 = (mu * profile.Q(1, "NUTesla")).to(output_energy_units)
+            muB0 = (mu * profile.Q(1, "NUTesla")).to(input_energy_units)
             y_list = y_values[i].m - muB0.m
 
             # Ensure y_list is iterable
