@@ -28,6 +28,11 @@ def system(
             String that indicates which method will be used to find the systems fixed
             points in :py:func:`single_fixed_point`. Can either be "fsolve" (deterministic)
             or "differential evolution" (stochastic).
+        psi_dot_scaling_factor : float,optional
+            Scaling factor that is used in the sum of squares of the time derivatives of the
+            :math:`\theta` and :math:`\psi` values like so -->
+            :math:`\dot{\theta}^2` + (psi_dot_scaling_factor:math:`\dot{\psi})^2` because physiacally
+            the time derivative of :math:`\psi` is quite smaller than that of :math:`\theta`. Defaults to 70.
 
 
 

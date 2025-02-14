@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from numpy import pi
+import numpy as np
 
 figsize = 13, 7  # Global window size
 dpi = 100  # Global dpi
@@ -157,3 +158,52 @@ class ParticlePoloidalDrift:
 class AutoYspan:
     zoomout: float = 0.75
     hardylim: float = 3  # times psi_wall
+
+
+@dataclass
+class ParabolasPlotConfig:
+    # Figure keywords
+    figsize: tuple = figsize
+    dpi: int = dpi
+    title: str = (
+        r"Constant-$\mu$ slices (plane cuts) of the three dimensional COM space (E,$\mu,P_{\zeta}$)"
+    )
+    layout: str = "constrained"
+    facecolor: str = "lightskyblue"
+    linewidth: int = 2
+    xlabel_fontsize: int = 13
+    ylabel_fontsize: int = 13
+    ylabel_rotation: int = 0
+    legend: bool = True
+    # Parabolas keywords
+    enlim: tuple = (0, 3)
+    Pzetalim: tuple = (-1, 1)  # result after division by psip_wall.m
+    Pzeta_density: int = 1000
+    LAR_TPB: bool = False
+
+
+@dataclass()
+class FixedPointsPlotConfig:
+    # Figure keywords
+    figsize: tuple = figsize
+    dpi: int = dpi
+    layout: str = "constrained"
+    facecolor: str = "lightskyblue"
+    projection: str | None = None  # None = default
+    # Fixed points keywords
+    fp_plot_init_cond: bool = False
+    flux_units: str = "Tesla * meter^2"
+
+
+@dataclass()
+class BifurcationPlotConfig:
+    # Figure keywords
+    figsize: tuple = figsize
+    dpi: int = dpi
+    layout: str = "constrained"
+    facecolor: str = "lightskyblue"
+    sharex: bool = True
+    # Bifurcation keywords
+    thetalim: tuple = (-np.pi, np.pi)
+    psilim: tuple = (0, 1.8)
+    plot_energy_bif: bool = True

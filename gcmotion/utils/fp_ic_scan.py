@@ -83,6 +83,11 @@ def fp_ic_scan(
         tol : float, optional
             Tolerance that determines weather the time derivatives of the :math:`\theta` and :math:`\psi`
             variables can be considered zero. Defaults to 1e-8.
+        psi_dot_scaling_factor : float,optional
+            Scaling factor that is used in the sum of squares of the time derivatives of the
+            :math:`\theta` and :math:`\psi` values like so -->
+            :math:`\dot{\theta}^2` + (psi_dot_scaling_factor:math:`\dot{\psi})^2` because physiacally
+            the time derivative of :math:`\psi` is quite smaller than that of :math:`\theta`. Defaults to 70.
 
 
         Returns

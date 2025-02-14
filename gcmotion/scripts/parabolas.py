@@ -8,10 +8,8 @@ from gcmotion.utils.logger_setup import logger
 from gcmotion.entities.profile import Profile
 from gcmotion.tokamak.efield import Nofield
 
-from gcmotion.configuration.parabolas_parameters import ParabolasConfig
 
-
-def calc_parabolas(profile: Profile, **kwargs):
+def calc_parabolas(profile: Profile, Pzetalim: list | tuple = [-1.5, 1], Pzeta_density: int = 1000):
     r"""
 
     In this script the values of the parabolas that correspond to the right and left
@@ -24,9 +22,6 @@ def calc_parabolas(profile: Profile, **kwargs):
     profile : Profile
         Profile object that contains Tokamak information like bfield, mu,
         useful psi values.
-
-    Other Parameters
-    ----------
     Pzetalim : tuple,list, optional
         The Pzeta limits within which the RW, LW, MA parabolas' values are to
         be calculated. CAUTION: the limits must be normalized to psip_wallNU.
@@ -50,11 +45,6 @@ def calc_parabolas(profile: Profile, **kwargs):
     if not isinstance(profile.efield, Nofield):
         print("\n\nWARNING: Parabolas do not work with an electric field...\n\n")
 
-    # Unpack Parameters
-    config = ParabolasConfig()
-    for key, value in kwargs.items():
-        setattr(config, key, value)
-
     # Unpack magnitudes
     bfield = profile.bfield
     psip_wallNU = profile.psip_wallNU.m
@@ -62,10 +52,10 @@ def calc_parabolas(profile: Profile, **kwargs):
     muNU = profile.muNU.m
 
     # Unpack Pzeta limits
-    PzetaminNU, PzetamaxNU = config.Pzetalim
-    PzetasNU = np.linspace(PzetaminNU, PzetamaxNU, config.Pzeta_density)
+    PzetaminNU, PzetamaxNU = Pzetalim
+    PzetasNU = np.linspace(PzetaminNU, PzetamaxNU, Pzeta_density)
 
-    logger.info(f"Unpacked parabolas Pzetalim={config.Pzetalim}")
+    logger.info(f"Unpacked parabolas Pzetalim={Pzetalim}")
 
     # Get intermediate values
     try:
@@ -101,7 +91,7 @@ def calc_parabolas(profile: Profile, **kwargs):
     # Calculate the LAR trapped-passing boundary
     LAR_tpb_O = np.array([])
     LAR_tpb_X = np.array([])
-    x_LAR = np.linspace(PzetasNU[np.argmin(y_L)], PzetasNU[np.argmin(y_MA)], config.Pzeta_density)
+    x_LAR = np.linspace(PzetasNU[np.argmin(y_L)], PzetasNU[np.argmin(y_MA)], Pzeta_density)
 
     if not bfield.plain_name == "LAR":
         print(

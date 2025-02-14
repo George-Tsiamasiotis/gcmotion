@@ -23,29 +23,9 @@ class FixedPointsConfig:
 
 
 @dataclass()
-class FixedPointsPlotConfig:
-    fp_plot_init_cond: bool = False
-    flux_units: str = "Tesla * meter^2"
-
-
-@dataclass()
 class BifurcationConfig:
     bif_info: bool = False
     calc_energies: bool = False
     energy_units: str = "keV"
     energies_info: bool = False
     which_COM: str = "Pzeta"
-
-
-@dataclass()
-class BifurcationPlotConfig:
-    # Figure keywords
-    figsize: tuple = figsize
-    dpi: int = dpi
-    layout: str = "constrained"
-    facecolor: str = "lightskyblue"
-    sharex: bool = True
-    # Bifurcation keywords
-    thetalim: tuple = (-np.pi, np.pi)
-    psilim: tuple = (0, 1.8)
-    plot_energy_bif: bool = True
