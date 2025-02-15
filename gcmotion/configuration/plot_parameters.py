@@ -194,19 +194,6 @@ class ParabolasPlotConfig:
 
 
 @dataclass()
-class FixedPointsPlotConfig:
-    # Figure keywords
-    figsize: tuple = figsize
-    dpi: int = dpi
-    layout: str = "constrained"
-    facecolor: str = "lightskyblue"
-    projection: str | None = None  # None = default
-    # Fixed points keywords
-    fp_plot_init_cond: bool = False
-    flux_units: str = "Tesla * meter^2"
-
-
-@dataclass()
 class BifurcationPlotConfig:
     # Figure keywords
     figsize: tuple = figsize
