@@ -171,8 +171,10 @@ class ParabolasPlotConfig:
     layout: str = "constrained"
     facecolor: str = "lightskyblue"
     linewidth: int = 2
-    xlabel_fontsize: int = 13
-    ylabel_fontsize: int = 13
+    title_fontsize: float = 15
+    xlabel_fontsize: float = 13
+    xlabel_rotation: int = 0
+    ylabel_fontsize: float = 13
     ylabel_rotation: int = 0
     legend: bool = True
     # Parabolas keywords
@@ -183,6 +185,11 @@ class ParabolasPlotConfig:
     parabolas_color: str = "orange"
     TPB_X_color: str = "#E65100"
     TPB_O_color: str = "#1f77b4"
+    # Dashed line keywords
+    show_d_line: bool = True
+    d_line_color: str = "black"
+    d_linewidth: int = 1
+    d_line_alplha: float = 0.5
 
 
 @dataclass()
@@ -206,6 +213,11 @@ class BifurcationPlotConfig:
     layout: str = "constrained"
     facecolor: str = "lightskyblue"
     sharex: bool = True
+    # x Label keywords
+    xlabel_fontsize: float = 10
+    # Suptitle keywords
+    suptitle_fontsize: float = 15
+    suptitle_color: str = "black"
     # Bifurcation keywords
     thetalim: tuple = (-np.pi, np.pi)
     psilim: tuple = (0, 1.8)
