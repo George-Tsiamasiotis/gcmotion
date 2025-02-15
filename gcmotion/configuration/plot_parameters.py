@@ -165,17 +165,18 @@ class ParabolasPlotConfig:
     # Figure keywords
     figsize: tuple = figsize
     dpi: int = dpi
-    title: str = (
-        r"Constant-$\mu$ slices (plane cuts) of the three dimensional COM space (E,$\mu,P_{\zeta}$)"
-    )
     layout: str = "constrained"
     facecolor: str = "lightskyblue"
     linewidth: int = 2
+    # Title keywords
     title_fontsize: float = 15
+    title_color: str = "black"
+    # Labels keywords
     xlabel_fontsize: float = 13
     xlabel_rotation: int = 0
     ylabel_fontsize: float = 13
     ylabel_rotation: int = 0
+    # Legend keywords
     legend: bool = True
     # Parabolas keywords
     enlim: tuple = (0, 3)
