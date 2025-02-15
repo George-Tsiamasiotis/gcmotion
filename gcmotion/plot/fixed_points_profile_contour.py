@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from gcmotion.plotters.fixed_points_plot import fixed_points_plot
+from gcmotion.plot._base._base_fixed_points_profile_contour import _base_fixed_points_plot
 
 from gcmotion.entities.profile import Profile
 from gcmotion.plot._base._base_profile_energy_contour import (
@@ -8,7 +8,6 @@ from gcmotion.plot._base._base_profile_energy_contour import (
 from gcmotion.plot._base._base_contour_colorbar import _base_contour_colorbar
 from gcmotion.configuration.plot_parameters import (
     ProfileEnergyContourConfig,
-    ProfilePzetaContourConfig,
 )
 
 from gcmotion.utils.logger_setup import logger
@@ -112,7 +111,7 @@ def fixed_points_energy_contour(profile: Profile, **kwargs):
     contourax = fig.add_subplot(projection=config.projection)
 
     # Here will go fixed points plot
-    fixed_points_plot(
+    _base_fixed_points_plot(
         profile=profile,
         ax=contourax,
         **kwargs,

@@ -90,3 +90,16 @@ class _ParticlePoloidalDrift:
     init_s: float = 30
     init_color: str = "k"
     init_marker: str = "."
+
+
+@dataclass()
+class _FixedPointsPlotConfig:
+    # Figure keywords
+    figsize: tuple = (13, 7)
+    dpi: int = 100
+    layout: str = "constrained"
+    facecolor: str = "lightskyblue"
+    projection: str | None = None  # None = default
+    # Fixed points keywords
+    fp_plot_init_cond: bool = False
+    flux_units: str = "Tesla * meter^2"
