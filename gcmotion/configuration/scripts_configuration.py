@@ -25,7 +25,7 @@ class SolverConfig:
 @dataclass
 class ContourFreqConfig:
     # Arguements
-    show_master_contour: bool = True
+    show_master_contour: bool = False
     show_close_segments: bool = False
     show_segments: bool = True
     # Figures
@@ -33,18 +33,23 @@ class ContourFreqConfig:
     dpi = 100
     layout: str = "constrained"
     # Contour
+    levels: int = 10  # For demo
     locator: str = "log"
     log_base: float = 1.0000001
     grid_density: int = 200
+    show_base_points: bool = False
     # Segments
     is_inbounds_atol: float = 1e-7  # Must not be 0 when comparing with 0
     trapped_color: str = "red"
     copassing_color: str = "blue"
     cupassing_color: str = "cyan"
+    undefined_color: str = "key"
     scatter_size: float = 1
     fullshow: bool = False
     energy_rtol: float = 1e-4
+    rho_sample_size: int = 10
     del_vertices: bool = False
+    check_omega_attr: bool = True
     # Misc
     pbar: bool = True
     tqdm_style: str = "-#"

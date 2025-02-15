@@ -9,6 +9,7 @@ respective constant and return a new Quantity for a given pair of psi, theta.
 """
 
 import pint
+import numpy as np
 from termcolor import colored
 from typing import Literal
 
@@ -361,7 +362,25 @@ class Profile:
         else:
             raise ValueError("Input must be a float or a Quantity")
 
-        logger.trace(f"\tUpdated Pzeta/PzetaNU to {self.PzetaNU:.4g}")
+    def _rhosign(self, psi: np.ndarray):
+        r"""Calculates the sign of rho from a given psi[NU].
+
+        Needed to classify an orbit as co- or counter-passing. Makes no sense
+        to be used in trapped orbits.
+
+        Parameters
+        ----------
+        psi : np.ndarray
+            The psi values in NU
+
+        Returns
+        -------
+        bool
+            True if all values are positive(co), else False(counter).
+        """
+        psip = self.tokamak.qfactor.psipNU(psi)
+        # UNSURE: no need for g since its positive
+        return bool(np.all(self.PzetaNU.m + psip > 0))
 
     def __repr__(self):
         string = Tokamak.__repr__(self)

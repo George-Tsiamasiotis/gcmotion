@@ -1,3 +1,4 @@
+import pint
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
@@ -8,7 +9,7 @@ from statistics import mean
 from dataclasses import asdict
 from collections import deque
 from matplotlib.contour import QuadContourSet
-from matplotlib.patches import Rectangle
+from matplotlib.patches import Patch
 
 from gcmotion.utils.logger_setup import logger
 from gcmotion.entities.profile import Profile
@@ -17,6 +18,10 @@ from gcmotion.scripts.utils.contour_segment import ContourSegment
 from gcmotion.plot._base._base_profile_energy_contour import (
     _base_profile_energy_contour,
 )
+
+ureg = pint.get_application_registry()
+Q = ureg.Quantity
+
 
 config = ContourFreqConfig()
 matplotlib.rcParams["savefig.dpi"] = 250
@@ -29,24 +34,24 @@ fig_kw = {
 
 def frequency_analysis(profile: Profile, psilim: list, **kwargs):
 
+    logger.info("==> Beginning Frequency Analysis...")
     # Unpack it here and updated, since only this function is to be called
     # externaly
     for key, value in kwargs.items():
         setattr(config, key, value)
 
-    logger.info("Creating master Contour...")
     C = _contour_set(profile, psilim)
 
-    logger.info("Unpacking paths...")
     segs = _unpack_paths(C=C, progress=config.pbar)
 
-    logger.info("Validating Segments...")
     segs = _validate_and_return(segments=segs)
 
-    logger.info("Preparing Segments...")
-    segs = _prepare_segments(segments=segs)
+    segs = _prepare_segments(segments=segs, profile=profile)
+
+    segs = _pick_colors(segments=segs)
 
     if config.show_segments:
+        logger.info("Plotting calculated segments...")
         _plot_segments(segs)
 
     _calculate_segment_frequencies(segs, C.data)
@@ -55,15 +60,33 @@ def frequency_analysis(profile: Profile, psilim: list, **kwargs):
         # Do not show contours produced by frequency calculation
         plt.close()
 
-    segs = [seg for seg in segs if hasattr(seg, "omega_theta")]
+    # WARN: this might be necessary. Sometimes, contours very close to the grid
+    # limits cannot find a valid segment close to them, and fail to calculate
+    # their omega.
 
-    _plot_omegas(segments=segs)
+    if config.check_omega_attr:
+        segs_len = len(segs)
+        segs = [seg for seg in segs if hasattr(seg, "omega_theta")]
+        logger.info(
+            f"{segs_len}/{len(segs)} segments calculated omega correctly."
+        )
 
-    return segs
+    try:
+        _plot_omegas(segments=segs)
+    except AttributeError:
+        msg = (
+            "Some segments could not calculate their omega. Consider "
+            "enabling 'check_omega_attr in the configuration.'"
+        )
+        logger.error(msg)
+        print(msg)
+
+    logger.info("Frequency analysis complete.")
 
 
 def _contour_set(profile: Profile, psilim: list, **kwargs):
 
+    logger.info("==> Creating master Contour...")
     fig = plt.figure(**fig_kw)
     ax = fig.add_subplot()
 
@@ -83,8 +106,12 @@ def _contour_set(profile: Profile, psilim: list, **kwargs):
         "log_base": config.log_base,
         "mode": "lines",
     }
+    logger.disable("gcmotion")
+    start = time()
     C = _base_profile_energy_contour(profile, ax=ax, **contour_kw)
-    logger.info(f"Found {len(C.allsegs)} Contours.")
+    duration = Q(time() - start, "seconds")
+    logger.enable("gcmotion")
+    logger.info(f"\tFound {len(C.allsegs)} Contours. Took {duration:.4g~#P}.")
 
     if config.show_master_contour:
         plt.title("Master Contour")
@@ -110,7 +137,8 @@ def _unpack_paths(C: QuadContourSet, progress: bool = True) -> None:
     segments = deque()
 
     # Iterate over allsegs and create ContourSegments
-    logger.info("Extracting ContourSegments")
+    logger.info("==> Extracting ContourSegments")
+    start = time()
     for E, composite_path in tqdm(
         iterable=zip(C.levels, C.get_paths()),
         desc=f"{"Creating ContourSegments":^25}",
@@ -131,6 +159,11 @@ def _unpack_paths(C: QuadContourSet, progress: bool = True) -> None:
 
             new_segment = ContourSegment(segment=segment, E=E, ylim=C.ylim)
             segments.append(new_segment)
+    del C
+
+    number = len(segments)
+    duration = Q(time() - start, "seconds")
+    logger.info(f"\tUnpacked {number} segments. Took {duration:.4g~#P}.")
 
     return segments
 
@@ -149,28 +182,53 @@ def _validate_and_return(
         A list containing all the valid ContourSegments
 
     """
+    logger.info("==> Validating Segments...")
 
+    start = time()
     for seg in segments:
         seg.validate()
 
     valid = [seg for seg in segments if seg.valid]
 
-    logger.info(f"Kept {len(valid)}/{len(segments)} valid segments.")
+    duration = Q(time() - start, "seconds")
+    logger.info(
+        f"\tKept {len(valid)}/{len(segments)} valid segments. "
+        f"Took {duration:.4g~#P}."
+    )
 
     return valid
 
 
 def _prepare_segments(
     segments: list[ContourSegment],
+    profile: Profile = None,
 ) -> list[ContourSegment]:
     r"""Makes all ContourSegments classify themselves"""
 
+    logger.info("\tPreparing Segments...")
+
+    start = time()
     for seg in segments:
-        seg.classify()
+        seg.classify(profile)
+    classify_dur = Q(time() - start, "seconds")
+
+    start = time()
+    for seg in segments:
         seg.close_segment()
+    close_segment_dur = Q(time() - start, "seconds")
+
+    start = time()
+    for seg in segments:
         seg.calculate_J()
-        if config.del_vertices and not config.show_segments:
-            delattr(seg, "vertices")
+    calculate_J_dur = Q(time() - start, "seconds")
+
+    total = classify_dur + close_segment_dur + calculate_J_dur
+    logger.info(
+        f"\tSegments classified and areas calculated. Took {total:.4g~#P}."
+    )
+    logger.info(f"\t\tClassification duration:  {classify_dur:.4g~#P}")
+    logger.info(f"\t\tSegment closure duration: {close_segment_dur:.4g~#P}")
+    logger.info(f"\t\tJ calculation duration:   {calculate_J_dur:.4g~#P}")
 
     return segments
 
@@ -180,7 +238,10 @@ def _prepare_segments(
 
 def _calculate_segment_frequencies(segments: list[ContourSegment], data: dict):
 
+    logger.info("==> Calculating frequencies...")
+
     logger.disable("gcmotion")
+    start = time()
     for seg in tqdm(
         iterable=segments,
         desc=f"{'Calculating frequencies':^25}",
@@ -189,6 +250,10 @@ def _calculate_segment_frequencies(segments: list[ContourSegment], data: dict):
         disable=not config.pbar,
     ):
         _calculate_segment_frequency(seg, data)
+
+    logger.enable("gcmotion")
+    duration = Q(time() - start, "seconds")
+    logger.info(f"\tSegments' frequencies calculated. Took {duration:.4g~#P}.")
 
     logger.enable("gcmotion")
 
@@ -213,6 +278,7 @@ def _calculate_segment_frequency(
     )
     C.ylim = segment.ylim
     segs = _unpack_paths(C=C, progress=False)
+    del C
 
     upper_segs = [seg for seg in segs if seg.E > E]
     lower_segs = [seg for seg in segs if seg.E < E]
@@ -254,9 +320,30 @@ def _calculate_segment_frequency(
 # ================================= Plots ===================================
 
 
+def _pick_colors(segments: list[ContourSegment]):
+
+    logger.info("==> Picking colors...")
+
+    start = time()
+    for seg in segments:
+        seg.pick_color()
+
+    duration = Q(time() - start, "seconds")
+    logger.info(f"\tSegments' colors assigned. Took {duration:.4g~#P}.")
+
+    return segments
+
+
 def _plot_segments(segments: list[ContourSegment]):
     r"""Plots all segments."""
 
+    if config.del_vertices:
+        msg = (
+            "Segments plot not availiable if 'del_vertices' option is enabled"
+        )
+        logger.warning(msg)
+        print(msg)
+        return
     fig = plt.figure(**fig_kw)
     ax = fig.add_subplot()
 
@@ -264,6 +351,13 @@ def _plot_segments(segments: list[ContourSegment]):
         x, y = seg.vertices.T[:]
         ax.plot(x, y, color=seg.color)
 
+    # if not config.show_base_points:
+    #     ax.set_ylim = seg.ylim
+
+    trapped = Patch(color=config.trapped_color, label="Trapped")
+    copassing = Patch(color=config.copassing_color, label="Co-passing")
+    cupassing = Patch(color=config.cupassing_color, label="Counter-Passing")
+    plt.legend(handles=[trapped, copassing, cupassing], loc="top right")
     plt.show()
 
 
@@ -277,5 +371,10 @@ def _plot_omegas(segments):
 
     ax.set_xlabel("Energy [NU]")
     ax.set_ylabel(r"$\omega [\omega_0]$")
+
+    trapped = Patch(color=config.trapped_color, label="Trapped")
+    copassing = Patch(color=config.copassing_color, label="Co-passing")
+    cupassing = Patch(color=config.cupassing_color, label="Counter-Passing")
+    plt.legend(handles=[trapped, copassing, cupassing])
 
     plt.show()
