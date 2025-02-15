@@ -180,6 +180,9 @@ class ParabolasPlotConfig:
     Pzetalim: tuple = (-1, 1)  # result after division by psip_wall.m
     Pzeta_density: int = 1000
     LAR_TPB: bool = False
+    parabolas_color: str = "orange"
+    TPB_X_color: str = "#E65100"
+    TPB_O_color: str = "#1f77b4"
 
 
 @dataclass()
