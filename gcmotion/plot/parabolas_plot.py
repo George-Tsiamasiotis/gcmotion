@@ -3,9 +3,6 @@ Simple script that draws parabolas diagram along with the trapped passing bounda
 if asked.
 """
 
-import numpy as np
-from collections import deque
-
 from gcmotion.utils.logger_setup import logger
 import matplotlib.pyplot as plt
 
@@ -74,6 +71,7 @@ def parabolas_diagram(profile: Profile, **kwargs):
         profile=profile,
         Pzeta_density=config.Pzeta_density,
         calc_TPB=config.plot_TPB,
+        # **kwargs,
     )
 
     logger.info(

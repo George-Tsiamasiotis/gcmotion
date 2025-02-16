@@ -105,11 +105,11 @@ def _plot_parabolas_tpb(
         B0NU = profile.bfield.B0.to("NUTesla").m
         muB0NU = muNU * B0NU
 
-        Pzeta_plotO /= psip_wallNU  # NUCanmom/ψpw
-        Pzeta_plotX /= psip_wallNU  # NUCanmom/ψpw
+        Pzeta_plotO = np.array(Pzeta_plotO) / psip_wallNU  # NUCanmom/ψpw
+        Pzeta_plotX = np.array(Pzeta_plotX) / psip_wallNU  # NUCanmom/ψpw
 
-        O_energies_plot /= muB0NU  # NUJoule/(μΒ0)
-        X_energies_plot /= muB0NU  # NUJoule/(μΒ0)
+        O_energies_plot = np.array(O_energies_plot) / muB0NU  # NUJoule/(μΒ0)
+        X_energies_plot = np.array(X_energies_plot) / muB0NU  # NUJoule/(μΒ0)
 
         ax.plot(
             Pzeta_plotX,

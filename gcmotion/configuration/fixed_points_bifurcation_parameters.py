@@ -1,14 +1,11 @@
 from dataclasses import dataclass
 import numpy as np
 
-figsize = 13, 7  # Global window size
-dpi = 100  # Global dpi
-
 
 @dataclass()
 class FixedPointsConfig:
-    fp_thetalim: tuple = (-np.pi, np.pi)
-    fp_psilim: tuple = (0, 1.8)
+    thetalim: tuple = (-np.pi, np.pi)
+    psilim: tuple = (0, 1.8)
     fp_method: str = "fsolve"
     dist_tol: float = 1e-3
     fp_ic_scan_tol: float = 5 * 1e-8

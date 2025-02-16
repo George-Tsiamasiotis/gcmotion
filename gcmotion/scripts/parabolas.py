@@ -55,6 +55,7 @@ def calc_parabolas(
     Pzeta_density: int = 1000,
     calc_TPB: bool = False,
     TPB_density: int = 100,
+    **kwargs,
 ):
     r"""
 
@@ -97,6 +98,8 @@ def calc_parabolas(
     if not isinstance(profile.efield, Nofield):
         print("\n\nWARNING: Parabolas do not work with an electric field...\n\n")
 
+    # -------------------------------------------------------------------------------
+
     # Unpack magnitudes
     bfield = profile.bfield
     psip_wallNU = profile.psip_wallNU.m
@@ -121,14 +124,16 @@ def calc_parabolas(
 
     logger.info(f"Upacked parabolas bfield values with Bmin={BminNU},Bmax={BmaxNU},B0={B0NU}")
 
-    # Because Pzetas given in Pzetalim are already divided (normalized) by pasip_wall
+    # Because Pzetas given in Pzetalim are already divided (normalized) by psip_wall
     x = PzetasNU
 
     # Currents are poloidally symmetrical --> independent of theta. Calculate g.
-    _, _, g_psipwNU = bfield.bigNU(psip_wallNU, 0)
+    _, _, g_psipwNU = bfield.bigNU(psi_wallNU, 0)
     _, _, g0NU = bfield.bigNU(0, 0)
 
     logger.info(f"Upacked parabolas g values with g(psip_wall)={g_psipwNU}, g(0)={g0NU}")
+
+    # -------------------------------------------------------------------------------
 
     # Calculate the quantity y=E/(mu*B0) to be plotted on the y axis
     # as a function of the quantity x=Pzeta/psi_pwall for x axis
@@ -144,6 +149,8 @@ def calc_parabolas(
     v_R = [x[np.argmin(y_R)], y_R[np.argmin(y_R)]]
     v_L = [x[np.argmin(y_L)], y_L[np.argmin(y_L)]]
     v_MA = [x[np.argmin(y_MA)], y_MA[np.argmin(y_MA)]]
+
+    # -------------------------------------------------------------------------------
 
     # Calculate the  trapped-passing boundary
     TPB_O = np.array([])
@@ -166,6 +173,7 @@ def calc_parabolas(
             calc_energies=True,
             energy_units="NUJoule",
             which_COM="Pzeta",
+            **kwargs,
         )
 
         # We do not yet divide by B0muNU yet as the energies will be needed later in NUJoule
