@@ -21,3 +21,10 @@ class LoggerConfig:
 class SolverConfig:
     atol: float = 1e-9  # Scipy's default is 1e-6
     rtol: float = 1e-8  # Scipy's default is 1e-3
+
+
+@dataclass
+class ParabolasConfig:
+    Pzetalim: tuple = (-1.5, 1)
+    Pzeta_density: int = 1000
+    TPB_density: int = 100

@@ -114,7 +114,7 @@ def _base_fixed_points_plot(
     # Calculate fixed points
     _, fixed_points, initial_conditions = get_fixed_points(profile=profile, **kwargs)
     logger.info(
-        f"Calculated fixed points ['NUMagnetic_flux'] for fixed_points_plot with Pz={profile.PzetaNU}, mu={profile.muNU}"
+        f"Calculated fixed points ['NUMagnetic_flux'] for fixed_points_plot with Pz={profile.PzetaNU}, mu={profile.muNU} in {(time() - start):.1f}s"
     )
     print(f"\n FIXED POINTS RUN IN {(time() - start):.1f}s\n")
 
