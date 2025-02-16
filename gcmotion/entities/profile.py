@@ -261,7 +261,7 @@ class Profile:
         ----------
         psi : Quantity
             The particle's psi Quantity.
-        theta : float
+        theta : float | np.ndarray
             The particle's :math:`\theta` angle.
         units : str
             The returned Pzeta units.
@@ -287,7 +287,7 @@ class Profile:
         if potential:
             PhiNU = self.efield.PhiNU(psiNU, theta)
         else:
-            PhiNU = 0 * psi  # Keep psi's shape
+            PhiNU = np.zeros(psiNU.shape)  # Keep psi's shape
 
         PzetaNU = (
             (2 * gNU**2 / bNU**2) * (self.ENU.m - self.muNU.m * bNU - PhiNU)
@@ -362,7 +362,7 @@ class Profile:
         else:
             raise ValueError("Input must be a float or a Quantity")
 
-    def _rhosign(self, psi: np.ndarray):
+    def _rhosign(self, psi: np.ndarray) -> np.ndarray:
         r"""Calculates the sign of rho from a given psi[NU].
 
         Needed to classify an orbit as co- or counter-passing. Makes no sense
@@ -381,6 +381,38 @@ class Profile:
         psip = self.tokamak.qfactor.psipNU(psi)
         # UNSURE: no need for g since its positive
         return bool(np.all(self.PzetaNU.m + psip > 0))
+
+    def _findPzeta(
+        self,
+        psi: Quantity,
+        theta: float,
+        energy,
+        units: str,
+        potential: bool = True,
+    ):
+        # Do all operations in NU floats, and Quantify at the end.
+        psiNU = psi.to("NUMagnetic_flux")
+        psiNU = psiNU.magnitude
+        energyNU = energy.to("NUJoule")
+        energyNU = energy.magnitude
+
+        # Calculate currents. B not needed so theta value doesnt matter
+        bNU, iNU, gNU = self.bfield.bigNU(psiNU, theta)
+        psipNU = self.qfactor.psipNU(psiNU)
+        psipNU = self.qfactor.psipNU(psiNU)
+
+        if potential:
+            PhiNU = self.efield.PhiNU(psiNU, theta)
+        else:
+            PhiNU = np.zeros(psiNU.shape)  # Keep psi's shape
+
+        PzetaNU = (
+            (2 * gNU**2 / bNU**2) * (energyNU - self.muNU.m * bNU - PhiNU)
+        ) ** (1 / 2) - psipNU
+
+        # Quantify, convert to input units and return
+        PzetaNU = self.Q(PzetaNU, "NUCanonical_momentum")
+        return PzetaNU.to(units)
 
     def __repr__(self):
         string = Tokamak.__repr__(self)
