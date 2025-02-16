@@ -9,7 +9,7 @@ from gcmotion.utils.bif_values_setup import set_up_bif_plot_values
 from gcmotion.configuration.plot_parameters import ParabolasPlotConfig
 
 
-def _create_profiles_list(profile: Profile, Pzetalim: list | tuple, TPB_density: int):
+def _create_profiles_list(profile: Profile, x_TPB: list | tuple, TPB_density: int):
 
     tokamak = Tokamak(
         R=profile.R,
@@ -22,7 +22,7 @@ def _create_profiles_list(profile: Profile, Pzetalim: list | tuple, TPB_density:
     psip_wallNU = profile.psip_wallNU.m
 
     # Pzetalim is given in PzetaNU/psip_walNU so we need to multiply bu psip_wallNU
-    Pzetamin, Pzetamax = Pzetalim  # PzetaNU/psip_wallNU
+    Pzetamin, Pzetamax = min(x_TPB), max(x_TPB)  # PzetaNU/psip_wallNU
     Pzetamin *= psip_wallNU  # Pzeta in NUcanmom
     Pzetamax *= psip_wallNU  # Pzeta in NUcanmom
 
@@ -79,7 +79,7 @@ def _plot_parabolas_tpb(
         tilt_energies = False
 
         profiles = _create_profiles_list(
-            profile=profile, Pzetalim=x_TPB, TPB_density=config.TPB_density
+            profile=profile, x_TPB=x_TPB, TPB_density=config.TPB_density
         )
 
         # X O Energies bifurcation plot
@@ -105,26 +105,24 @@ def _plot_parabolas_tpb(
         B0NU = profile.bfield.B0.to("NUTesla").m
         muB0NU = muNU * B0NU
 
-        Pzeta_plotO = np.array(Pzeta_plotO) / psip_wallNU  # NUCanmom/ψpw
-        Pzeta_plotX = np.array(Pzeta_plotX) / psip_wallNU  # NUCanmom/ψpw
+        Pzeta_plotO = [O.m / psip_wallNU for O in Pzeta_plotO]  # NUCanmom/ψpw
+        Pzeta_plotX = [X.m / psip_wallNU for X in Pzeta_plotX]  # NUCanmom/ψpw
 
-        O_energies_plot = np.array(O_energies_plot) / muB0NU  # NUJoule/(μΒ0)
-        X_energies_plot = np.array(X_energies_plot) / muB0NU  # NUJoule/(μΒ0)
+        O_energies_plot = [O.m / muB0NU for O in O_energies_plot]  # NUJoule/(μΒ0)
+        X_energies_plot = [X.m / muB0NU for X in X_energies_plot]  # NUJoule/(μΒ0)
 
-        ax.plot(
+        ax.scatter(
             Pzeta_plotX,
             X_energies_plot,
-            linestyle=config.TPB_X_linestyle,
+            s=config.TPB_X_markersize,
             color=config.TPB_X_color,
-            linewidth=config.linewidth,
             label="X points",
         )
-        ax.plot(
+        ax.scatter(
             Pzeta_plotO,
             O_energies_plot,
-            linestyle=config.TPB_O_linestyle,
+            s=config.TPB_O_markersize,
             color=config.TPB_O_color,
-            linewidth=config.linewidth,
             label="O points",
         )
 

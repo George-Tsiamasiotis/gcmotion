@@ -11,10 +11,12 @@ from gcmotion.entities.profile import Profile
 from gcmotion.entities.tokamak import Tokamak
 from gcmotion.tokamak.efield import Nofield
 
+from gcmotion.configuration.scripts_configuration import ParabolasConfig
+
 from gcmotion.scripts.bifurcation import bifurcation
 
 
-def _create_profiles_list(profile: Profile, Pzetalim: list | tuple, TPB_density: int):
+def _create_profiles_list(profile: Profile, x_TPB: list | tuple, TPB_density: int):
 
     tokamak = Tokamak(
         R=profile.R,
@@ -26,8 +28,9 @@ def _create_profiles_list(profile: Profile, Pzetalim: list | tuple, TPB_density:
 
     psip_wallNU = profile.psip_wallNU.m
 
-    # Pzetalim is given in PzetaNU/psip_walNU so we need to multiply bu psip_wallNU
-    Pzetamin, Pzetamax = Pzetalim  # PzetaNU/psip_wallNU
+    # x_TPB is given in PzetaNU/psip_walNU so we need to multiply bu psip_wallNU
+    # and is the horizontal distance between the RW (or LW) and MA verticies
+    Pzetamin, Pzetamax = min(x_TPB), max(x_TPB)  # PzetaNU/psip_wallNU
     Pzetamin *= psip_wallNU  # Pzeta in NUcanmom
     Pzetamax *= psip_wallNU  # Pzeta in NUcanmom
 
@@ -49,12 +52,12 @@ def _create_profiles_list(profile: Profile, Pzetalim: list | tuple, TPB_density:
     return list(profiles)
 
 
-def calc_parabolas(
+def calc_parabolas_tpb(
     profile: Profile,
-    Pzetalim: list | tuple = [-1.5, 1],
-    Pzeta_density: int = 1000,
+    # Pzetalim: list | tuple = [-1.5, 1],
+    # Pzeta_density: int = 1000,
     calc_TPB: bool = False,
-    TPB_density: int = 100,
+    # TPB_density: int = 100,
     **kwargs,
 ):
     r"""
@@ -94,6 +97,11 @@ def calc_parabolas(
 
     """
 
+    # Unpack parameters
+    config = ParabolasConfig()
+    for key, value in kwargs.items():
+        setattr(config, key, value)
+
     # First of all check if there is an electric field
     if not isinstance(profile.efield, Nofield):
         print("\n\nWARNING: Parabolas do not work with an electric field...\n\n")
@@ -107,10 +115,10 @@ def calc_parabolas(
     muNU = profile.muNU.m
 
     # Unpack Pzeta limits
-    PzetaminNU, PzetamaxNU = Pzetalim
-    PzetasNU = np.linspace(PzetaminNU, PzetamaxNU, Pzeta_density)
+    PzetaminNU, PzetamaxNU = config.Pzetalim
+    PzetasNU = np.linspace(PzetaminNU, PzetamaxNU, config.Pzeta_density)
 
-    logger.info(f"Unpacked parabolas Pzetalim={Pzetalim}")
+    logger.info(f"Unpacked parabolas Pzetalim={config.Pzetalim}")
 
     # Get intermediate values
     try:
@@ -155,7 +163,7 @@ def calc_parabolas(
     # Calculate the  trapped-passing boundary
     TPB_O = np.array([])
     TPB_X = np.array([])
-    x_TPB = np.linspace(v_R[0], v_MA[0], Pzeta_density)
+    x_TPB = np.linspace(v_R[0], v_MA[0], config.Pzeta_density)
 
     if calc_TPB and not bfield.plain_name == "LAR":
         # If the equilibrium is not LAR we need to constrauct the energy bifurcation
@@ -164,7 +172,7 @@ def calc_parabolas(
         # Create profiles that will be passed into bifurcation. CAUTION: the Pzetas
         # in each profile are in NUcanmom and not divided by psip_wallNU
         profiles = _create_profiles_list(
-            profile=profile, Pzetalim=Pzetalim, TPB_density=TPB_density
+            profile=profile, x_TPB=x_TPB, TPB_density=config.TPB_density
         )
 
         # Energies are returned in NUJoule
@@ -182,7 +190,7 @@ def calc_parabolas(
         TPB_X = list(X_energies)
 
         logger.info(
-            f"Ran bifurcation for parabolas TPB for {TPB_density} profiles. Calculated energies in 'NUJoule'"
+            f"Ran bifurcation for parabolas TPB for {config.TPB_density} profiles. Calculated energies in 'NUJoule'"
         )
 
     else:

@@ -189,6 +189,8 @@ class ParabolasPlotConfig:
     TPB_O_color: str = "#1f77b4"
     TPB_X_linestyle: str = "solid"
     TPB_O_linestyle: str = "solid"
+    TPB_X_markersize: float = 2
+    TPB_O_markersize: float = 2
     # Dashed line keywords
     show_d_line: bool = True
     d_line_color: str = "black"

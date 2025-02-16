@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 from gcmotion.configuration.plot_parameters import ParabolasPlotConfig
 from gcmotion.entities.profile import Profile
-from gcmotion.scripts.parabolas import calc_parabolas
+from gcmotion.scripts.parabolas import calc_parabolas_tpb
 from gcmotion.plot._base._base_parabolas_tpb_plot import _plot_parabolas_tpb
 
 
@@ -16,7 +16,7 @@ def parabolas_diagram(profile: Profile, **kwargs):
     r"""
 
     This script draw the parabolas diagram along with the trapped passing boundary
-    (if asked) by plotting the values calculated in :py:func:`_calc_parabolas`.
+    (if asked) by plotting the values calculated in :py:func:`calc_parabolas_tpb`.
 
     Parameters
     ----------
@@ -66,12 +66,12 @@ def parabolas_diagram(profile: Profile, **kwargs):
     logger.info("Creating parabolas diagram figure.")
 
     # Calculate parabolas values
-    x, x_TPB, y_R, y_L, y_MA, TPB_O, TPB_X, v_R, v_L, v_MA = calc_parabolas(
-        Pzetalim=config.Pzetalim,
+    x, x_TPB, y_R, y_L, y_MA, TPB_O, TPB_X, v_R, v_L, v_MA = calc_parabolas_tpb(
+        # Pzetalim=config.Pzetalim,
         profile=profile,
-        Pzeta_density=config.Pzeta_density,
+        # Pzeta_density=config.Pzeta_density,
         calc_TPB=config.plot_TPB,
-        # **kwargs,
+        **kwargs,
     )
 
     logger.info(
