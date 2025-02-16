@@ -3,7 +3,7 @@ Draws fixed points plot. This method is called internally by ``profile_contour()
 as well.
 """
 
-from gcmotion.scripts.fixed_points import fixed_points as fp
+from gcmotion.scripts.fixed_points import fixed_points as get_fixed_points
 from gcmotion.entities.profile import Profile
 
 from gcmotion.utils.XO_points_classification import XO_points_classification as xoc
@@ -112,7 +112,7 @@ def _base_fixed_points_plot(
 
     start = time()
     # Calculate fixed points
-    _, fixed_points, initial_conditions = fp(profile=profile, **kwargs)
+    _, fixed_points, initial_conditions = get_fixed_points(profile=profile, **kwargs)
     logger.info(
         f"Calculated fixed points ['NUMagnetic_flux'] for fixed_points_plot with Pz={profile.PzetaNU}, mu={profile.muNU}"
     )

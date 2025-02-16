@@ -123,16 +123,16 @@ def parabolas_diagram(profile: Profile, ax=None, **kwargs):
         par_ax.plot(
             x_LAR,
             LAR_tpb_O,
-            linestyle="solid",
-            color=config.TPB_X_color,
+            linestyle=config.TPB_O_linestyle,
+            color=config.TPB_O_color,
             label="TPB_LAR_O",
             linewidth=config.linewidth,
         )
         par_ax.plot(
             x_LAR,
             LAR_tpb_X,
-            linestyle="solid",
-            color=config.TPB_O_color,
+            linestyle=config.TPB_X_linestyle,
+            color=config.TPB_X_color,
             label="TPB_LAR_X",
             linewidth=config.linewidth,
         )
@@ -157,7 +157,7 @@ def parabolas_diagram(profile: Profile, ax=None, **kwargs):
     )
     par_ax.set_ylim(config.enlim)
 
-    if config.legend:
+    if config.parabolas_legend:
         par_ax.legend()
 
     plt.show()

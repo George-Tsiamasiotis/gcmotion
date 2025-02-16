@@ -177,7 +177,7 @@ class ParabolasPlotConfig:
     ylabel_fontsize: float = 13
     ylabel_rotation: int = 0
     # Legend keywords
-    legend: bool = True
+    parabolas_legend: bool = True
     # Parabolas keywords
     enlim: tuple = (0, 3)
     Pzetalim: tuple = (-1, 1)  # result after division by psip_wall.m
@@ -186,6 +186,8 @@ class ParabolasPlotConfig:
     parabolas_color: str = "orange"
     TPB_X_color: str = "#E65100"
     TPB_O_color: str = "#1f77b4"
+    TPB_X_linestyle: str = "solid"
+    TPB_O_linestyle: str = "solid"
     # Dashed line keywords
     show_d_line: bool = True
     d_line_color: str = "black"

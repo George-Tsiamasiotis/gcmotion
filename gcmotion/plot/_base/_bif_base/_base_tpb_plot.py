@@ -95,14 +95,15 @@ def _plot_trapped_passing_boundary(
     for key, value in kwargs.items():
         setattr(config, key, value)
 
-    fig_kw = {
-        "figsize": config.figsize,
-        "dpi": config.dpi,
-        "layout": config.layout,
-        "facecolor": config.facecolor,
-    }
+    if ax is None:
+        fig_kw = {
+            "figsize": config.figsize,
+            "dpi": config.dpi,
+            "layout": config.layout,
+            "facecolor": config.facecolor,
+        }
 
-    fig, ax = plt.subplots(1, 1, **fig_kw)
+        fig, ax = plt.subplots(1, 1, **fig_kw)
 
     # If the selcted COM is mu we need to tilt the energies in the plot by subtracting
     # mu*B0 which is done in set_up_bif_plot_values if tilt_energies = True
