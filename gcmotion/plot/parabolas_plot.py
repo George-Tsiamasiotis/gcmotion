@@ -1,20 +1,24 @@
 """
-Simple script that draws parabolas diagram along with the trapped passing LAR boundary
+Simple script that draws parabolas diagram along with the trapped passing boundary
 if asked.
 """
+
+import numpy as np
+from collections import deque
 
 from gcmotion.utils.logger_setup import logger
 import matplotlib.pyplot as plt
 
 from gcmotion.configuration.plot_parameters import ParabolasPlotConfig
 from gcmotion.entities.profile import Profile
-from gcmotion.plot._base._base_calc_parabolas import _calc_parabolas
+from gcmotion.scripts.parabolas import calc_parabolas
+from gcmotion.plot._base._base_parabolas_tpb_plot import _plot_parabolas_tpb
 
 
-def parabolas_diagram(profile: Profile, ax=None, **kwargs):
+def parabolas_diagram(profile: Profile, **kwargs):
     r"""
 
-    This script draw the parabolas diagram along with the trapped passing LAR boundary
+    This script draw the parabolas diagram along with the trapped passing boundary
     (if asked) by plotting the values calculated in :py:func:`_calc_parabolas`.
 
     Parameters
@@ -22,8 +26,6 @@ def parabolas_diagram(profile: Profile, ax=None, **kwargs):
     profile : Profile
         Profile object that contains Tokamak information like bfield, mu,
         useful psi values.
-    ax : Axes, optional
-        Axes object upon which the plot is to be created. Defaults to None.
 
     Other Parameters
     ----------
@@ -38,8 +40,8 @@ def parabolas_diagram(profile: Profile, ax=None, **kwargs):
         The Pzeta limits within which the RW, LW, MA parabolas' values are to
         be calculated. CAUTION: the limits must be normalized to E/:math:`\mu B_0`.
         Defaults to (0,3).
-    LAR_TPB : bool, optional
-        Boolean that determines weather the LAR trapped-passing boundary is to
+    TPB : bool, optional
+        Boolean that determines weather the trapped-passing boundary is to
         be plotted. Defaults to ``False``.
 
     Notes
@@ -54,25 +56,24 @@ def parabolas_diagram(profile: Profile, ax=None, **kwargs):
     for key, value in kwargs.items():
         setattr(config, key, value)
 
-    # Create figure if ax is not given
-    if ax is None:
-        fig_kw = {
-            "figsize": config.figsize,
-            "dpi": config.dpi,
-            "layout": config.layout,
-            "facecolor": config.facecolor,
-        }
+    # Create figure
+    fig_kw = {
+        "figsize": config.figsize,
+        "dpi": config.dpi,
+        "layout": config.layout,
+        "facecolor": config.facecolor,
+    }
 
-        fig, par_ax = plt.subplots(1, 1, **fig_kw)
+    fig, par_ax = plt.subplots(1, 1, **fig_kw)
 
-        logger.info("Axes was not given for parabolas. Creating figure")
-    else:
-        par_ax = ax
-        logger.info("Using Axes given to parabolas diagram")
+    logger.info("Creating parabolas diagram figure.")
 
     # Calculate parabolas values
-    x, x_LAR, y_R, y_L, y_MA, LAR_tpb_O, LAR_tpb_X, v_R, v_L, v_MA = _calc_parabolas(
-        Pzetalim=config.Pzetalim, profile=profile, Pzeta_density=config.Pzeta_density
+    x, x_TPB, y_R, y_L, y_MA, TPB_O, TPB_X, v_R, v_L, v_MA = calc_parabolas(
+        Pzetalim=config.Pzetalim,
+        profile=profile,
+        Pzeta_density=config.Pzeta_density,
+        calc_TPB=config.plot_TPB,
     )
 
     logger.info(
@@ -118,28 +119,15 @@ def parabolas_diagram(profile: Profile, ax=None, **kwargs):
 
     logger.info("Plotted RW, LW, MA parabolas.")
 
-    # If asked and if LAR plot LAR trapped-passing boundary
-    if config.LAR_TPB and profile.bfield.plain_name == "LAR":
-        par_ax.plot(
-            x_LAR,
-            LAR_tpb_O,
-            linestyle=config.TPB_O_linestyle,
-            color=config.TPB_O_color,
-            label="TPB_LAR_O",
-            linewidth=config.linewidth,
+    # If asked plot trapped-passing boundary
+    if config.plot_TPB:
+        _plot_parabolas_tpb(
+            profile=profile, X_energies=TPB_X, O_energies=TPB_O, ax=par_ax, x_TPB=x_TPB, **kwargs
         )
-        par_ax.plot(
-            x_LAR,
-            LAR_tpb_X,
-            linestyle=config.TPB_X_linestyle,
-            color=config.TPB_X_color,
-            label="TPB_LAR_X",
-            linewidth=config.linewidth,
-        )
-        # In case the Pzeta limits are very close to zero
-        par_ax.set_xlim([1.1 * config.Pzetalim[0], 1.1 * abs(config.Pzetalim[1])])
 
-        logger.info("Plotted LAR trapped-passing boundary in parabolas diagram.")
+        logger.info(
+            f"Plotted {profile.bfield.plain_name} trapped-passing boundary in parabolas diagram."
+        )
 
     par_ax.set_xlabel(
         r"$\dfrac{P_\zeta}{\psi_{p_w}}$",
