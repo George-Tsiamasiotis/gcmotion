@@ -1,10 +1,10 @@
 import pint
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 
 from tqdm import tqdm
 from time import time
-from statistics import mean
 from collections import deque
 from matplotlib.patches import Patch
 from matplotlib.contour import QuadContourSet
@@ -18,7 +18,6 @@ from gcmotion.scripts.utils._contours import _ptheta_energy_contour
 
 ureg = pint.get_application_registry()
 Q = ureg.Quantity
-
 
 config = ContourFreqConfig()
 global_fig_kw = {
@@ -215,19 +214,36 @@ def _calculate_segment_frequencies(
 
     logger.info("==> Calculating frequencies...")
 
+    # OPTIM: Switch to a non GUI backend because we are creating a lot of
+    # contour plots. After the analysis is completed, we switch back to the
+    # previous one. About +10% speed.
+    default_backend = matplotlib.get_backend()
+    matplotlib.use("ps")
+
     logger.disable("gcmotion")
     start = time()
-    for seg in tqdm(
-        iterable=segments,
-        desc=f"{'Calculating frequencies':^25}",
-        unit=" freq",
-        ascii=config.tqdm_style,
-        colour=config.tqdm_color,
-        disable=not config.pbar,
+    for i, seg in enumerate(
+        tqdm(
+            iterable=segments,
+            desc=f"{'Calculating frequencies':^25}",
+            unit=" freq",
+            ascii=config.tqdm_style,
+            colour=config.tqdm_color,
+            disable=not config.pbar,
+        )
     ):
         _calculate_omega_theta(seg, profile, data)
         _calculate_omega_zeta()
         _calculate_qkinetic()
+
+        # Not closing the plots results in a memory leak, but closing them in
+        # every loop has a huge performance impact. >20 seems good.
+        if i % 40 == 0:
+            plt.clf()
+            plt.close()
+
+    # Revert to previous backend
+    matplotlib.use(default_backend)
 
     if not config.show_close_segments:
         # Do not show contours produced by frequency calculation
@@ -287,7 +303,7 @@ def _calculate_omega_theta(
         seg.calculate_Jtheta()
 
     # Same as calculating the derivative from both sides and taking the mean.
-    dE = upper_seg.E = lower_seg.E
+    dE = upper_seg.E - lower_seg.E
     dJtheta = upper_seg.Jtheta - lower_seg.Jtheta
 
     segment.omega_theta = dE / dJtheta
@@ -329,8 +345,11 @@ def _plot_segments(segments: list[ContourSegment]):
 
     collection = LineCollection(seg_vertices, colors=colors)
     ax.add_collection(collection)
-    ax.set_xlim([-2 * np.pi, 2 * np.pi])
+    ax.set_xlim([-np.pi, np.pi])
     ax.set_ylim(segments[1].ylim)
+    ax.set_title(r"Contour Segments")
+    ax.set_xlabel(r"$\theta [radians]$")
+    ax.set_ylabel(r"$P_\theta [NU]$")
 
     ax.legend(handles=[trapped, copassing, cupassing], loc="upper right")
     plt.show()
