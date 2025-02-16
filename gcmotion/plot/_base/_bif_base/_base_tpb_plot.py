@@ -74,11 +74,6 @@ def _plot_trapped_passing_boundary(
     which_COM : str
         String that indicates with respect to which constant of motion (COM) :math:`\mu`
         or :math:`P_{\zeta}` the energies of the fixed points are plotted.
-    config : BifurcationPlotConfig
-        Dataclass config with several plot parameters. For a full list of all
-        available optional parameters, see the dataclass BifurcationPlotConfig at
-        gcmotion/configuration/plot_parameters. The defaults values are set there,
-        and are overwritten if passed as arguements.
 
     Notes
     -----
