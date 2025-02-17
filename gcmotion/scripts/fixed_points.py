@@ -156,7 +156,7 @@ def _set_up_fixed_points(
     return bounds, initial_conditions, empty_fixed_points, known_theta_values
 
 
-def fixed_points(profile: Profile, **kwargs):
+def fixed_points(profile: Profile, **kwargs) -> tuple[list, list, list]:
     r"""
     Function that finds the fixed points of the GC Hamiltonian by numerically setting the
     time derivatives of the :math:`\theta` and :math:`\psi` variables equal to zero (numerical
@@ -212,10 +212,10 @@ def fixed_points(profile: Profile, **kwargs):
 
         Returns
         -------
-        num_of_dfp, distinct_fixed_points, initial_conditions : tuple
-        Tuple that contains the number of the distinct fixed points found, the distinct fixed points,
-        as well as the initial conditions used to locate these fixed points. :math:`\psi` is calculated in
-        "NUMagnetic_flux" units.
+        tuple
+            Tuple that contains the number of the distinct fixed points found, the distinct fixed points,
+            as well as the initial conditions used to locate these fixed points. :math:`\psi` is calculated in
+            "NUMagnetic_flux" units.
 
     """
     # Unpack Parameters
@@ -229,8 +229,7 @@ def fixed_points(profile: Profile, **kwargs):
         f"Converting psi_lim from {config.psilim} 'NUpsi_wall' units to 'NUMagnetic_flux units'"
     )
 
-    psi_lim = np.array(config.psilim) * profile.Q("NUpsi_wall")
-    psi_lim = psi_lim.to("NUmagnetic_flux").m
+    psi_lim = profile.Q(config.psilim, "NUpsi_wall").to("NUmagnetic_flux").m
 
     logger.info(f"Converted psi_lim from 'NUpsi_wall' units to {psi_lim} 'NUMagnetic_flux units'")
 

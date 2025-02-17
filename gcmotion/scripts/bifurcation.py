@@ -1,5 +1,5 @@
 r""" Function that calculates the fixed points, the number of fixed points, and their energies
-for multiple profiles , where each particle has a different :math:`P_{\zeta}`.
+for multiple profiles , where each profile has a different Pzeta or mu.
 """
 
 import numpy as np
@@ -15,7 +15,7 @@ from gcmotion.configuration.fixed_points_bifurcation_parameters import Bifurcati
 def bifurcation(profiles: list | deque, **kwargs):
     r"""
     Function that calculates all the fixed points of the GC Hamiltonian for multiple profiles
-    with different :math:`\P_{\zeta}`'s and returns all the information in lists. Most of its
+    with different :math:`P_{\zeta}`'s or :math:`\mu`'s and returns all the information in lists. Most of its
     arguments will be passed into :py:func:`fixed_points`.
 
         Parameters

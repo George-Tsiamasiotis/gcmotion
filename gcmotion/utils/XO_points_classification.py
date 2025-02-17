@@ -29,7 +29,7 @@ def _higher_order_second_derivative(
         dx : float
             Finite difference parameter (very small number) used for the calculation of the
             derivatives with respect to the x variable.
-        dxy : float
+        dy : float
             Finite difference parameter (very small number) used for the calculation of the
             derivatives with respect to the y variable.
         respect_to : str
@@ -71,33 +71,30 @@ def XO_points_classification(
     profile: Profile,
     delta: float = 1e-5,
     to_P_thetas: bool = False,
-):
+) -> tuple[list, list]:
     r"""
     Takes in an array with fixed points of the form [:math:`\theta`, :math:`\psi`] and
     , using the Hamiltonian's Hessian, it classifies them in X and O points, returning two
     deque lists for each case respectively.
 
-        Parameters
-        ----------
-        unclassified_fixed_points : np.ndarray
-            np.ndarray that contains point of the form [:math:`\theta_{fixed}`, :math:`\psi_{fixed}`].
-        profile : Profile
-            Profile object that contains Tokamak and Particle information.
-        delta : float, optional
-            Very small number used to calculate the second order derivatives, with
-            a finite difference method, needed for the Hessian. Deafults to 1e-5.
-        to_P_thetas : bool, optional
-            Boolean that determines weather :math:`\psi_{fixed}` will be turned into
-            :math:`P_{\theta,fixed}` in the resulting X,O Points lists. Defaults to ``False``.
+    Parameters
+    ----------
+    unclassified_fixed_points : np.ndarray
+        np.ndarray that contains point of the form [:math:`\theta_{fixed}`, :math:`\psi_{fixed}`].
+    profile : Profile
+        Profile object that contains Tokamak and Particle information.
+    delta : float, optional
+        Very small number used to calculate the second order derivatives, with
+        a finite difference method, needed for the Hessian. Deafults to 1e-5.
+    to_P_thetas : bool, optional
+        Boolean that determines weather :math:`\psi_{fixed}` will be turned into
+        :math:`P_{\theta,fixed}` in the resulting X,O Points lists. Defaults to ``False``.
 
-
-
-        Returns
-        -------
-
-        X_points, O_points : tuple
-            Tuple containing the two lists, X_points, O_points, of the now classified
-            fixed points.
+    Returns
+    -------
+    tuple
+        Tuple containing the two lists, X_points, O_points, of the now classified
+        fixed points.
 
 
     """

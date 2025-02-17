@@ -17,7 +17,7 @@ def fixed_point(
     profile: Profile,
     known_thetas: bool = False,
     known_theta_value: float = 0,
-):
+) -> tuple:
     r"""
     Function that finds a single fixed point of the GC Hamiltonian for a given profile
     (tokamak, particle information). It uses numerical solvers/methods "fsolve" or
@@ -48,11 +48,10 @@ def fixed_point(
 
         Returns
         -------
-        theta_solution, psi_solution : tuple
-
-        Fixed point (tuple) of the form (:math:`\theta`,:math:`\psi`) that essentially
-        represents a solution of the numercial solver. :math:`\psi` is calculated in
-        "NUMagnetic_flux" units.
+        tuple
+            Fixed point (tuple) of the form (:math:`\theta`,:math:`\psi`) that essentially
+            represents a solution of the numercial solver. :math:`\psi` is calculated in
+            "NUMagnetic_flux" units.
 
     """
 

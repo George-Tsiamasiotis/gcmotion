@@ -85,7 +85,7 @@ def system(
     bracket2 = par * b_der_theta + phi_der_theta
     D = g * q + i + rho * (g * i_der - i * g_der)
 
-    # Canonical Equations
+    # Time Derivatives
     theta_dot = (1 - rho * g_der) / D * rho * b**2 + q * g / D * bracket1
     psi_dot = -q * g / D * bracket2
 
