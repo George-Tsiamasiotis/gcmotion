@@ -1,352 +1,287 @@
 import pint
+import contourpy
 import numpy as np
-import matplotlib
 import matplotlib.pyplot as plt
 
-from tqdm import tqdm
 from time import time
+from tqdm import tqdm
 from collections import deque
+from contourpy import ContourGenerator
 from matplotlib.patches import Patch
-from matplotlib.contour import QuadContourSet
+from matplotlib.ticker import LogLocator
 from matplotlib.collections import LineCollection
 
 from gcmotion.utils.logger_setup import logger
 from gcmotion.entities.profile import Profile
 from gcmotion.configuration.scripts_configuration import ContourFreqConfig
-from gcmotion.scripts.utils.contour_segment import ContourSegment
-from gcmotion.scripts.utils._contours import _ptheta_energy_contour
+from gcmotion.scripts.utils.contour_lines import ContourPath
 
-ureg = pint.get_application_registry()
-Q = ureg.Quantity
-
-config = ContourFreqConfig()
+Q = pint.get_application_registry().Quantity
+tau = 2 * np.pi
+global_config = ContourFreqConfig()
 global_fig_kw = {
-    "figsize": config.figsize,
-    "dpi": config.dpi,
-    "layout": config.layout,
+    "figsize": global_config.figsize,
+    "dpi": global_config.dpi,
+    "layout": global_config.layout,
 }
 
 
-def frequency_analysis(profile: Profile, psilim: list, **kwargs):
+def frequency_analysis(profile: Profile, psilim=tuple, **kwargs) -> None:
 
     logger.info("==> Beginning Frequency Analysis...")
-    # Unpack it here and update it, since only this function is to be called
-    # externaly
+
+    # Unpack default params and replace with passed kwargs if given.
+    config = ContourFreqConfig()
     for key, value in kwargs.items():
         setattr(config, key, value)
 
-    # Create the Contour object, which also contains the grid and the ylim
-    # tuple
-    C = _ptheta_energy_contour(profile=profile, psilim=psilim, config=config)
+    # Create Contour Generator
+    C, energy_span, ylim = _create_contour(profile, psilim, config=config)
 
-    # Unpack Contour paths into ContourSegments and store them in a list.
-    segs = _unpack_and_return_paths(C=C, progress=config.pbar)
+    # Generate all the lines upon which we will calculate the frequencies
+    contour_paths = _generate_contour_paths(C, energy_span, ylim, config)
 
-    # Validate ContourSegments and discard invalid ones.
-    segs = _validate_and_return(segments=segs)
+    # Discard out of bounds / cutoff contours
+    contour_paths = _discard_invalid_paths(contour_paths)
 
-    # Prepare the segments to calculate their frequencies.
-    _prepare_segments(segments=segs, profile=profile)
+    # Classify, add base points and pick color
+    _prepare_paths(paths=contour_paths, profile=profile)
 
-    _plot_segments(segs)
+    # Calculate ωθ, ωζ and qkinetic
+    _calculate_frequencies(contour_paths, C, profile, config)
 
-    _calculate_segment_frequencies(segs, C.data, profile)
+    _plot_main_paths(contour_paths, config)
 
-    # WARN: this might be necessary. Sometimes, contours very close to the grid
-    # limits cannot find a valid segment close to them, and fail to calculate
-    # their omega.
-    segs = [seg for seg in segs if hasattr(seg, "omega_theta")]
-
-    _plot_omega_thetas(segments=segs)
-    # _plot_omega_zetas(segments=segs)
-    # _plot_qkinetic(segments=segs)
-
-    logger.info("Frequency analysis complete.")
-
-    return segs
+    _plot_omega_thetas(contour_paths)
 
 
-def _unpack_and_return_paths(
-    C: QuadContourSet, progress: bool = True
-) -> list[ContourSegment]:
-    r"""Iterates over C.get_paths(), unpacking each one and creating a
-    ContourSegment, assigning to it the correct energy. It also discards all
-    empty segments, which are unavoidably yielded from the gererator.
+def _create_contour(
+    profile: Profile, psilim: tuple, config
+) -> tuple[ContourGenerator, tuple, tuple]:
+    r"""Creates a ContourGenerator from contourpy, as well as a couple of
+    needed quantities."""
 
-    Returns
-    -------
-    list
-        A list containing *all* the extracted ContourSegments.
-
-    """
-
-    segments = deque()
-
-    # Iterate over allsegs and create ContourSegments
-    logger.info("==> Extracting ContourSegments")
+    logger.info("\tCreating Contour Generator...")
     start = time()
 
-    # HACK: C.allsegs does the exact same thing, though we can't surely
-    # assign the correct energy to each seg. However, this method also
-    # relies on the contour object return the Paths in rising energy
-    # levels, since C.levels is sorted.
+    thetalim = profile.Q((-tau, tau), "radians")
+    psilim = profile.Q(psilim, "psi_wall").to("NUMagnetic_flux")
+    psi_grid, theta_grid = np.meshgrid(
+        np.linspace(psilim[0], psilim[1], config.grid_density),
+        np.linspace(thetalim[0], thetalim[1], config.grid_density),
+    )
 
-    for E, composite_path in tqdm(
-        iterable=zip(C.levels, C.get_paths()),
-        total=len(C.allsegs),
-        desc=f"{"Creating ContourSegments":^25}",
-        unit=" segs",
+    energy_grid = profile.findEnergy(
+        psi=psi_grid,
+        theta=theta_grid.m,
+        units="NUJoule",
+        potential=config.potential,
+    )
+    ptheta_grid = profile.findPtheta(
+        psi=psi_grid,
+        units="NUCanonical_momentum",
+    )
+
+    C = contourpy.contour_generator(
+        x=theta_grid.m,
+        y=ptheta_grid.m,
+        z=energy_grid.m,
+        line_type="Separate",
+        fill_type="OuterCode",
+    )
+    energy_span = (energy_grid.min().m, energy_grid.max().m)
+    ylim = (ptheta_grid.m[0][0], ptheta_grid.m[0][-1])
+
+    dur = Q(time() - start, "seconds")
+    logger.info(f"\tTook {dur:.4g~#P}.")
+
+    return C, energy_span, ylim
+
+
+# ======================= ContourPath Instantiation =========================
+
+
+def _generate_contour_paths(
+    C: ContourGenerator, energy_span: tuple, ylim: tuple, config
+) -> list[ContourPath]:
+    r"""Extracts paths from the Contour Generator on different energy levels
+    and creates ContourPath objects."""
+
+    logger.info("\tGenerating Contour Paths...")
+    start = time()
+
+    locator = LogLocator(base=config.log_base, numticks=config.levels)
+    locator.MAXTICKS = 40000
+    energy_levels = locator.tick_values(*energy_span)
+
+    contour_paths = deque()
+
+    for energy in tqdm(
+        iterable=energy_levels,
+        desc=f"{'Generating ContourPaths':^25}",
+        unit=" paths",
         ascii=config.tqdm_style,
         colour=config.tqdm_color,
-        disable=not progress,
+        disable=not config.pbar,
     ):
-        segment_genenerator = composite_path._iter_connected_components()
+        lines = C.lines(level=energy)
+        for points_array in lines:
+            contour_paths.append(
+                ContourPath(
+                    E=energy,
+                    ylim=ylim,
+                    vertices=points_array,
+                )
+            )
 
-        for segment in segment_genenerator:
-            if segment.vertices.shape == (0, 2):  # Discard empty segments
-                continue
+    dur = Q(time() - start, "seconds")
+    logger.info(f"\tTook {dur:.4g~#P}.")
 
-            new_segment = ContourSegment(segment=segment, E=E, ylim=C.ylim)
-            segments.append(new_segment)
-    del C
-
-    number = len(segments)
-    duration = Q(time() - start, "seconds")
-    logger.info(f"\tUnpacked {number} segments. Took {duration:.4g~#P}.")
-
-    return segments
-
-
-def _unpack_and_return_paths_optim(
-    C: QuadContourSet, progress: bool = True
-) -> list[ContourSegment]:
-    r"""Same as _unpack_and_return_paths, but without the clutter. To be used
-    in _calculate_omega_theta(). Actually is ~10% faster!"""
-
-    for E, path in zip(C.levels, C.get_paths()):
-
-        for segment in path._iter_connected_components():
-            if segment.vertices.shape == (0, 2):  # Discard empty segments
-                continue
-
-            yield ContourSegment(segment=segment, E=E, ylim=C.ylim)
+    return contour_paths
 
 
-# ====================== ContourSegment Instantiation ========================
+def _discard_invalid_paths(
+    contour_paths: list[ContourPath],
+) -> list[ContourPath]:
+    r"""Validates and discards generated ContourPaths"""
+
+    logger.info("\tValidating ContourPaths...")
+
+    for path in contour_paths:
+        path.validate()
+
+    return [path for path in contour_paths if path.valid]
 
 
-def _validate_and_return(
-    segments: list[ContourSegment],
-) -> tuple[ContourSegment]:
-    r"""Makes every segment validate itself and returns the valid ones.
+def _prepare_paths(paths: list[ContourPath], profile: Profile) -> None:
+    r"""Classifies, adds base points in passing particles and picks the orbit
+    color."""
 
-    validate() checks if the segment is fully inbounds and doesn't get cutoff.
-
-    Returns
-    -------
-    tuple
-        A list containing all the valid ContourSegments
-
-    """
-    logger.info("==> Validating Segments...")
-
+    logger.info("\tClassifying Paths...")
     start = time()
-    for seg in segments:
-        seg.validate()
 
-    valid_segments = tuple(seg for seg in segments if seg.valid)
+    for path in paths:
+        path.classify(profile=profile)
+        path.close_segment()
+        path.pick_color()
 
-    duration = Q(time() - start, "seconds")
-    logger.info(
-        f"\tKept {len(valid_segments)}/{len(segments)} valid segments. "
-        f"Took {duration:.4g~#P}."
-    )
-
-    return valid_segments
-
-
-def _prepare_segments(
-    segments: list[ContourSegment],
-    profile: Profile = None,
-) -> list[ContourSegment]:
-    r"""Makes all ContourSegments classify themselves"""
-
-    logger.info("\tPreparing Segments...")
-
-    start = time()
-    for seg in segments:
-        seg.classify(profile)
-    classify_dur = Q(time() - start, "seconds")
-
-    start = time()
-    for seg in segments:
-        seg.close_segment()
-    close_segment_dur = Q(time() - start, "seconds")
-
-    start = time()
-    for seg in segments:
-        seg.calculate_Jtheta()
-    calculate_J_dur = Q(time() - start, "seconds")
-
-    start = time()
-    for seg in segments:
-        seg.pick_color()
-    color_picking_dur = Q(time() - start, "seconds")
-
-    total = classify_dur + close_segment_dur + calculate_J_dur
-    logger.info(
-        f"\tSegments classified and areas calculated. Took {total:.4g~#P}."
-    )
-    logger.info(f"\t\tClassification duration:  {classify_dur:.4g~#P}")
-    logger.info(f"\t\tSegment closure duration: {close_segment_dur:.4g~#P}")
-    logger.info(f"\t\tJ calculation duration:   {calculate_J_dur:.4g~#P}")
-    logger.info(f"\t\tColor picking duration:   {color_picking_dur:.4g~#P}")
-
-    return segments
+    dur = Q(time() - start, "seconds")
+    logger.info(f"\tTook {dur:.4g~#P}.")
 
 
 # ====================== Segment Frequency Calculation ========================
 
 
-def _calculate_segment_frequencies(
-    segments: list[ContourSegment], data: dict, profile: Profile
-):
+def _calculate_frequencies(
+    contour_paths: list, C: ContourGenerator, profile: Profile, config
+) -> None:
+    r"""Iterates over all main ContourPaths and calcluates ωθ, ωζ and qkin."""
 
-    logger.info("==> Calculating frequencies...")
-
-    # OPTIM: Switch to a non GUI backend because we are creating a lot of
-    # contour plots. After the analysis is completed, we switch back to the
-    # previous one. About +10% speed.
-    default_backend = matplotlib.get_backend()
-    matplotlib.use("ps")
+    logger.info("\tCalculating Frequencies...")
+    start = time()
 
     logger.disable("gcmotion")
-    start = time()
-    for i, seg in enumerate(
-        tqdm(
-            iterable=segments,
-            desc=f"{'Calculating frequencies':^25}",
-            unit=" freq",
-            ascii=config.tqdm_style,
-            colour=config.tqdm_color,
-            disable=not config.pbar,
-        )
+    for line in tqdm(
+        iterable=contour_paths,
+        desc=f"{'Calculating frequencies':^25}",
+        unit=" freq",
+        ascii=config.tqdm_style,
+        colour=config.tqdm_color,
+        disable=not config.pbar,
     ):
-        _calculate_omega_theta(seg, profile, data)
-        _calculate_omega_zeta()
-        _calculate_qkinetic()
-
-        # Not closing the plots results in a memory leak, but closing them in
-        # every loop has a huge performance impact. >20 seems good.
-        if i % 40 == 0:
-            plt.clf()
-            plt.close()
-
-    # Revert to previous backend
-    matplotlib.use(default_backend)
-
-    if not config.show_close_segments:
-        # Do not show contours produced by frequency calculation
-        plt.close()
+        _calculate_omega_theta(line, C, profile, config)
 
     logger.enable("gcmotion")
-    duration = Q(time() - start, "seconds")
-    logger.info(f"\tSegments' frequencies calculated. Took {duration:.4g~#P}.")
 
-    logger.enable("gcmotion")
+    dur = Q(time() - start, "seconds")
+    logger.info(f"\tTook {dur:.4g~#P}.")
 
 
 def _calculate_omega_theta(
-    segment: ContourSegment,
-    profile: Profile,
-    data: dict,
-    **kwargs,
-):
-    r"""Calculates the ωθ of a single ContourSegment, independently from all
-    the others."""
+    main_path: ContourPath, C: ContourGenerator, profile: Profile, config
+) -> None:
 
-    E = segment.E
-    Elower = E * (1 - config.energy_rtol)
+    ylim = main_path.ylim
+    E = main_path.E
     Eupper = E * (1 + config.energy_rtol)
+    Elower = E * (1 - config.energy_rtol)
 
-    # Create a contour
-    levels = (Elower, E, Eupper)
-    C = plt.contour(
-        "theta",
-        "Ptheta",
-        "Energy",
-        data=data,
-        levels=levels,
-        algorithm="serial",
-    )
-    C.ylim = segment.ylim
+    upper_lines = C.lines(level=Eupper)
+    lower_lines = C.lines(level=Elower)
 
-    segs = tuple(_unpack_and_return_paths_optim(C=C, progress=False))
+    upper_paths = deque()
+    for points_array in upper_lines:
+        upper_paths.append(
+            ContourPath(
+                E=None,
+                ylim=ylim,
+                vertices=points_array,
+            )
+        )
 
-    upper_segs = tuple(seg for seg in segs if seg.E > E)
-    lower_segs = tuple(seg for seg in segs if seg.E < E)
+    lower_paths = deque()
+    for points_array in lower_lines:
+        lower_paths.append(
+            ContourPath(
+                E=None,
+                ylim=ylim,
+                vertices=points_array,
+            )
+        )
+
+    upper_paths = _discard_invalid_paths(upper_paths)
+    lower_paths = _discard_invalid_paths(lower_paths)
+    _prepare_paths(upper_paths, profile)
+    _prepare_paths(lower_paths, profile)
 
     upper_distances = tuple(
-        segment.bbox_distance((seg.xmin, seg.ymin)) for seg in upper_segs
+        main_path.distance_from((path.xmin, path.ymin)) for path in upper_paths
     )
     lower_distances = tuple(
-        segment.bbox_distance((seg.xmin, seg.ymin)) for seg in lower_segs
+        main_path.distance_from((path.xmin, path.ymin)) for path in lower_paths
     )
 
-    # WARN: Might raise ValueError
-    upper_seg = upper_segs[np.argmin(upper_distances)]
-    lower_seg = lower_segs[np.argmin(lower_distances)]
+    try:
+        upper_path = upper_paths[np.argmin(upper_distances)]
+        lower_path = lower_paths[np.argmin(lower_distances)]
+    except ValueError:
+        return
 
-    for seg in (upper_seg, lower_seg):
-        seg.classify()
-        seg.close_segment()
-        seg.calculate_Jtheta()
+    dE = Eupper - Elower
 
-    # Same as calculating the derivative from both sides and taking the mean.
-    dE = upper_seg.E - lower_seg.E
-    dJtheta = upper_seg.Jtheta - lower_seg.Jtheta
+    upper_path.calculate_Jtheta()
+    lower_path.calculate_Jtheta()
+    dJtheta = upper_path.Jtheta - lower_path.Jtheta
 
-    segment.omega_theta = dE / dJtheta
-
-
-def _calculate_omega_zeta():
-    # TODO:
-    pass
-
-
-def _calculate_qkinetic():
-    # TODO:
-    pass
+    main_path.omega_theta = dE / dJtheta
 
 
 # ================================= Plots ===================================
 
 # Manual lengend entries patches
-trapped = Patch(color=config.trapped_color, label="Trapped")
-copassing = Patch(color=config.copassing_color, label="Co-passing")
-cupassing = Patch(color=config.cupassing_color, label="Counter-Passing")
+trapped = Patch(color=global_config.trapped_color, label="Trapped")
+copassing = Patch(color=global_config.copassing_color, label="Co-passing")
+cupassing = Patch(color=global_config.cupassing_color, label="Counter-Passing")
 
 
-def _plot_segments(segments: list[ContourSegment]):
+def _plot_main_paths(lines: list[ContourPath], config):
     r"""Plots all segments."""
 
-    if not config.show_segments:
+    if not config.plot_main_paths:
         return
-
-    logger.info("Plotting calculated segments...")
 
     fig = plt.figure(**global_fig_kw)
     ax = fig.add_subplot()
 
     # See LineCollection example
     # Unpacking and creating a LineCollection is MUCH faster.
-    seg_vertices = tuple((np.column_stack(seg.vertices.T) for seg in segments))
-    colors = tuple(seg.color for seg in segments)
+    seg_vertices = tuple((np.column_stack(line.vertices.T) for line in lines))
+    colors = tuple(line.color for line in lines)
 
     collection = LineCollection(seg_vertices, colors=colors)
     ax.add_collection(collection)
     ax.set_xlim([-np.pi, np.pi])
-    ax.set_ylim(segments[1].ylim)
+    ax.set_ylim(lines[1].ylim)
     ax.set_title(r"Contour Segments")
     ax.set_xlabel(r"$\theta [radians]$")
     ax.set_ylabel(r"$P_\theta [NU]$")
@@ -355,10 +290,8 @@ def _plot_segments(segments: list[ContourSegment]):
     plt.show()
 
 
-def _plot_omega_thetas(segments):
+def _plot_omega_thetas(lines: list[ContourPath]):
     r"""Plots all omegas."""
-
-    logger.info("Plotting omega thetas...")
 
     fig = plt.figure(**global_fig_kw)
     ax = fig.add_subplot()
@@ -366,60 +299,14 @@ def _plot_omega_thetas(segments):
 
     # See LineCollection example
     # Unpacking and creating a LineCollection is MUCH faster.
-    omegas = tuple(seg.omega_theta for seg in segments)
-    energies = tuple(seg.E for seg in segments)
-    colors = tuple(seg.color for seg in segments)
-    ax.scatter(energies, omegas, c=colors, s=config.scatter_size)
+    omegas = tuple(line.omega_theta for line in lines)
+    energies = tuple(line.E for line in lines)
+    colors = tuple(line.color for line in lines)
+    ax.scatter(energies, omegas, c=colors, s=global_config.scatter_size)
 
     ax.axhline(y=0, ls="--", lw=0.5, c="k")
     ax.set_xlabel("Energy [NU]")
     ax.set_ylabel(r"$\omega_\theta [\omega_0]$")
-
-    ax.legend(handles=[trapped, copassing, cupassing])
-
-    plt.show()
-
-
-def _plot_omega_zetas(segments):
-
-    logger.info("Plotting omega zetas...")
-
-    fig = plt.figure(**global_fig_kw)
-    ax = fig.add_subplot()
-    fig.suptitle(r"$\omega_\zeta - Energy$")
-
-    # See LineCollection example
-    # Unpacking and creating a LineCollection is MUCH faster.
-    omegas = tuple(seg.omega_zeta for seg in segments)
-    energies = tuple(seg.E for seg in segments)
-    colors = tuple(seg.color for seg in segments)
-    ax.scatter(energies, omegas, c=colors, s=config.scatter_size)
-
-    ax.set_xlabel("Energy [NU]")
-    ax.set_ylabel(r"$\omega_\zeta [\omega_0]$")
-
-    ax.legend(handles=[trapped, copassing, cupassing])
-
-    plt.show()
-
-
-def _plot_qkinetic(segments):
-
-    logger.info("Plotting qkinetic...")
-
-    fig = plt.figure(**global_fig_kw)
-    ax = fig.add_subplot()
-    fig.suptitle("qkinetic - Energy")
-
-    # See LineCollection example
-    # Unpacking and creating a LineCollection is MUCH faster.
-    qs = tuple(seg.qkinetic for seg in segments)
-    energies = tuple(seg.E for seg in segments)
-    colors = tuple(seg.color for seg in segments)
-    ax.scatter(energies, qs, c=colors, s=config.scatter_size)
-
-    ax.set_xlabel("Energy [NU]")
-    ax.set_ylabel(r"$q_{kin}$")
 
     ax.legend(handles=[trapped, copassing, cupassing])
 

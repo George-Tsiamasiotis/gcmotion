@@ -25,19 +25,15 @@ class SolverConfig:
 @dataclass
 class ContourFreqConfig:
     # Arguements
-    show_master_contour: bool = False
-    show_close_segments: bool = False
-    show_segments: bool = True
+    plot_main_paths: bool = True
     # Figures
     figsize: tuple = (13, 7)
     dpi = 100
     layout: str = "constrained"
     # Contour
-    levels: int = 10  # For demo
-    locator: str = "log"
+    levels: int = 200
     log_base: float = 1.0000001
     grid_density: int = 200
-    show_base_points: bool = False
     potential: bool = True
     # Segments
     is_inbounds_atol: float = 1e-7  # Must not be 0 when comparing with 0

@@ -37,7 +37,6 @@ from gcmotion.scripts import events
 
 # TEMP
 from gcmotion.scripts.frequency_analysis import frequency_analysis
-from gcmotion.scripts.utils.contour_segment import ContourSegment
 
 
 # main namespace
