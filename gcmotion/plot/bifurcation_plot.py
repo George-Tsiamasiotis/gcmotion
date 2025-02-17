@@ -1,6 +1,6 @@
 r"""
 Calculates and plots the bifurcation diagram of the fixed points for multiple profiles
-with different :math:`\mu`s or :math:`P_{\zeta}`s.
+with different Pzetas or mus.
 """
 
 import matplotlib.pyplot as plt
@@ -16,19 +16,6 @@ from gcmotion.scripts.bifurcation import bifurcation
 from gcmotion.entities.profile import Profile
 from collections import deque
 from gcmotion.configuration.plot_parameters import BifurcationPlotConfig
-
-
-def _setup_x_label(which_COM: str):
-
-    return r"${\mu}$" if which_COM == "mu" else r"$P_{\zeta}$"
-
-
-def _other_COM(profile: Profile, COM: str):
-
-    if COM == "mu":
-        return "PzetaNU", getattr(profile, "PzetaNU")
-    elif COM == "Pzeta":
-        return "muNU", getattr(profile, "muNU")
 
 
 def bifurcation_plot(profiles: list | deque, **kwargs):
@@ -109,19 +96,27 @@ def bifurcation_plot(profiles: list | deque, **kwargs):
 
     start = time()
     # CAUTION: The bifurcation function takes in psis_fixed but returns P_thetas_fixed
-    X_thetas, X_P_thetas, O_thetas, O_P_thetas, num_of_XP, num_of_OP, X_energies, O_energies = (
-        bifurcation(
-            profiles=profiles,
-            calc_energies=config.plot_energy_bif,
-            **kwargs,
-        )
+    bifurcation_output = bifurcation(
+        profiles=profiles,
+        calc_energies=config.plot_energy_bif,
+        **kwargs,
     )
 
     print(f"BIFURCATION RUN IN {(time() - start)/60:.1f} mins")
 
     logger.info(
-        f"Ran bifurcation script for bifurcation plot with N={len(profiles)} and for COM = {config.which_COM}"
+        f"Ran bifurcation script for bifurcation plot with N={len(profiles)} and for COM = {config.which_COM} in {(time() - start)/60:.1f} mins"
     )
+
+    # Unpack bifurcation output
+    X_thetas = bifurcation_output["X_thetas"]
+    X_P_thetas = bifurcation_output["X_P_thetas"]
+    O_thetas = bifurcation_output["O_thetas"]
+    O_P_thetas = bifurcation_output["O_P_thetas"]
+    num_of_XP = bifurcation_output["num_of_XP"]
+    num_of_OP = bifurcation_output["num_of_OP"]
+    X_energies = bifurcation_output["X_energies"]
+    O_energies = bifurcation_output["O_energies"]
 
     # Create figure
     fig_kw = {
@@ -205,3 +200,16 @@ def bifurcation_plot(profiles: list | deque, **kwargs):
 
     plt.ion()
     plt.show(block=True)
+
+
+def _setup_x_label(which_COM: str):
+
+    return r"${\mu}$" if which_COM == "mu" else r"$P_{\zeta}$"
+
+
+def _other_COM(profile: Profile, COM: str):
+
+    if COM == "mu":
+        return "PzetaNU", getattr(profile, "PzetaNU")
+    elif COM == "Pzeta":
+        return "muNU", getattr(profile, "muNU")

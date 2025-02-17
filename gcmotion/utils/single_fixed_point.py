@@ -17,7 +17,7 @@ def fixed_point(
     profile: Profile,
     known_thetas: bool = False,
     known_theta_value: float = 0,
-) -> tuple:
+) -> tuple[float, float]:
     r"""
     Function that finds a single fixed point of the GC Hamiltonian for a given profile
     (tokamak, particle information). It uses numerical solvers/methods "fsolve" or
@@ -43,8 +43,6 @@ def fixed_point(
         known_theta_value : float, optional
             Value of the LAR theta used. For this value the numerical solver will search for
             fixed :math:`\psi`. Defaults to 0.
-
-
 
         Returns
         -------
@@ -94,7 +92,7 @@ def fixed_point(
     elif method == "fsolve":
 
         result = fsolve(
-            fixed_point_system, x0=initial_condition, xtol=1e-10, maxfev=5_000, factor=0.1
+            fixed_point_system, x0=initial_condition, xtol=1e-10, maxfev=1_000, factor=0.1
         )
 
         psi_solution = result[0] if known_thetas else result[1]

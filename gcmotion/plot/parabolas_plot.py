@@ -66,13 +66,23 @@ def parabolas_diagram(profile: Profile, **kwargs):
     logger.info("Creating parabolas diagram figure.")
 
     # Calculate parabolas values
-    x, x_TPB, y_R, y_L, y_MA, TPB_O, TPB_X, v_R, v_L, v_MA = calc_parabolas_tpb(
-        # Pzetalim=config.Pzetalim,
+    parabolas_output = calc_parabolas_tpb(
         profile=profile,
-        # Pzeta_density=config.Pzeta_density,
         calc_TPB=config.plot_TPB,
         **kwargs,
     )
+
+    # Unpack parabolas output
+    x = parabolas_output["x"]
+    x_TPB = parabolas_output["x_TPB"]
+    y_R = parabolas_output["y_R"]
+    y_L = parabolas_output["y_L"]
+    y_MA = parabolas_output["y_MA"]
+    TPB_O = parabolas_output["TPB_O"]
+    TPB_X = parabolas_output["TPB_X"]
+    v_R = parabolas_output["v_R"]
+    v_L = parabolas_output["v_L"]
+    v_MA = parabolas_output["v_MA"]
 
     logger.info(
         f"Successfully calculated {y_L.shape[0]} parabolas values with vertices RW: {v_R}, LW: {v_L}, MA: {v_MA}"

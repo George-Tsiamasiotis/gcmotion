@@ -8,10 +8,11 @@ import numpy as np
 from gcmotion.entities.profile import Profile
 
 
-def points_psi_to_P_theta(points: np.ndarray | list | deque, profile: Profile):
+def points_psi_to_P_theta(points: np.ndarray | list | deque, profile: Profile) -> list:
     r"""
-    Takes in points list/array/deque of the form [:math:`\theta`, :math:`\psi`] returns [:math:`\theta`, :math:`\P_{theta}`]
-    after calculating the :math:`P_{theta}` corresponding to each :math:`\psi`
+    Takes in points list/array/deque of the form [:math:`\theta`, :math:`\psi`] returns
+    [:math:`\theta`, :math:`\P_{theta}`] after calculating the :math:`P_{theta}`
+    corresponding to each :math:`\psi`.
 
         Parameters
         ----------
@@ -22,8 +23,7 @@ def points_psi_to_P_theta(points: np.ndarray | list | deque, profile: Profile):
 
         Returns
         -------
-
-        new_points : np.ndarray, list, deque
+        list
             List that contains points of the form [:math:`\theta`, :math:`P_{theta}`].
 
 

@@ -9,7 +9,7 @@ from gcmotion.entities.profile import Profile
 # System of equations to be solved
 def system(
     theta: float, psi: float, profile: Profile, method: str, psi_dot_scaling_factor: float = 70
-):
+) -> float | list:
     r"""
     Function that calculates the time derivatives of the :math:`\theta` and :math:`\psi`
     variables, based on White's equations. It will be used in the :py:func:`single_fixed_point`

@@ -12,7 +12,7 @@ def set_up_bif_plot_values(
     which_COM: str,
     tilt_energies: bool = False,
     input_energy_units: str = "NUJoule",
-):
+) -> tuple[list, list]:
     r"""
     Simple function that sets up the values of the desired quantity in a bifurcation plot.
     Due to bifurcations an two or more y values may correspond to asingle x value.

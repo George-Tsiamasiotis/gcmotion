@@ -9,41 +9,6 @@ from gcmotion.utils.bif_values_setup import set_up_bif_plot_values
 from gcmotion.configuration.plot_parameters import ParabolasPlotConfig
 
 
-def _create_profiles_list(profile: Profile, x_TPB: list | tuple, TPB_density: int):
-
-    tokamak = Tokamak(
-        R=profile.R,
-        a=profile.a,
-        qfactor=profile.qfactor,
-        bfield=profile.bfield,
-        efield=profile.efield,
-    )
-
-    psip_wallNU = profile.psip_wallNU.m
-
-    # Pzetalim is given in PzetaNU/psip_walNU so we need to multiply bu psip_wallNU
-    Pzetamin, Pzetamax = min(x_TPB), max(x_TPB)  # PzetaNU/psip_wallNU
-    Pzetamin *= psip_wallNU  # Pzeta in NUcanmom
-    Pzetamax *= psip_wallNU  # Pzeta in NUcanmom
-
-    PzetasNU = np.linspace(Pzetamin, Pzetamax, TPB_density)
-
-    profiles = deque([])
-
-    for PzetaNU in PzetasNU:
-
-        current_profile = Profile(
-            tokamak=tokamak,
-            species=profile.species,
-            mu=profile.muNU,
-            Pzeta=profile.Q(PzetaNU, "NUCanonical_momentum"),
-        )
-
-        profiles.append(current_profile)
-
-    return list(profiles)
-
-
 def _plot_parabolas_tpb(
     profile: list,
     X_energies: list | deque,
@@ -147,3 +112,41 @@ def _plot_parabolas_tpb(
 
     # In case the Pzeta limits are very close to zero
     ax.set_xlim([1.1 * config.Pzetalim[0], 1.1 * abs(config.Pzetalim[1])])
+
+
+def _create_profiles_list(profile: Profile, x_TPB: list | tuple, TPB_density: int) -> list:
+    r"""
+    Simple function that takes in a profile object and creates a list of profiles with
+    different Pzeta values, but all other attributes remain the same.
+    """
+    tokamak = Tokamak(
+        R=profile.R,
+        a=profile.a,
+        qfactor=profile.qfactor,
+        bfield=profile.bfield,
+        efield=profile.efield,
+    )
+
+    psip_wallNU = profile.psip_wallNU.m
+
+    # Pzetalim is given in PzetaNU/psip_walNU so we need to multiply bu psip_wallNU
+    Pzetamin, Pzetamax = min(x_TPB), max(x_TPB)  # PzetaNU/psip_wallNU
+    Pzetamin *= psip_wallNU  # Pzeta in NUcanmom
+    Pzetamax *= psip_wallNU  # Pzeta in NUcanmom
+
+    PzetasNU = np.linspace(Pzetamin, Pzetamax, TPB_density)
+
+    profiles = deque([])
+
+    for PzetaNU in PzetasNU:
+
+        current_profile = Profile(
+            tokamak=tokamak,
+            species=profile.species,
+            mu=profile.muNU,
+            Pzeta=profile.Q(PzetaNU, "NUCanonical_momentum"),
+        )
+
+        profiles.append(current_profile)
+
+    return list(profiles)

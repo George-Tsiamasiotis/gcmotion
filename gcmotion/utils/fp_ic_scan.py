@@ -53,7 +53,7 @@ def fp_ic_scan(
     psi_lim: list = [0.01, 1.8],
     tol: float = 1e-8,
     psi_dot_scaling_factor: float = 70,
-):
+) -> list:
     r"""
     Function that finds fixed points candidates to used as initial conditions for the
     numerical solver in :py:func:`single_fixed_point`, by scanning a :math:`\theta`, :math:`\psi`
@@ -92,9 +92,9 @@ def fp_ic_scan(
 
         Returns
         -------
-        fixed_point_candidates : list
-        List of all the fixed points candidates fould after the 2D grid scan. They are to be
-        passed in the numerical solver as initial conditions to find all the true fixed points.
+        list
+            List of all the fixed points candidates fould after the 2D grid scan. They are to be
+            passed in the numerical solver as initial conditions to find all the true fixed points.
 
     """
 

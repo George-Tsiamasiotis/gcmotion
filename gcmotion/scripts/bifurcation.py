@@ -12,11 +12,11 @@ from gcmotion.utils.points_psi_to_P_theta import points_psi_to_P_theta
 from gcmotion.configuration.fixed_points_bifurcation_parameters import BifurcationConfig
 
 
-def bifurcation(profiles: list | deque, **kwargs):
+def bifurcation(profiles: list | deque, **kwargs) -> dict:
     r"""
     Function that calculates all the fixed points of the GC Hamiltonian for multiple profiles
-    with different :math:`P_{\zeta}`'s or :math:`\mu`'s and returns all the information in lists. Most of its
-    arguments will be passed into :py:func:`fixed_points`.
+    with different :math:`P_{\zeta}`'s or :math:`\mu`'s and returns all the information in lists.
+    Most of its arguments will be passed into :py:func:`fixed_points`.
 
         Parameters
         ----------
@@ -80,13 +80,12 @@ def bifurcation(profiles: list | deque, **kwargs):
             Determines with regard to which COM (:math:`\mu` or :math:`P_{zeta}`) will the bifurcation
             analysis take place.
 
-    Returns
-    -------
-
-    thetas_fixed, P_thetas_fixed, num_of_fp : tuple
-        Tuple where each element is a list containing the lists of all the :math:`theta`'s
-        fixed, all the :math:`P_{theta}`'s fixed and the number of fixed points found for
-        each :math:`P_{\zeta}`.
+        Returns
+        -------
+        dict
+            Dict where each value is a list containing the lists of all the :math:`theta`'s
+            fixed, all the :math:`P_{theta}`'s fixed and the number of fixed points found for
+            each :math:`P_{\zeta}`.
     """
 
     # Unpack parameters
@@ -108,20 +107,20 @@ def bifurcation(profiles: list | deque, **kwargs):
         print("\n\n'which_COM' argumet must either be 'mu' or 'Pzeta'.\n\n")
         return
 
-    num_of_XP = deque([])
-    num_of_OP = deque([])
+    num_of_XP = deque()
+    num_of_OP = deque()
 
-    X_points = deque([])
-    O_points = deque([])
+    X_points = deque()
+    O_points = deque()
 
-    X_thetas = deque([])
-    X_P_thetas = deque([])
+    X_thetas = deque()
+    X_P_thetas = deque()
 
-    O_thetas = deque([])
-    O_P_thetas = deque([])
+    O_thetas = deque()
+    O_P_thetas = deque()
 
-    O_energies = deque([])
-    X_energies = deque([])
+    O_energies = deque()
+    X_energies = deque()
 
     N = len(profiles)
     selected_COMNU_str = config.which_COM + "NU"
@@ -222,13 +221,13 @@ def bifurcation(profiles: list | deque, **kwargs):
         O_thetas.append(current_O_thetas)
         O_P_thetas.append(current_O_P_thetas)
 
-    return (
-        X_thetas,
-        X_P_thetas,
-        O_thetas,
-        O_P_thetas,
-        num_of_XP,
-        num_of_OP,
-        X_energies,
-        O_energies,
-    )
+    return {
+        "X_thetas": X_thetas,
+        "X_P_thetas": X_P_thetas,
+        "O_thetas": O_thetas,
+        "O_P_thetas": O_P_thetas,
+        "num_of_XP": num_of_XP,
+        "num_of_OP": num_of_OP,
+        "X_energies": X_energies,
+        "O_energies": O_energies,
+    }

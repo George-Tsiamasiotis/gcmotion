@@ -18,144 +18,6 @@ from gcmotion.configuration.fixed_points_bifurcation_parameters import FixedPoin
 type Quantity = pint.UnitRegistry.Quantity
 
 
-def _distinctify(points: np.ndarray | list | deque, tol: float):
-    r"""
-    Simple function that determines which elements [,] of a list of lists of len 2 [[,],[,],[,]...]
-    can be considered distinct from one another. In this project's context, it is used to
-    determine which points [x,y] can be considered distinct.
-
-        Parameters
-        ----------
-        points : np.ndarray | list | deque
-            Iterable (np.ndarray, list, deque) that contains sublists that are to be examined for uniquness.
-        tol : list
-            If two sublists have both elements that are less than tol (tolerance) apart, they
-            are considered idenical.
-
-        Returns
-        -------
-        List that contains only the distinct sublists/points.
-
-
-    """
-
-    if isinstance(points, deque):
-        points = np.array(points)
-
-    def are_considered_equal(sublist1, sublist2, tol=tol):
-        return abs(sublist1[0] - sublist2[0]) <= tol and abs(sublist1[1] - sublist2[1]) <= tol
-
-    distinct_points = np.empty((points.shape[0], points.shape[1]))
-    distinct_points[:] = np.nan
-
-    idx = 0
-
-    for point in points:
-
-        is_unique = True
-        for distinct in distinct_points:
-            if are_considered_equal(distinct, point):
-                is_unique = False
-                break
-
-        if is_unique:
-            distinct_points[idx] = point
-            idx += 1
-
-    distinct_points = distinct_points[~np.isnan(distinct_points).any(axis=1)]
-
-    return distinct_points
-
-
-def _set_up_fixed_points(
-    profile: Profile,
-    method: str,
-    thetalim: list,
-    psilim: list,
-    fp_ic_scan_tol: float,
-    ic_theta_grid_density: int,
-    ic_psi_grid_density: int,
-    ic_scaling_factor: int,
-    random_init_cond: bool = False,
-    LAR_thetas: bool = False,
-):
-    """
-    Function that sets up some parameters of the fixed points' system, numerical solvers,
-    initial conditions.
-    """
-
-    # CAUTION: Here psi lim has already been denormalized from psi_wall and converted to
-    # NUMagnetic_flux. This happened in fixed_points()
-    psi_min = psilim[0]
-    psi_max = psilim[1]
-
-    theta_min = thetalim[0]
-    theta_max = thetalim[1]
-
-    known_theta_values = []
-
-    if LAR_thetas and not random_init_cond:
-
-        bounds = [(0.99 * psi_min, 1.01 * psi_max)]
-
-        initial_conditions = np.linspace(psi_min, psi_max, ic_psi_grid_density)
-        known_theta_values = np.linspace(0, np.pi, 2)
-
-        empty_fixed_points = np.empty((len(known_theta_values) * len(initial_conditions), 2))
-        empty_fixed_points[:] = np.nan
-
-    elif random_init_cond and not LAR_thetas:
-
-        bounds = [(theta_min, theta_max), (0.99 * psi_min, 1.01 * psi_max)]
-
-        theta_ic = np.linspace(theta_min, theta_max, ic_theta_grid_density)
-        psi_ic = np.linspace(psi_min, psi_max, ic_psi_grid_density)
-
-        initial_conditions = [
-            [theta_init, psi_init] for theta_init, psi_init in product(theta_ic, psi_ic)
-        ]
-
-        empty_fixed_points = np.empty((len(initial_conditions), len(initial_conditions[0])))
-        empty_fixed_points[:] = np.nan
-
-    elif not LAR_thetas and not random_init_cond:
-
-        bounds = [(theta_min, theta_max), (0.99 * psi_min, 1.01 * psi_max)]
-
-        initial_conditions = ic_scanner(
-            profile=profile,
-            method=method,
-            theta_grid_density=ic_theta_grid_density,
-            psi_grid_density=ic_psi_grid_density,
-            psi_lim=psilim,
-            theta_lim=thetalim,
-            tol=fp_ic_scan_tol,
-            psi_dot_scaling_factor=ic_scaling_factor,
-        )
-
-        # Make sure there are initial conditions. If not, use randoom
-        if not initial_conditions:
-            logger.info(f"No initial conditions were found from fp_ic_scan")
-
-            print("\n\nDID NOT FIND INITIAL CONDITIONS. USING RANDOM...\n\n")
-
-            theta_ic = np.linspace(theta_min, theta_max, 3)
-            psi_ic = np.linspace(psi_min, psi_max, 70)
-
-            initial_conditions = [
-                [theta_init, psi_init] for theta_init, psi_init in product(theta_ic, psi_ic)
-            ]
-
-        empty_fixed_points = np.empty((len(initial_conditions), len(initial_conditions[0])))
-        empty_fixed_points[:] = np.nan
-
-    elif LAR_thetas and random_init_cond:
-        print("LAR_thetas and random_init_cond can not be true at the same time.")
-        return
-
-    return bounds, initial_conditions, empty_fixed_points, known_theta_values
-
-
 def fixed_points(profile: Profile, **kwargs) -> tuple[list, list, list]:
     r"""
     Function that finds the fixed points of the GC Hamiltonian by numerically setting the
@@ -266,7 +128,7 @@ def fixed_points(profile: Profile, **kwargs) -> tuple[list, list, list]:
                 profile=profile,
                 known_thetas=config.fp_LAR_thetas,
             )
-            fixed_points[idx] = [float(theta_fix), float(psi_fix)]
+            fixed_points[idx] = (float(theta_fix), float(psi_fix))
             idx += 1
 
     else:
@@ -281,7 +143,7 @@ def fixed_points(profile: Profile, **kwargs) -> tuple[list, list, list]:
                     known_theta_value=known_theta_value,
                 )
 
-                fixed_points[idx] = [float(theta_fix), float(psi_fix)]
+                fixed_points[idx] = (float(theta_fix), float(psi_fix))
                 idx += 1
 
     logger.info(
@@ -311,3 +173,141 @@ def fixed_points(profile: Profile, **kwargs) -> tuple[list, list, list]:
         print(f"Number of Distinct Fixed Points: {distinct_fixed_points.shape[0]}\n")
 
     return num_of_dfp, distinct_fixed_points, initial_conditions
+
+
+def _distinctify(points: np.ndarray | list | deque, tol: float):
+    r"""
+    Simple function that determines which elements [,] of a list of lists of len 2 [[,],[,],[,]...]
+    can be considered distinct from one another. In this project's context, it is used to
+    determine which points [x,y] can be considered distinct.
+
+        Parameters
+        ----------
+        points : np.ndarray | list | deque
+            Iterable (np.ndarray, list, deque) that contains sublists that are to be examined for uniquness.
+        tol : list
+            If two sublists have both elements that are less than tol (tolerance) apart, they
+            are considered idenical.
+
+        Returns
+        -------
+        List that contains only the distinct sublists/points.
+
+
+    """
+
+    if isinstance(points, deque):
+        points = np.array(points)
+
+    def are_considered_equal(sublist1, sublist2, tol=tol):
+        return abs(sublist1[0] - sublist2[0]) <= tol and abs(sublist1[1] - sublist2[1]) <= tol
+
+    distinct_points = np.empty((points.shape[0], points.shape[1]))
+    distinct_points[:] = np.nan
+
+    idx = 0
+
+    for point in points:
+
+        is_unique = True
+        for distinct in distinct_points:
+            if are_considered_equal(distinct, point):
+                is_unique = False
+                break
+
+        if is_unique:
+            distinct_points[idx] = point
+            idx += 1
+
+    distinct_points = distinct_points[~np.isnan(distinct_points).any(axis=1)]
+
+    return distinct_points
+
+
+def _set_up_fixed_points(
+    profile: Profile,
+    method: str,
+    thetalim: list,
+    psilim: list,
+    fp_ic_scan_tol: float,
+    ic_theta_grid_density: int,
+    ic_psi_grid_density: int,
+    ic_scaling_factor: int,
+    random_init_cond: bool = False,
+    LAR_thetas: bool = False,
+) -> tuple:
+    """
+    Function that sets up some parameters of the fixed points' system, numerical solvers,
+    initial conditions.
+    """
+
+    # CAUTION: Here psi lim has already been denormalized from psi_wall and converted to
+    # NUMagnetic_flux. This happened in fixed_points()
+    psi_min = psilim[0]
+    psi_max = psilim[1]
+
+    theta_min = thetalim[0]
+    theta_max = thetalim[1]
+
+    known_theta_values = []
+
+    if LAR_thetas and not random_init_cond:
+
+        bounds = [(0.99 * psi_min, 1.01 * psi_max)]
+
+        initial_conditions = np.linspace(psi_min, psi_max, ic_psi_grid_density)
+        known_theta_values = np.linspace(0, np.pi, 2)
+
+        empty_fixed_points = np.empty((len(known_theta_values) * len(initial_conditions), 2))
+        empty_fixed_points[:] = np.nan
+
+    elif random_init_cond and not LAR_thetas:
+
+        bounds = [(theta_min, theta_max), (0.99 * psi_min, 1.01 * psi_max)]
+
+        theta_ic = np.linspace(theta_min, theta_max, ic_theta_grid_density)
+        psi_ic = np.linspace(psi_min, psi_max, ic_psi_grid_density)
+
+        initial_conditions = [
+            [theta_init, psi_init] for theta_init, psi_init in product(theta_ic, psi_ic)
+        ]
+
+        empty_fixed_points = np.empty((len(initial_conditions), len(initial_conditions[0])))
+        empty_fixed_points[:] = np.nan
+
+    elif not LAR_thetas and not random_init_cond:
+
+        bounds = [(theta_min, theta_max), (0.99 * psi_min, 1.01 * psi_max)]
+
+        initial_conditions = ic_scanner(
+            profile=profile,
+            method=method,
+            theta_grid_density=ic_theta_grid_density,
+            psi_grid_density=ic_psi_grid_density,
+            psi_lim=psilim,
+            theta_lim=thetalim,
+            tol=fp_ic_scan_tol,
+            psi_dot_scaling_factor=ic_scaling_factor,
+        )
+
+        # Make sure there are initial conditions. If not, use randoom
+        if not initial_conditions:
+            logger.info(f"No initial conditions were found from fp_ic_scan")
+
+            print("\n\nDID NOT FIND INITIAL CONDITIONS. USING RANDOM...\n\n")
+
+            theta_ic = np.linspace(theta_min, theta_max, 3)
+            psi_ic = np.linspace(psi_min, psi_max, 70)
+
+            initial_conditions = [
+                [theta_init, psi_init] for theta_init, psi_init in product(theta_ic, psi_ic)
+            ]
+
+        empty_fixed_points = np.empty((len(initial_conditions), len(initial_conditions[0])))
+        empty_fixed_points[:] = np.nan
+
+    elif LAR_thetas and random_init_cond:
+        print("LAR_thetas and random_init_cond can not be true at the same time.")
+        return
+
+    return bounds, initial_conditions, empty_fixed_points, known_theta_values
