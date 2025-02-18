@@ -36,7 +36,9 @@ from gcmotion.entities.particle import Particle
 from gcmotion.scripts import events
 
 # TEMP
-from gcmotion.scripts.frequency_analysis import frequency_analysis
+from gcmotion.scripts.frequency_analysis.frequency_analysis import (
+    frequency_analysis,
+)
 
 
 # main namespace

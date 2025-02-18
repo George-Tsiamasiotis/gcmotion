@@ -44,6 +44,7 @@ class ContourFreqConfig:
     scatter_size: float = 4
     fullshow: bool = False
     energy_rtol: float = 1e-5
+    pzeta_rtol: float = 1e-3
     rho_sample_size: int = 10
     omega_zeta_sample_size: int = 40
     check_omega_attr: bool = True
