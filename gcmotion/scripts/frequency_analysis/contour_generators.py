@@ -16,6 +16,7 @@ Q = pint.get_application_registry().Quantity
 def _create_contours(
     profile: Profile, psilim: tuple, config: ContourFreqConfig
 ) -> dict:
+    r"""Creates the 3 Contour Generators needed for the analysis."""
 
     contours: dict = _create_main_contour(profile, psilim, config)
     contours |= _create_dpzeta_contours(profile, psilim, config)
@@ -27,7 +28,10 @@ def _create_main_contour(
     profile: Profile, psilim: tuple, config: ContourFreqConfig
 ) -> dict:
     r"""Creates a ContourGenerator from contourpy, as well as a couple of
-    needed quantities."""
+    needed quantities.
+
+    The contour uses the main Profile's mu and Pzeta.
+    """
 
     logger.info("\tCreating Contour Generator...")
     start = time()
@@ -76,12 +80,21 @@ def _create_main_contour(
 def _create_dpzeta_contours(
     profile: Profile, psilim: tuple, config: ContourFreqConfig
 ) -> dict:
+    r"""Creates 2 'adjacent' Profiles by changing slightly the Pzeta constant
+    of motion.
+
+    Returns
+    -------
+    dict
+        A dict containing the Contour Generators and some needed metadata.
+
+    """
 
     # Copy them, otherwise they point to the same instance
     lower_profile = deepcopy(profile)
     upper_profile = deepcopy(profile)
 
-    # Update Pzetas
+    # Update Pzetas (remember that they are properties)
     lower_profile.PzetaNU = lower_profile.PzetaNU * (1 - config.pzeta_rtol)
     upper_profile.PzetaNU = upper_profile.PzetaNU * (1 + config.pzeta_rtol)
 

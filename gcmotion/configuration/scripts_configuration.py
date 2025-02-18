@@ -40,7 +40,7 @@ class ContourFreqConfig:
     trapped_color: str = "red"
     copassing_color: str = "xkcd:light purple"
     cupassing_color: str = "xkcd:navy blue"
-    undefined_color: str = "key"
+    undefined_color: str = "xkcd:blue"
     scatter_size: float = 4
     fullshow: bool = False
     energy_rtol: float = 1e-5

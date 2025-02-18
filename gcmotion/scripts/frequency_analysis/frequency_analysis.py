@@ -1,14 +1,12 @@
 import pint
 import numpy as np
-import matplotlib.pyplot as plt
 
 from time import time
 from tqdm import tqdm
 from collections import deque
 from contourpy import ContourGenerator
-from matplotlib.patches import Patch
+from matplotlib.path import Path
 from matplotlib.ticker import LogLocator
-from matplotlib.collections import LineCollection
 
 from gcmotion.utils.logger_setup import logger
 from gcmotion.entities.profile import Profile
@@ -54,12 +52,25 @@ def frequency_analysis(profile: Profile, psilim=tuple, **kwargs) -> None:
     # Calculate ωθ, ωζ and qkinetic
     _calculate_frequencies(contour_paths, Contours, profile, config)
 
-    _plot_results(paths=contour_paths, config=config)
+    # Discard faulty orbits
+    contour_paths = [
+        path
+        for path in contour_paths
+        if (
+            hasattr(path, "omega_theta")
+            and hasattr(path, "qkinetic")
+            and hasattr(path, "omega_zeta")
+        )
+    ]
 
-    # _plot_main_paths(contour_paths, config)
-    # _plot_omega_thetas(contour_paths)
-    # _plot_omega_zetas(contour_paths)
-    # _plot_qkinetics(contour_paths)
+    undef_num = len(
+        [path for path in contour_paths if getattr(path, "undefined", False)]
+    )
+    msg = f"Undefined passing found = {undef_num}"
+    print(msg)
+    logger.warning(msg)
+
+    _plot_results(paths=contour_paths, config=config)
 
 
 # ======================= ContourOrbits Instantiation =========================
@@ -85,24 +96,37 @@ def _generate_contour_paths(
 
     for energy in tqdm(
         iterable=energy_levels,
-        desc=f"{'Generating ContourOrbitss':^25}",
+        desc=f"{'Generating ContourOrbits':^25}",
         unit=" paths",
         ascii=config.tqdm_style,
         colour=config.tqdm_color,
         disable=not config.pbar,
     ):
         lines = C.lines(level=energy)
-        for points_array in lines:
-            contour_paths.append(
-                ContourOrbit(
-                    E=energy,
-                    ylim=metadata["ylim"],
-                    vertices=points_array,
-                )
-            )
+        contour_paths += _unpack_cg_lines(
+            lines=lines, ylim=metadata["ylim"], E=energy
+        )
 
     dur = Q(time() - start, "seconds")
     logger.info(f"\tTook {dur:.4g~#P}.")
+
+    return contour_paths
+
+
+def _unpack_cg_lines(
+    lines: list, ylim: tuple, E: float = None
+) -> list[ContourOrbit]:
+    r"""Creates ContourObrit objects from the output of the contour generator's
+    cg.lines(level=level).
+
+    This only works if the generator's line_type is 'SeperateCode'.
+    """
+    contour_paths = deque()
+
+    for point_array in lines:
+        contour_paths.append(
+            ContourOrbit(E=E, ylim=ylim, vertices=point_array)
+        )
 
     return contour_paths
 
@@ -115,6 +139,7 @@ def _discard_invalid_paths(
     logger.info("\tValidating ContourOrbitss...")
 
     for path in contour_paths:
+        path._bbox_extends()
         path.validate()
 
     return [path for path in contour_paths if path.valid]
@@ -130,6 +155,8 @@ def _prepare_paths(paths: list[ContourOrbit], profile: Profile) -> None:
     for path in paths:
         path.classify(profile=profile)
         path.close_segment()
+        if profile is None:
+            continue
         path.pick_color()
 
     dur = Q(time() - start, "seconds")
@@ -180,30 +207,14 @@ def _calculate_omega_theta(
     upper_lines = C.lines(level=Eupper)
     lower_lines = C.lines(level=Elower)
 
-    upper_paths = deque()
-    for points_array in upper_lines:
-        upper_paths.append(
-            ContourOrbit(
-                E=None,
-                ylim=ylim,
-                vertices=points_array,
-            )
-        )
-
-    lower_paths = deque()
-    for points_array in lower_lines:
-        lower_paths.append(
-            ContourOrbit(
-                E=None,
-                ylim=ylim,
-                vertices=points_array,
-            )
-        )
+    upper_paths = _unpack_cg_lines(lines=upper_lines, ylim=ylim, E=E)
+    lower_paths = _unpack_cg_lines(lines=lower_lines, ylim=ylim, E=E)
 
     upper_paths = _discard_invalid_paths(upper_paths)
     lower_paths = _discard_invalid_paths(lower_paths)
-    _prepare_paths(upper_paths, profile)
-    _prepare_paths(lower_paths, profile)
+    # We dont need co/counterpassing here
+    _prepare_paths(upper_paths, profile=None)
+    _prepare_paths(lower_paths, profile=None)
 
     upper_distances = tuple(
         main_path.distance_from((path.xmin, path.ymin)) for path in upper_paths
@@ -238,36 +249,23 @@ def _calculate_qkinetic(
     PzetaLower = Contours["PzetaLower"]
     CUpper = Contours["PzetaUpperContour"]
     CLower = Contours["PzetaLowerContour"]
-    PzetaUpperMetadata = Contours["PzetaUpperMetadata"]
-    PzetaLowerMetadata = Contours["PzetaLowerMetadata"]
+    ylim_upper = Contours["PzetaUpperMetadata"]["ylim"]
+    ylim_lower = Contours["PzetaLowerMetadata"]["ylim"]
 
+    # Contour Generator lists of vertices
     upper_lines = CLower.lines(level=E)
     lower_lines = CUpper.lines(level=E)
 
-    upper_paths = deque()
-    for points_array in upper_lines:
-        upper_paths.append(
-            ContourOrbit(
-                E=None,
-                ylim=PzetaUpperMetadata["ylim"],
-                vertices=points_array,
-            )
-        )
-
-    lower_paths = deque()
-    for points_array in lower_lines:
-        lower_paths.append(
-            ContourOrbit(
-                E=None,
-                ylim=PzetaLowerMetadata["ylim"],
-                vertices=points_array,
-            )
-        )
+    # Now lists of ContourObrits. Note that we must pass the new grid's ylim in
+    # order to classify them correctly
+    upper_paths = _unpack_cg_lines(lines=upper_lines, ylim=ylim_upper, E=E)
+    lower_paths = _unpack_cg_lines(lines=lower_lines, ylim=ylim_lower, E=E)
 
     upper_paths = _discard_invalid_paths(upper_paths)
     lower_paths = _discard_invalid_paths(lower_paths)
-    _prepare_paths(upper_paths, Contours["PzetaUpperProfile"])
-    _prepare_paths(lower_paths, Contours["PzetaLowerProfile"])
+    # We dont need co/counterpassing here
+    _prepare_paths(upper_paths, None)
+    _prepare_paths(lower_paths, None)
 
     upper_distances = tuple(
         main_path.distance_from((path.xmin, path.ymin)) for path in upper_paths
@@ -283,18 +281,21 @@ def _calculate_qkinetic(
         return
 
     # Show Pzeta Contours
-    plt.plot(*main_path.vertices.T, color="r")
-    plt.plot(*upper_path.vertices.T, color="b")
-    plt.plot(*lower_path.vertices.T, color="b")
-    plt.show()
-
+    # plt.plot(*main_path.vertices.T, color="r")
+    # plt.plot(*upper_path.vertices.T, color="b")
+    # plt.plot(*lower_path.vertices.T, color="b")
+    # plt.show()
+    #
     upper_path.calculate_Jtheta()
     lower_path.calculate_Jtheta()
 
     dPzeta = PzetaUpper - PzetaLower
     dJtheta = upper_path.Jtheta - lower_path.Jtheta
 
-    main_path.qkinetic = dJtheta / dPzeta
+    qkinetic = -dJtheta / dPzeta
+    if abs(qkinetic) > 20:
+        return
+    main_path.qkinetic = qkinetic
 
 
 def _calculate_omega_zeta(path: list[ContourOrbit]) -> None:
@@ -303,106 +304,3 @@ def _calculate_omega_zeta(path: list[ContourOrbit]) -> None:
         path.omega_zeta = path.qkinetic * path.omega_theta
     except AttributeError:
         return
-
-
-# ================================= Plots ===================================
-
-# Manual lengend entries patches
-trapped = Patch(color=global_config.trapped_color, label="Trapped")
-copassing = Patch(color=global_config.copassing_color, label="Co-passing")
-cupassing = Patch(color=global_config.cupassing_color, label="Counter-Passing")
-
-
-def _plot_main_paths(lines: list[ContourOrbit], config):
-    r"""Plots all segments."""
-
-    if not config.plot_main_paths:
-        return
-
-    fig = plt.figure(**global_fig_kw)
-    ax = fig.add_subplot()
-
-    # See LineCollection example
-    # Unpacking and creating a LineCollection is MUCH faster.
-    seg_vertices = tuple((np.column_stack(line.vertices.T) for line in lines))
-    colors = tuple(line.color for line in lines)
-
-    collection = LineCollection(seg_vertices, colors=colors)
-    ax.add_collection(collection)
-    ax.set_xlim([-np.pi, np.pi])
-    ax.set_ylim(lines[1].ylim)
-    ax.set_title(r"Contour Segments")
-    ax.set_xlabel(r"$\theta [radians]$")
-    ax.set_ylabel(r"$P_\theta [NU]$")
-
-    ax.legend(handles=[trapped, copassing, cupassing], loc="upper right")
-    plt.show()
-
-
-def _plot_omega_thetas(lines: list[ContourOrbit]):
-    r"""Plots all omegas."""
-
-    fig = plt.figure(**global_fig_kw)
-    ax = fig.add_subplot()
-    fig.suptitle(r"$\omega_\theta- Energy$")
-
-    # See LineCollection example
-    # Unpacking and creating a LineCollection is MUCH faster.
-    omegas = tuple(line.omega_theta for line in lines)
-    energies = tuple(line.E for line in lines)
-    colors = tuple(line.color for line in lines)
-    ax.scatter(energies, omegas, c=colors, s=global_config.scatter_size)
-
-    ax.axhline(y=0, ls="--", lw=0.5, c="k")
-    ax.set_xlabel("Energy [NU]")
-    ax.set_ylabel(r"$\omega_\theta [\omega_0]$")
-
-    ax.legend(handles=[trapped, copassing, cupassing])
-
-    plt.show()
-
-
-def _plot_omega_zetas(lines: list[ContourOrbit]):
-    r"""Plots all omegas."""
-
-    fig = plt.figure(**global_fig_kw)
-    ax = fig.add_subplot()
-    fig.suptitle(r"$\omega_\theta- Energy$")
-
-    # See LineCollection example
-    # Unpacking and creating a LineCollection is MUCH faster.
-    omegas = tuple(line.omega_zeta for line in lines)
-    energies = tuple(line.E for line in lines)
-    colors = tuple(line.color for line in lines)
-    ax.scatter(energies, omegas, c=colors, s=global_config.scatter_size)
-
-    ax.axhline(y=0, ls="--", lw=0.5, c="k")
-    ax.set_xlabel("Energy [NU]")
-    ax.set_ylabel(r"$\omega_\theta [\omega_0]$")
-
-    ax.legend(handles=[trapped, copassing, cupassing])
-
-    plt.show()
-
-
-def _plot_qkinetics(lines: list[ContourOrbit]):
-    r"""Plots all omegas."""
-
-    fig = plt.figure(**global_fig_kw)
-    ax = fig.add_subplot()
-    fig.suptitle(r"$\omega_\theta- Energy$")
-
-    # See LineCollection example
-    # Unpacking and creating a LineCollection is MUCH faster.
-    qs = tuple(line.qkinetic for line in lines)
-    energies = tuple(line.E for line in lines)
-    colors = tuple(line.color for line in lines)
-    ax.scatter(energies, qs, c=colors, s=global_config.scatter_size)
-
-    ax.axhline(y=0, ls="--", lw=0.5, c="k")
-    ax.set_xlabel("Energy [NU]")
-    ax.set_ylabel(r"$\omega_\theta [\omega_0]$")
-
-    ax.legend(handles=[trapped, copassing, cupassing])
-
-    plt.show()

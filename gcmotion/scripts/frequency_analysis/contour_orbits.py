@@ -1,7 +1,7 @@
 import numpy as np
 from math import isclose
-from matplotlib.path import Path
 
+from gcmotion.utils.logger_setup import logger
 from gcmotion.entities.profile import Profile
 from gcmotion.configuration.scripts_configuration import ContourFreqConfig
 
@@ -9,34 +9,61 @@ config = ContourFreqConfig()
 tau = 2 * np.pi
 
 
-class ContourOrbit(Path):
+class ContourOrbit:
+    r"""Path-like object containing vertices as well as flags and the methods
+    needed to classify the orbit.
 
-    def __init__(self, E: float, ylim: tuple = None, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    The methods should be called in a specific order, which is done inside
+    frequency_analysis() since some extra parameters are needed
+    """
+
+    def __init__(
+        self,
+        E: float,
+        ylim: tuple,
+        vertices: np.ndarray,
+    ):
 
         self.E = E
         self.ylim = ylim
+        self.vertices = vertices
 
-        # Bounding box
-        (self.xmin, self.ymin), (self.xmax, self.ymax) = (
-            self.get_extents().get_points()
-        )
+    def _bbox_extends(self):
+        r"""Calculates the orbit's bounding box (smallest rectangle fully
+        containing the orbit).
+
+        Matplotlib's Path object does the exact same thing, so there is no
+        reason to extend it.
+        """
+
+        self.xmin, self.ymin = self.vertices.min(axis=0)
+        self.xmax, self.ymax = self.vertices.max(axis=0)
 
     def validate(self) -> None:
         r"""Checks if the bbox of the contour line touches the upper or lower
         walls, which means the path gets cut off and must be discarded.
         """
+
         self.valid = _is_inbounds(self) and not _is_cutoff_trapped(self)
 
     def classify(self, profile: Profile = None):
         r"""Classifies the segment to trapped/passing and left-to-right, needed
-        to correctly add the bottom points.
+        to correctly add the bottom points in the correct order.
+
+        Since the same class is used to create 'phony orbits' to calclulate dE
+        and dJtheta localy, co-/counter-passing classification is not
+        necessary.
         """
+
         self.passing, self.trapped = _tp_classify(self)
         self.left_to_right = _is_left_to_right(self)
         if profile is None:
             return
-        self.copassing, self.cupassing = _cocu_classify(self, profile)
+        if self.trapped:
+            return
+        self.undefined, self.copassing, self.cupassing = _cocu_classify(
+            self, profile
+        )
 
     def close_segment(self):
         r"""If the segment is passing, append the two bottom points, as well as
@@ -70,6 +97,10 @@ class ContourOrbit(Path):
     def pick_color(self):
         r"""Sets the segment's color depending on its orbit type."""
         # TODO: find a better way to do this
+        if getattr(self, "undefined", False):
+            self.color = config.undefined_color
+            return
+
         self.color = (
             config.trapped_color
             if self.trapped
@@ -129,19 +160,15 @@ def _tp_classify(path: ContourOrbit) -> list[bool, bool]:
 def _cocu_classify(path: ContourOrbit, profile: Profile) -> list[bool, bool]:
     r"""Classifies the segment as co-passing or counter-passing depending on
     the sign of rho"""
-    # OPTIM: After some testing, we can see that for passing particles, the rho
-    # variable is always either negative or positive. For the shake of
-    # optimization, it is safe to assume that if some evenly spaced values of
-    # psi correspond to negative rho, then all of them do. The sample size can
-    # be tweaked in the configuration
+    # psis = path.vertices.T[1]
+    # sample_idx = np.round(
+    #     np.linspace(1, len(psis) - 1, config.rho_sample_size)
+    # ).astype(int)
+    # co = profile._rhosign(psis[sample_idx])
 
-    psis = path.vertices.T[1]
-    sample_idx = np.round(
-        np.linspace(1, len(psis) - 1, config.rho_sample_size)
-    ).astype(int)
-    co = profile._rhosign(psis[sample_idx])
+    undefined, co = profile._rhosign(psiNU=path.vertices.T[1])
 
-    return co, not co
+    return undefined, co, not co
 
 
 # ======================= Left-to-Right Classification =======================

@@ -34,6 +34,7 @@ def _plot_results(paths: ContourOrbit, config):
     trapped = Patch(color=config.trapped_color, label="Trapped")
     copassing = Patch(color=config.copassing_color, label="Co-passing")
     cupassing = Patch(color=config.cupassing_color, label="Counter-Passing")
+    undefined = Patch(color=config.undefined_color, label="Undefined")
 
     #################
     # Contour Paths #
@@ -53,7 +54,7 @@ def _plot_results(paths: ContourOrbit, config):
     ax_dict["paths"].set_ylabel(r"$P_\theta [NU]$")
 
     ax_dict["paths"].legend(
-        handles=[trapped, copassing, cupassing], loc="upper right"
+        handles=[trapped, copassing, cupassing, undefined], loc="upper right"
     )
 
     #############
@@ -67,9 +68,10 @@ def _plot_results(paths: ContourOrbit, config):
 
     ax_dict["qkin"].axhline(y=0, ls="--", lw=0.5, c="k")
     ax_dict["qkin"].set_xlabel("Energy [NU]")
-    ax_dict["qkin"].set_ylabel(r"$\omega_\theta [\omega_0]$")
+    ax_dict["qkin"].set_ylabel(r"$q_{kinetic}$")
+    ax_dict["qkin"].grid(True, zorder=-2)
 
-    ax_dict["qkin"].legend(handles=[trapped, copassing, cupassing])
+    ax_dict["qkin"].legend(handles=[trapped, copassing, cupassing, undefined])
     ax_dict["qkin"].tick_params(axis="x", labelrotation=40, labelsize=9)
 
     ################
@@ -87,8 +89,11 @@ def _plot_results(paths: ContourOrbit, config):
     ax_dict["thetas"].set_xlabel("Energy [NU]")
     ax_dict["thetas"].set_ylabel(r"$\omega_\theta [\omega_0]$")
     ax_dict["thetas"].tick_params(axis="x", labelrotation=30, labelsize=9)
+    ax_dict["thetas"].grid(True, zorder=-2)
 
-    ax_dict["thetas"].legend(handles=[trapped, copassing, cupassing])
+    ax_dict["thetas"].legend(
+        handles=[trapped, copassing, cupassing, undefined]
+    )
 
     ###############
     # omega_zetas #
@@ -103,7 +108,8 @@ def _plot_results(paths: ContourOrbit, config):
     ax_dict["zetas"].set_xlabel("Energy [NU]")
     ax_dict["zetas"].set_ylabel(r"$\omega_\zeta [\omega_0]$")
     ax_dict["zetas"].tick_params(axis="x", labelrotation=40, labelsize=9)
+    ax_dict["zetas"].grid(True, zorder=-2)
 
-    ax_dict["zetas"].legend(handles=[trapped, copassing, cupassing])
+    ax_dict["zetas"].legend(handles=[trapped, copassing, cupassing, undefined])
 
     plt.show()

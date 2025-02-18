@@ -393,7 +393,7 @@ class Profile:
         muNU = self.Q(muNU, "NUMagnetic_moment")
         return muNU.to(units)
 
-    def _rhosign(self, psi: np.ndarray) -> np.ndarray:
+    def _rhosign(self, psiNU: np.ndarray) -> np.ndarray:
         r"""Calculates the sign of rho from a given psi[NU].
 
         Needed to classify an orbit as co- or counter-passing. Makes no sense
@@ -409,9 +409,28 @@ class Profile:
         bool
             True if all values are positive(co), else False(counter).
         """
-        psip = self.tokamak.qfactor.psipNU(psi)
+        psipNU = self.tokamak.qfactor.psipNU(psiNU)
         # UNSURE: no need for g since its positive
-        return bool(np.all(self.PzetaNU.m + psip > 0))
+        rho = self.PzetaNU.m + psipNU
+        signs = np.sign(rho)
+
+        # NOTE: We must make sure that the sign stays the same. If it doesn't
+        # then something interesting is going on.
+        unique = np.unique(signs)
+
+        # Most of the times only one sign (and maybe 0) will be present
+        if 1 in unique and -1 in unique:
+            undefined = True
+        else:
+            undefined = False
+
+        all_positive: bool = np.all(signs > 0)
+
+        # Return (undefined orbit, copassing)
+        if all_positive:
+            return undefined, True
+        else:
+            return undefined, False
 
     def _findPzeta(
         self,
