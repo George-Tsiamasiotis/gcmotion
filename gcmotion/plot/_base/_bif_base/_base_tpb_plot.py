@@ -27,7 +27,6 @@ def _set_up_tpb_base_plot(
         yO_values = COM_plotO
         xX_values = X_energies_plot
         yX_values = COM_plotX
-        axis_to_format = "y"
 
     elif which_COM == "Pzeta":
         x_label_loc = r"$P_{\zeta}$" + f"[{profiles[0].PzetaNU.units}]"
@@ -36,7 +35,6 @@ def _set_up_tpb_base_plot(
         yO_values = O_energies_plot
         xX_values = COM_plotX
         yX_values = X_energies_plot
-        axis_to_format = "x"
 
     else:
         print(
@@ -44,7 +42,7 @@ def _set_up_tpb_base_plot(
             \nABORTING trapped passing boundary plot...\n"""
         )
 
-    return x_label_loc, y_label_loc, xX_values, yX_values, xO_values, yO_values, axis_to_format
+    return x_label_loc, y_label_loc, xX_values, yX_values, xO_values, yO_values
 
 
 def _setup_which_COM_title(which_COM: str):
@@ -123,16 +121,14 @@ def _plot_trapped_passing_boundary(
         input_energy_units=input_energy_units,
     )
 
-    x_label_loc, y_label_loc, xX_values, yX_values, xO_values, yO_values, axis_to_format = (
-        _set_up_tpb_base_plot(
-            profiles=profiles,
-            COM_plotO=COM_plotO,
-            O_energies_plot=O_energies_plot,
-            COM_plotX=COM_plotX,
-            X_energies_plot=X_energies_plot,
-            which_COM=which_COM,
-            label_energy_units=input_energy_units,
-        )
+    x_label_loc, y_label_loc, xX_values, yX_values, xO_values, yO_values = _set_up_tpb_base_plot(
+        profiles=profiles,
+        COM_plotO=COM_plotO,
+        O_energies_plot=O_energies_plot,
+        COM_plotX=COM_plotX,
+        X_energies_plot=X_energies_plot,
+        which_COM=which_COM,
+        label_energy_units=input_energy_units,
     )
 
     which_COM_title = _setup_which_COM_title(which_COM)
@@ -147,7 +143,8 @@ def _plot_trapped_passing_boundary(
     ax.set_ylabel(
         y_label_loc, rotation=config.tpb_ylabel_rotation, fontsize=config.tpb_ylabel_fontzise
     )
-    ax.ticklabel_format(style="sci", axis=axis_to_format, scilimits=(0, 0))
+    ax.ticklabel_format(style="sci", axis="x", scilimits=(0, 0))
+    ax.ticklabel_format(style="sci", axis="y", scilimits=(0, 0))
 
     ax.scatter(
         xX_values,

@@ -297,7 +297,7 @@ def _set_up_fixed_points(
             print("\n\nDID NOT FIND INITIAL CONDITIONS. USING RANDOM...\n\n")
 
             theta_ic = np.linspace(theta_min, theta_max, 3)
-            psi_ic = np.linspace(psi_min, psi_max, 70)
+            psi_ic = np.linspace(psi_min, psi_max, 10)
 
             initial_conditions = [
                 [theta_init, psi_init] for theta_init, psi_init in product(theta_ic, psi_ic)

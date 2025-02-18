@@ -6,6 +6,7 @@ in the :math:`\theta`,:math:`P_{\zeta}`,E COM space).
 import numpy as np
 from gcmotion.utils.logger_setup import logger
 from collections import deque
+from time import time
 
 from gcmotion.entities.profile import Profile
 from gcmotion.entities.tokamak import Tokamak
@@ -139,6 +140,7 @@ def calc_parabolas_tpb(
             profile=profile, x_TPB=x_TPB, TPB_density=config.TPB_density
         )
 
+        start = time()
         # Energies are returned in NUJoule
         bifurcation_output = bifurcation(
             profiles=profiles,
@@ -147,6 +149,8 @@ def calc_parabolas_tpb(
             which_COM="Pzeta",
             **kwargs,
         )
+
+        print(f"BIFURCATION RUN IN {(time() - start)/60:.1f} mins")
 
         # Unpack bifurcation output
         X_energies = bifurcation_output["X_energies"]
