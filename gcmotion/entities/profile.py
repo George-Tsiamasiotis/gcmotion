@@ -112,12 +112,6 @@ class Profile:
 
         logger.info("==> Initializing Profile...")
 
-        # Check if at least 2 are given
-        if [mu, Pzeta, E].count(None) > 1:
-            msg = "At least 2/3 Constants of motion must be specified"
-            logger.error("\t" + msg)
-            raise ValueError(msg)
-
         E_str = None if E is None else f"{E:.4g~}"
         mu_str = None if mu is None else f"{mu:.4g~}"
         Pzeta_str = None if Pzeta is None else f"{Pzeta:.4g~}"
@@ -147,28 +141,84 @@ class Profile:
 
         # Constants of motion
         if mu is None:
-            self.mu = self.muNU = None
+            self._mu = self._muNU = None
         else:
-            self.mu = mu.to("Magnetic_moment")
-            self.muNU = self.mu.to("NUMagnetic_moment")
-            logger.debug(f"\tSet {self.mu=:.4g~} and {self.muNU=:.4g~}")
+            self._mu = mu.to("Magnetic_moment")
+            self._muNU = self._mu.to("NUMagnetic_moment")
+            logger.debug(f"\tSet {self._mu=:.4g~} and {self._muNU=:.4g~}")
 
         if Pzeta is None:
-            self.Pzeta = self.PzetaNU = None
+            self._Pzeta = self._PzetaNU = None
         else:
-            self.Pzeta = Pzeta.to("Canonical_momentum")
-            self.PzetaNU = self.Pzeta.to("NUCanonical_momentum")
-            logger.debug(f"\tSet {self.Pzeta=:.4g~} and {self.PzetaNU=:.4g~}")
+            self._Pzeta = Pzeta.to("Canonical_momentum")
+            self._PzetaNU = self._Pzeta.to("NUCanonical_momentum")
+            logger.debug(
+                f"\tSet {self._Pzeta=:.4g~} and {self._PzetaNU=:.4g~}"
+            )
 
         if E is None:
-            self.E = self.ENU = None
+            self._E = self._ENU = None
             logger.debug(f"\tSet {self.E=} and {self.ENU=}")
         else:
-            self.E = E.to("keV")
-            self.ENU = self.E.to("NUJoule")
-            logger.debug(f"\tSet {self.E=:.4g~} and {self.ENU=:.4g~}")
+            self._E = E.to("keV")
+            self._ENU = self._E.to("NUJoule")
+            logger.debug(f"\tSet {self._E=:.4g~} and {self._ENU=:.4g~}")
 
         logger.info("--> Profile Initialization Complete.")
+
+    # NOTE: Unfortunately those are need to update correctly both SI and NU
+    # Quantities
+
+    @property
+    def mu(self):
+        return self._mu
+
+    @property
+    def muNU(self):
+        return self._muNU
+
+    @mu.setter
+    def mu(self, new_mu: Quantity):
+        self._mu = new_mu.to("Magnetic_moment")
+        self._muNU = self._mu.to("NUmagnetic_moment")
+
+    @muNU.setter
+    def muNU(self, new_mu):
+        self.mu = new_mu
+
+    @property
+    def Pzeta(self):
+        return self._Pzeta
+
+    @property
+    def PzetaNU(self):
+        return self._PzetaNU
+
+    @Pzeta.setter
+    def Pzeta(self, new_Pzeta: Quantity):
+        self._Pzeta = new_Pzeta.to("Canonical_momentum")
+        self._PzetaNU = self._Pzeta.to("NUCanonical_momentum")
+
+    @PzetaNU.setter
+    def PzetaNU(self, new_Pzeta):
+        self.Pzeta = new_Pzeta
+
+    @property
+    def E(self):
+        return self._E
+
+    @property
+    def ENU(self):
+        return self._ENU
+
+    @E.setter
+    def E(self, new_E: Quantity):
+        self._E = new_E.to("keV")
+        self._ENU = self._E.to("NUJoule")
+
+    @ENU.setter
+    def ENU(self, new_E):
+        self.E = new_E
 
     def findPtheta(self, psi: Quantity, units: str):
         r"""Calculates Ptheta from psi. "Pzeta"" must be defined.
@@ -342,25 +392,6 @@ class Profile:
         # Quantify, convert to input units and return
         muNU = self.Q(muNU, "NUMagnetic_moment")
         return muNU.to(units)
-
-    def _update_Pzeta(self, newPzeta: float | Quantity):
-        r"""Updates the Pzeta and PzetaNU attributes.
-
-        Parameters
-        ----------
-        newPzeta : float | Quantity
-            The new Pzeta value. If it is a float, then it is assumed it is in
-            Normalized units.
-
-        """
-        if isinstance(newPzeta, (int, float)):
-            self.PzetaNU = self.Q(newPzeta, "NUCanonical_momentum")
-            self.Pzeta = self.PzetaNU.to("Canonical_momentum")
-        elif isinstance(newPzeta, pint.Quantity):
-            self.PzetaNU = newPzeta.to("NUCanonical_momentum")
-            self.Pzeta = newPzeta.to("Canonical_momentum")
-        else:
-            raise ValueError("Input must be a float or a Quantity")
 
     def _rhosign(self, psi: np.ndarray) -> np.ndarray:
         r"""Calculates the sign of rho from a given psi[NU].
