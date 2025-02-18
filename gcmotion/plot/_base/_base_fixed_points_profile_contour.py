@@ -150,6 +150,10 @@ def _base_fixed_points_plot(
         thetas_init, psis_initNU = zip(*initial_conditions) if initial_conditions else ([], [])
 
         psis_init = profile.Q(psis_initNU, "NUmagnetic_flux").to(output_units)
-        ax.scatter(thetas_init, psis_init.m, marker=">", color="red", s=100)
+        ax.scatter(
+            thetas_init, psis_init.m, marker=">", color="red", s=100, label="Initial Guesses"
+        )
+
+        ax.legend()
 
         logger.info(f"Plotted initial conditions for fixed points")
