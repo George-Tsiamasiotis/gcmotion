@@ -160,17 +160,17 @@ def fixed_points(profile: Profile, **kwargs) -> tuple[list, list, list]:
 
     if config.fp_ic_info and not config.fp_LAR_thetas:
         initial_conditions_print = [[float(x), float(y)] for x, y in initial_conditions]
-        print(f"\nInitial Conditions:{initial_conditions_print}\n")
-        print(f"\nNumber of Initial Conditions: {len(initial_conditions_print)}\n")
+        logger.info(f"\nInitial Conditions:{initial_conditions_print}\n")
+        logger.info(f"\nNumber of Initial Conditions: {len(initial_conditions_print)}\n")
 
     if config.fp_info and fixed_points.shape[0] <= 30:
-        print(f'\nUsing Method: "{config.fp_method}"\n')
-        print(f"\nFixed Points: {fixed_points}\n")
-        print(f"Number of Fixed Points: {fixed_points.shape[0]}")
+        logger.info(f'\nUsing Method: "{config.fp_method}"\n')
+        logger.info(f"\nFixed Points: {fixed_points}\n")
+        logger.info(f"Number of Fixed Points: {fixed_points.shape[0]}")
 
     if config.fp_info and distinct_fixed_points.shape[0] <= 12:
-        print(f"\nDistinct Fixed Points: {distinct_fixed_points}\n")
-        print(f"Number of Distinct Fixed Points: {distinct_fixed_points.shape[0]}\n")
+        logger.info(f"\nDistinct Fixed Points: {distinct_fixed_points}\n")
+        logger.info(f"Number of Distinct Fixed Points: {distinct_fixed_points.shape[0]}\n")
 
     return num_of_dfp, distinct_fixed_points, initial_conditions
 

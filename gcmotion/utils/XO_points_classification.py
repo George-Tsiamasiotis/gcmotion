@@ -55,7 +55,10 @@ def XO_points_classification(
 
     def WNU(theta, psi):
         # Calculate the Hamiltonian at (theta, psi)
-        psi = max(1e-3, psi)
+        psi = max(
+            psi, profile.psi_wallNU.m / 100
+        )  # Should become small for Pzetas close to 0 because psi-->0
+
         W = profile.findEnergy(
             psi=Q(psi, "NUMagnetic_flux"), theta=theta, units="NUJoule", potential=True
         )

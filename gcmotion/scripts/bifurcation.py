@@ -2,6 +2,7 @@ r""" Function that calculates the fixed points, the number of fixed points, and 
 for multiple profiles , where each profile has a different Pzeta or mu.
 """
 
+from tqdm import tqdm
 import numpy as np
 from collections import deque
 from gcmotion.utils.logger_setup import logger
@@ -125,7 +126,7 @@ def bifurcation(profiles: list | deque, **kwargs) -> dict:
     N = len(profiles)
     selected_COMNU_str = config.which_COM + "NU"
 
-    for idx, profile in enumerate(profiles):
+    for idx, profile in enumerate(tqdm(profiles, desc="Processing")):
 
         current_COMNU = getattr(profile, selected_COMNU_str, "PzetaNU")
 
@@ -177,8 +178,8 @@ def bifurcation(profiles: list | deque, **kwargs) -> dict:
             X_energies.append(current_X_energies)
 
             if config.energies_info:
-                print(f"X energies {X_energies}\n\n")
-                print(f"O energies {O_energies}\n\n")
+                logger.info(f"X energies {X_energies}\n\n")
+                logger.info(f"O energies {O_energies}\n\n")
 
             logger.info(
                 f"Calculated energies ['{config.energy_units}'] of fixed points for bifurcation script with {selected_COMNU_str}={current_COMNU}"
@@ -198,14 +199,14 @@ def bifurcation(profiles: list | deque, **kwargs) -> dict:
         )
 
         if config.bif_info:
-            print(
+            logger.info(
                 f"\nCurrent Step: {idx+1}/{N} ({100*(idx+1)/N:.1f}%) at {selected_COMNU_str} = {current_COMNU} with {current_num_of_fp} fixed points"
             )
-            print(f"Current Fixed Points: {current_fp}\n")
-            print(
+            logger.info(f"Current Fixed Points: {current_fp}\n")
+            logger.info(
                 f"Current X Points: {[[float(thetaX),float(P_thetaX)] for thetaX,P_thetaX in current_X_points]}\n"
             )
-            print(
+            logger.info(
                 f"Current O Points: {[[float(thetaO),float(P_thetaO)] for thetaO,P_thetaO in current_O_points]}\n"
             )
 

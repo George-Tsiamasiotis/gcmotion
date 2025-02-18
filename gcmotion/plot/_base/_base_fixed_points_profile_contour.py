@@ -88,6 +88,12 @@ def _base_fixed_points_plot(
             only_confined : bool, optional
                 Boolean determining if the search for :math:`\psi_{fixed}` will be conducted only for
                 :math:`\psi` < :math:`\psi_{wall}` (confined particles). Defaults to ``False``.
+
+            Notes
+            -----
+            For a full list of all available optional parameters, see the dataclass
+            _FixedPointsPlotConfig at gcmotion/plot/_base/_config. The default values
+            are set there, and are overwritten if passed as arguements.
     """
 
     # Unpack Parameters
@@ -138,8 +144,8 @@ def _base_fixed_points_plot(
     ax.set_xticklabels([r"$-\pi$", "0", r"$\pi$"])
     ax.set_xlim([-np.pi, np.pi])
 
-    ax.scatter(X_thetas, X_psis, marker="x", color="#80FF80", s=100)
-    ax.scatter(O_thetas, O_psis, marker="o", edgecolor="yellow", facecolors="none", s=100)
+    ax.scatter(X_thetas, X_psis.m, marker="x", color="#80FF80", s=100)
+    ax.scatter(O_thetas, O_psis.m, marker="o", edgecolor="yellow", facecolors="none", s=100)
 
     logger.info(
         f"Plotted fixed points for fixed_points_plot with Pz={profile.PzetaNU} and mu={profile.muNU}"
@@ -150,6 +156,15 @@ def _base_fixed_points_plot(
         thetas_init, psis_initNU = zip(*initial_conditions) if initial_conditions else ([], [])
 
         psis_init = profile.Q(psis_initNU, "NUmagnetic_flux").to(output_units)
-        ax.scatter(thetas_init, psis_init.m, marker=">", color="red", s=100)
+        ax.scatter(
+            thetas_init,
+            psis_init.m,
+            marker=config.ic_marker,
+            color=config.ic_markercolor,
+            s=config.ic_markersize,
+            label="Initial Guesses",
+        )
+
+        ax.legend()
 
         logger.info(f"Plotted initial conditions for fixed points")
