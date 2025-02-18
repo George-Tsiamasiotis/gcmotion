@@ -242,8 +242,11 @@ class Profile:
 
         """
         # Do all operations in NU units, and Quantify at the end.
-        psiNU = psi.to("NUMagnetic_flux")
-        psiNU = psiNU.magnitude
+        if isinstance(psi, pint.Quantity):
+            psiNU = psi.to("NUMagnetic_flux")
+            psiNU = psiNU.magnitude
+        else:
+            psiNU = psi
 
         # Calculate currents. B not needed so theta value doesnt matter
         _, iNU, gNU = self.bfield.bigNU(psiNU, 0)
@@ -253,8 +256,11 @@ class Profile:
         PthetaNU = psiNU + rhoNU * iNU
 
         # Quantify, convert to input units and return
-        PthetaNU = self.Q(PthetaNU, "NUCanonical_momentum")
-        return PthetaNU.to(units)
+        if isinstance(psi, pint.Quantity):
+            PthetaNU = self.Q(PthetaNU, "NUCanonical_momentum")
+            return PthetaNU.to(units)
+        else:
+            return PthetaNU
 
     def findEnergy(
         self, psi: Quantity, theta: float, units: str, potential: bool = True
@@ -280,8 +286,11 @@ class Profile:
             The calculated Energy Quantity in the specified units.
         """
         # Do all operations in NU floats, and Quantify at the end.
-        _ = psi.to("NUMagnetic_flux")
-        psiNU = _.magnitude
+        if isinstance(psi, pint.Quantity):
+            psiNU = psi.to("NUMagnetic_flux")
+            psiNU = psiNU.magnitude
+        else:
+            psiNU = psi
 
         # Calculate currents. B not needed so theta value doesnt matter
         bNU, iNU, gNU = self.bfield.bigNU(psiNU, theta)
@@ -298,8 +307,11 @@ class Profile:
             EnergyNU += PhiNU
 
         # Quantify, convert to input units and return
-        EnergyNU = self.Q(EnergyNU, "NUJoule")
-        return EnergyNU.to(units)
+        if isinstance(psi, pint.Quantity):
+            EnergyNU = self.Q(EnergyNU, "NUJoule")
+            return EnergyNU.to(units)
+        else:
+            return EnergyNU
 
     def findPzeta(
         self, psi: Quantity, theta: float, units: str, potential: bool = True
@@ -393,7 +405,7 @@ class Profile:
         muNU = self.Q(muNU, "NUMagnetic_moment")
         return muNU.to(units)
 
-    def _rhosign(self, psi: np.ndarray) -> np.ndarray:
+    def _rhosign(self, psiNU: np.ndarray) -> np.ndarray:
         r"""Calculates the sign of rho from a given psi[NU].
 
         Needed to classify an orbit as co- or counter-passing. Makes no sense
@@ -409,9 +421,28 @@ class Profile:
         bool
             True if all values are positive(co), else False(counter).
         """
-        psip = self.tokamak.qfactor.psipNU(psi)
+        psipNU = self.tokamak.qfactor.psipNU(psiNU)
         # UNSURE: no need for g since its positive
-        return bool(np.all(self.PzetaNU.m + psip > 0))
+        rho = self.PzetaNU.m + psipNU
+        signs = np.sign(rho)
+
+        # NOTE: We must make sure that the sign stays the same. If it doesn't
+        # then something interesting is going on.
+        unique = np.unique(signs)
+
+        # Most of the times only one sign (and maybe 0) will be present
+        if 1 in unique and -1 in unique:
+            undefined = True
+        else:
+            undefined = False
+
+        all_positive: bool = np.all(signs > 0)
+
+        # Return (undefined orbit, copassing)
+        if all_positive:
+            return undefined, True
+        else:
+            return undefined, False
 
     def _findPzeta(
         self,
@@ -420,7 +451,8 @@ class Profile:
         energy,
         units: str,
         potential: bool = True,
-    ):
+    ):  # FIXME: Might be redundant
+
         # Do all operations in NU floats, and Quantify at the end.
         psiNU = psi.to("NUMagnetic_flux")
         psiNU = psiNU.magnitude

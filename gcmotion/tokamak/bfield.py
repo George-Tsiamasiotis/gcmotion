@@ -135,8 +135,6 @@ class NumericalMagneticField(MagneticField):
         psi_values = dataset.psi.data
         theta_values = dataset.boozer_theta.data
         b_values = dataset.b_field_norm.data.T
-        db_dpsi_values = dataset.db_dpsi_norm.data.T
-        db_dtheta_values = dataset.db_dtheta_norm.data.T
         i_values = dataset.I_norm.data
         g_values = dataset.g_norm.data
 
@@ -146,17 +144,18 @@ class NumericalMagneticField(MagneticField):
             y=psi_values,
             z=b_values,
         )
-        self.db_dpsi_spline = RectBivariateSpline(
-            x=theta_values,
-            y=psi_values,
-            z=db_dpsi_values,
+        # NOTE: Do not use the dataset bfield derivatives. They introduce small
+        # non-Hamiltonian terms, resulting in a noticeable fluxuation and even
+        # loss of Energy, due to error propagation through 2 different splines.
+        # Use the derivatives calculated from the bfield spline instead.
+        self.db_dpsi_spline = self.b_spline.partial_derivative(
+            dx=0,
+            dy=1,
         )
-        self.db_dtheta_spline = RectBivariateSpline(
-            x=theta_values,
-            y=psi_values,
-            z=db_dtheta_values,
+        self.db_dtheta_spline = self.b_spline.partial_derivative(
+            dx=1,
+            dy=0,
         )
-
         self.i_spline = UnivariateSpline(
             x=psi_values,
             y=i_values,
@@ -379,23 +378,65 @@ class SmartNegative(NumericalMagneticField):
         )
 
 
-class DivertorNegative(NumericalMagneticField):
-    r"""Initializes a bfield object with numerical data from the Divertor
-    Tokamak with **Negative** Triangularity.
+class SmartNegative2(NumericalMagneticField):
+    r"""Initializes a bfield object with numerical data from the Smart Tokamak
+    with **Negative** Triangularity.
 
     The dataset must be stored in
-    *./gcmotion/tokamak/reconstructed/divertor_negative.nc*.
+    *./gcmotion/tokamak/reconstructed/smart_negative.nc*.
 
     """
 
     def __init__(self):
-        filename = "divertor_negative.nc"
+        filename = "smart_negative2.nc"
         super().__init__(filename=filename)
 
-        self.plain_name = "Divertor - Negative"
+        self.plain_name = "Smart - Negative 2"
 
     def __repr__(self):
         return (
-            colored("Divertor - Negative", "light_blue")
+            colored("Smart - Negative 2", "light_blue")
             + f": B0={self.B0:.4g~}."
+        )
+
+
+class DTTPositive(NumericalMagneticField):
+    r"""Initializes a bfield object with numerical data from the Divertor Test
+    Tokamak with **Positive** Triangularity..
+
+    The dataset must be stored in
+    *./gcmotion/tokamak/reconstructed/dtt_positive.nc*.
+
+    """
+
+    def __init__(self):
+        filename = "dtt_positive.nc"
+        super().__init__(filename=filename)
+
+        self.plain_name = "DTT - Positive"
+
+    def __repr__(self):
+        return (
+            colored("DTT - Positive", "light_blue") + f": B0={self.B0:.4g~}."
+        )
+
+
+class DTTNegative(NumericalMagneticField):
+    r"""Initializes a bfield object with numerical data from the Divertor Test
+    Tokamak with **Negative** Triangularity.
+
+    The dataset must be stored in
+    *./gcmotion/tokamak/reconstructed/dtt_negative.nc*.
+
+    """
+
+    def __init__(self):
+        filename = "dtt_negative.nc"
+        super().__init__(filename=filename)
+
+        self.plain_name = "DTT - Negative"
+
+    def __repr__(self):
+        return (
+            colored("DTT - Negative", "light_blue") + f": B0={self.B0:.4g~}."
         )

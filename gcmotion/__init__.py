@@ -23,7 +23,9 @@ from gcmotion.tokamak import efield
 from gcmotion.tokamak.reconstructed.initializers import (
     SmartPositiveInit,
     SmartNegativeInit,
-    DivertorNegativeInit,
+    SmartNegative2Init,
+    DTTPositiveInit,
+    DTTNegativeInit,
 )
 
 # Entities
@@ -34,6 +36,9 @@ from gcmotion.entities.particle import Particle
 
 # Scripts
 from gcmotion.scripts import events
+from gcmotion.scripts.frequency_analysis.frequency_analysis import (
+    FrequencyAnalysis,
+)
 
 # TEMP
 from gcmotion.scripts.frequency_analysis.frequency_analysis import (
@@ -49,7 +54,9 @@ __all__ = [
     # Tokamak objects
     "SmartPositiveInit",
     "SmartNegativeInit",
-    "DivertorNegativeInit",
+    "SmartNegative2Init",
+    "DTTPositiveInit",
+    "DTTNegativeInit",
     "qfactor",
     "bfield",
     "efield",

@@ -36,11 +36,17 @@ A seperate initializer is needed for every numerical equilibrium, but they work 
 ====================          ================================
 Smart - Positive              :py:class:`SmartPositiveInit`
 Smart - Negative              :py:class:`SmartNegativeInit`
-Divertor - Negative           :py:class:`DivertorNegativeInit`
+Smart - Negative 2            :py:class:`SmartNegative2Init`
+DTT - Positive                :py:class:`DTTPositiveInit`
+DTT - Negative                :py:class:`DTTNegativeInit`
 ====================          ================================
 
 .. autoclass:: SmartPositiveInit
 
 .. autoclass:: SmartNegativeInit
 
-.. autoclass:: DivertorNegativeInit
+.. autoclass:: SmartNegative2Init
+
+.. autoclass:: DTTPositiveInit
+
+.. autoclass:: DTTNegativeInit

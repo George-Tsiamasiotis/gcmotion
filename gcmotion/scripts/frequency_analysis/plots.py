@@ -4,7 +4,11 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
 from matplotlib.collections import LineCollection
 
-from gcmotion.scripts.frequency_analysis.contour_orbits import ContourOrbit
+from gcmotion.entities.profile import Profile
+from gcmotion.plot.profile_contour import profile_energy_contour
+from gcmotion.scripts.frequency_analysis.contours.contour_orbit import (
+    ContourOrbit,
+)
 
 
 def _plot_results(paths: ContourOrbit, config):
@@ -34,6 +38,7 @@ def _plot_results(paths: ContourOrbit, config):
     trapped = Patch(color=config.trapped_color, label="Trapped")
     copassing = Patch(color=config.copassing_color, label="Co-passing")
     cupassing = Patch(color=config.cupassing_color, label="Counter-Passing")
+    undefined = Patch(color=config.undefined_color, label="Undefined")
 
     #################
     # Contour Paths #
@@ -53,7 +58,7 @@ def _plot_results(paths: ContourOrbit, config):
     ax_dict["paths"].set_ylabel(r"$P_\theta [NU]$")
 
     ax_dict["paths"].legend(
-        handles=[trapped, copassing, cupassing], loc="upper right"
+        handles=[trapped, copassing, cupassing, undefined], loc="upper right"
     )
 
     #############
@@ -67,9 +72,10 @@ def _plot_results(paths: ContourOrbit, config):
 
     ax_dict["qkin"].axhline(y=0, ls="--", lw=0.5, c="k")
     ax_dict["qkin"].set_xlabel("Energy [NU]")
-    ax_dict["qkin"].set_ylabel(r"$\omega_\theta [\omega_0]$")
+    ax_dict["qkin"].set_ylabel(r"$q_{kinetic}$")
+    ax_dict["qkin"].grid(True, zorder=-2)
 
-    ax_dict["qkin"].legend(handles=[trapped, copassing, cupassing])
+    ax_dict["qkin"].legend(handles=[trapped, copassing, cupassing, undefined])
     ax_dict["qkin"].tick_params(axis="x", labelrotation=40, labelsize=9)
 
     ################
@@ -87,8 +93,11 @@ def _plot_results(paths: ContourOrbit, config):
     ax_dict["thetas"].set_xlabel("Energy [NU]")
     ax_dict["thetas"].set_ylabel(r"$\omega_\theta [\omega_0]$")
     ax_dict["thetas"].tick_params(axis="x", labelrotation=30, labelsize=9)
+    ax_dict["thetas"].grid(True, zorder=-2)
 
-    ax_dict["thetas"].legend(handles=[trapped, copassing, cupassing])
+    ax_dict["thetas"].legend(
+        handles=[trapped, copassing, cupassing, undefined]
+    )
 
     ###############
     # omega_zetas #
@@ -103,7 +112,33 @@ def _plot_results(paths: ContourOrbit, config):
     ax_dict["zetas"].set_xlabel("Energy [NU]")
     ax_dict["zetas"].set_ylabel(r"$\omega_\zeta [\omega_0]$")
     ax_dict["zetas"].tick_params(axis="x", labelrotation=40, labelsize=9)
+    ax_dict["zetas"].grid(True, zorder=-2)
 
-    ax_dict["zetas"].legend(handles=[trapped, copassing, cupassing])
+    ax_dict["zetas"].legend(handles=[trapped, copassing, cupassing, undefined])
 
     plt.show()
+
+
+# =============================== Debug Plots ===============================
+
+
+def debug_plot_valid_orbits(profile: Profile, orbits: list):
+    r"""Prints Profile Contour with all valid isoenergy orbits found"""
+
+    ax = profile_energy_contour(
+        profile,
+        psilim=profile.psilim,
+        E_units="NUJoule",
+        flux_units="NUMagnetic_flux",
+        canmom_units="NUCanonical_momentum",
+        cursor=False,  # ?
+        show=False,
+    )
+
+    for orbit in orbits:
+        ax.plot(*orbit.vertices.T, color="red", zorder=10)
+
+    ax.set_title(f"Valid orbits found: {len(orbits)}")
+
+    plt.show()
+    plt.close()

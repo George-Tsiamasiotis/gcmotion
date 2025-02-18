@@ -1,143 +1,114 @@
-import pint
+import contourpy
 import numpy as np
 
-from time import time
-from copy import deepcopy
-from contourpy import contour_generator
-
-from gcmotion.utils.logger_setup import logger
 from gcmotion.entities.profile import Profile
-from gcmotion.configuration.scripts_configuration import ContourFreqConfig
+from gcmotion.configuration.scripts_configuration import ContourGeneratorConfig
+from gcmotion.scripts.frequency_analysis.contours.contour_orbit import (
+    ContourOrbit,
+)
 
 tau = 2 * np.pi
-Q = pint.get_application_registry().Quantity
 
 
-def _create_contours(
-    profile: Profile, psilim: tuple, config: ContourFreqConfig
-) -> dict:
+def main_contour(profile: Profile, psilim: tuple, **kwargs):
+    r"""[Step 1] Generate the main Profile Contour.
 
-    contours: dict = _create_main_contour(profile, psilim, config)
-    contours |= _create_dpzeta_contours(profile, psilim, config)
+    Psi limits are the full span, as called from FrequencyAnalysis.
 
-    return contours
+    Returns
+    -------
+    dict
+        A dict containing the contour generator and the psilim of the energy
+        grid.
+    """
 
+    # Unpack parameters
+    config = ContourGeneratorConfig()
+    for key, value in kwargs.items():
+        setattr(config, key, value)
 
-def _create_main_contour(
-    profile: Profile, psilim: tuple, config: ContourFreqConfig
-) -> dict:
-    r"""Creates a ContourGenerator from contourpy, as well as a couple of
-    needed quantities."""
-
-    logger.info("\tCreating Contour Generator...")
-    start = time()
-
-    thetalim = profile.Q((-tau, tau), "radians")
-    psilim = profile.Q(psilim, "psi_wall").to("NUMagnetic_flux")
     psi_grid, theta_grid = np.meshgrid(
-        np.linspace(psilim[0], psilim[1], config.grid_density),
-        np.linspace(thetalim[0], thetalim[1], config.grid_density),
+        np.linspace(psilim[0], psilim[1], config.main_grid_density),
+        np.linspace(-tau, tau, config.main_grid_density),
     )
 
     energy_grid = profile.findEnergy(
         psi=psi_grid,
-        theta=theta_grid.m,
-        units="NUJoule",
-        potential=config.potential,
-    )
-    ptheta_grid = profile.findPtheta(
-        psi=psi_grid,
-        units="NUCanonical_momentum",
+        theta=theta_grid,
+        units="will return float",
     )
 
-    C = contour_generator(
-        x=theta_grid.m,
-        y=ptheta_grid.m,
-        z=energy_grid.m,
+    # NOTE: Use line_type="Separate". Then C.lines(level) returns a list of
+    # (N,2) numpy arrays containing the vertices of each contour line.
+    C = contourpy.contour_generator(
+        x=theta_grid,
+        y=psi_grid,
+        z=energy_grid,
         line_type="Separate",
-        fill_type="OuterCode",
     )
-    energy_span = (energy_grid.min().m, energy_grid.max().m)
-    ylim = (ptheta_grid.m[0][0], ptheta_grid.m[0][-1])
 
-    # Extra quantities we will need, but C has no __dict__
-    metadata = {"energy_span": energy_span, "ylim": ylim}
-
-    dur = Q(time() - start, "seconds")
-    logger.info(f"\tTook {dur:.4g~#P}.")
-
-    Contour = {
-        "EnergyContour": C,
-        "EnergyMetadata": metadata,
-    }
-    return Contour
-
-
-def _create_dpzeta_contours(
-    profile: Profile, psilim: tuple, config: ContourFreqConfig
-) -> dict:
-
-    # Copy them, otherwise they point to the same instance
-    lower_profile = deepcopy(profile)
-    upper_profile = deepcopy(profile)
-
-    # Update Pzetas
-    lower_profile.PzetaNU = lower_profile.PzetaNU * (1 - config.pzeta_rtol)
-    upper_profile.PzetaNU = upper_profile.PzetaNU * (1 + config.pzeta_rtol)
-
-    logger.info("\tCreating Pzeta Contour Generators...")
-    start = time()
-
-    contours_list = []
-    metadata_list = []
-    for prof in (lower_profile, upper_profile):
-
-        thetalim = prof.Q((-tau, tau), "radians")
-        psilim = prof.Q(psilim, "psi_wall").to("NUMagnetic_flux")
-        psi_grid, theta_grid = np.meshgrid(
-            np.linspace(psilim[0], psilim[1], config.grid_density),
-            np.linspace(thetalim[0], thetalim[1], config.grid_density),
-        )
-
-        energy_grid = prof.findEnergy(
-            psi=psi_grid,
-            theta=theta_grid.m,
-            units="NUJoule",
-            potential=config.potential,
-        )
-        ptheta_grid = prof.findPtheta(
-            psi=psi_grid,
-            units="NUCanonical_momentum",
-        )
-
-        C = contour_generator(
-            x=theta_grid.m,
-            y=ptheta_grid.m,
-            z=energy_grid.m,
-            line_type="Separate",
-            fill_type="OuterCode",
-        )
-        energy_span = (energy_grid.min().m, energy_grid.max().m)
-        ylim = (ptheta_grid.m[0][0], ptheta_grid.m[0][-1])
-
-        # Extra quantities we will need, but C has no __dict__
-        metadata = {"energy_span": energy_span, "ylim": ylim}
-
-        contours_list.append(C)
-        metadata_list.append(metadata)
-
-    Contours = {
-        "PzetaLowerProfile": lower_profile,
-        "PzetaUpperProfile": upper_profile,
-        "PzetaLower": lower_profile.PzetaNU.m,
-        "PzetaUpper": upper_profile.PzetaNU.m,
-        "PzetaLowerContour": contours_list[0],
-        "PzetaUpperContour": contours_list[1],
-        "PzetaLowerMetadata": metadata_list[0],
-        "PzetaUpperMetadata": metadata_list[1],
+    MainContour = {
+        "C": C,
+        "psilim": psilim,
     }
 
-    dur = Q(time() - start, "seconds")
-    logger.info(f"\tTook {dur:.4g~#P}.")
+    return MainContour
 
-    return Contours
+
+def local_contour(profile: Profile, orbit: ContourOrbit):
+    r"""Expands bounding box and creates a local contour generator inside of
+    it.
+
+    Returns
+    -------
+    dict
+        A dict containing the contour generator and the psilim of the energy
+        grid.
+
+    """
+
+    config = ContourGeneratorConfig()
+
+    # Expand theta but dont let it out of (-tau, tau)
+    (xmin, ymin), (xmax, ymax) = orbit.bbox
+    if orbit.trapped:
+        thetamean = (xmin + xmax) / 2
+        thetaspan = (xmax - xmin) / 2
+        thetamin = max(thetamean - config.theta_expansion * thetaspan, -tau)
+        thetamax = min(thetamean + config.theta_expansion * thetaspan, tau)
+    elif orbit.passing:
+        thetamin, thetamax = -tau, tau
+
+    # Expand psilim without limiting it (but staying positive), to catch all
+    # orbits. psilim is already in NU so don't bother with Quantities..
+    psimean = (ymin + ymax) / 2
+    psispan = (ymax - ymin) / 2
+    psimin = max(psimean - config.psi_expansion * psispan, 0)
+    psimax = psimean + config.psi_expansion * psispan
+
+    psi_grid, theta_grid = np.meshgrid(
+        np.linspace(psimin, psimax, config.local_grid_density),
+        np.linspace(thetamin, thetamax, config.local_grid_density),
+    )
+
+    energy_grid = profile.findEnergy(
+        psi=psi_grid,
+        theta=theta_grid,
+        units="NUjoule",
+    )
+
+    # NOTE: Use line_type="Separate". Then C.lines(level) returns a list of
+    # (N,2) numpy arrays containing the vertices of each contour line.
+    C = contourpy.contour_generator(
+        x=theta_grid,
+        y=psi_grid,
+        z=energy_grid,
+        line_type="Separate",
+    )
+
+    LocalContour = {
+        "C": C,
+        "psilim": (psimin, psimax),
+    }
+
+    return LocalContour

@@ -97,7 +97,14 @@ def _base_profile_energy_contour(profile: Profile, ax: Axes, **kwargs):
 
     # Contour plot
     if config.mode == "lines":
-        C = ax.contour("theta", "ycoord", "Energy", data=data, **kw)
+        C = ax.contour(
+            "theta",
+            "ycoord",
+            "Energy",
+            data=data,
+            linewidths=config.linewidths,
+            **kw,
+        )
         logger.debug("\t\tContour mode: lines")
     else:
         C = ax.contourf(
@@ -105,7 +112,6 @@ def _base_profile_energy_contour(profile: Profile, ax: Axes, **kwargs):
             "ycoord",
             "Energy",
             data=data,
-            linewidths=config.linewidths,
             **kw,
         )
         logger.debug("\t\tContour mode: filled")
@@ -196,11 +202,12 @@ def _base_profile_energy_contour(profile: Profile, ax: Axes, **kwargs):
     # The format must be applied to the second ax for some reason. This means
     # we have to transform data from one ax to the other. This little manouver
     # is a bit costly but I haven't found a better way.
-    cursorx = data["theta"][:, 0]
-    cursory = data["ycoord"][0]
-    cursorz = data["Energy"]
-    values = RectBivariateSpline(cursorx, cursory, cursorz)
-    ycoord_label = f"{ycoordgrid.units:~P}"
+    if config.cursor:
+        cursorx = data["theta"][:, 0]
+        cursory = data["ycoord"][0]
+        cursorz = data["Energy"]
+        values = RectBivariateSpline(cursorx, cursory, cursorz)
+        ycoord_label = f"{ycoordgrid.units:~P}"
 
     # Always add the main axes cursor, but the twin ax cursor is added only if
     # the projection is rectilinear (the default).
