@@ -358,42 +358,62 @@ class SmartNegative(NumericalQFactor):
         )
 
 
-class DivertorPositive(NumericalQFactor):
-    r"""Initializes an object q with numerical data from the Divertor Tokamak
-    with **Positive** Triangularity.
+class SmartNegative2(NumericalQFactor):
+    r"""Initializes an object q with numerical data from the Smart Tokamak with
+    **Negative** Triangularity.
 
     The dataset must be stored in
-    *./gcmotion/tokamak/reconstructed/divertor_positive.nc*.
+    *./gcmotion/tokamak/reconstructed/smart_negative2.nc*.
 
     """
 
     def __init__(self):
-        filename = "divertor_positive.nc"
+        filename = "smart_negative2.nc"
         super().__init__(filename=filename)
 
     def __repr__(self):
         return (
-            colored("Divertor - Negative", "light_blue")
+            colored("Smart - Negative 2", "light_blue")
             + f": q0={self.q0:.4g}, q_wall={self.q_wall:.4g}."
         )
 
 
-class DivertorNegative(NumericalQFactor):
-    r"""Initializes an object q with numerical data from the Divertor Tokamak
-    with **Negative** Triangularity.
+class DTTPositive(NumericalQFactor):
+    r"""Initializes an object q with numerical data from the Divertor Test
+    Tokamak with **Positive** Triangularity.
 
     The dataset must be stored in
-    *./gcmotion/tokamak/reconstructed/divertor_positive.nc*.
+    *./gcmotion/tokamak/reconstructed/dtt_positive.nc*.
 
     """
 
     def __init__(self):
-        filename = "divertor_negative.nc"
+        filename = "dtt_positive.nc"
         super().__init__(filename=filename)
 
     def __repr__(self):
         return (
-            colored("Divertor - Negative", "light_blue")
+            colored("DTT - Negative", "light_blue")
+            + f": q0={self.q0:.4g}, q_wall={self.q_wall:.4g}."
+        )
+
+
+class DTTNegative(NumericalQFactor):
+    r"""Initializes an object q with numerical data from the Divertor Test
+    Tokamak with **Negative** Triangularity.
+
+    The dataset must be stored in
+    *./gcmotion/tokamak/reconstructed/dtt_negative.nc*.
+
+    """
+
+    def __init__(self):
+        filename = "dtt_negative.nc"
+        super().__init__(filename=filename)
+
+    def __repr__(self):
+        return (
+            colored("DTT - Negative", "light_blue")
             + f": q0={self.q0:.4g}, q_wall={self.q_wall:.4g}."
         )
 

@@ -10,12 +10,16 @@ def datasets_exist():
     r"""Returns True if all datasets exists. pytest must run from rootdir."""
     reconstructed_path = gcm.__path__[0] + "/tokamak/reconstructed/"
     dataset1 = Path(reconstructed_path + "/smart_negative.nc")
-    dataset2 = Path(reconstructed_path + "/smart_positive.nc")
-    dataset3 = Path(reconstructed_path + "/divertor_negative.nc")
+    dataset2 = Path(reconstructed_path + "/smart_negative2.nc")
+    dataset3 = Path(reconstructed_path + "/smart_positive.nc")
+    dataset4 = Path(reconstructed_path + "/dtt_negative.nc")
+    dataset5 = Path(reconstructed_path + "/dtt_positive.nc")
     return (
         os.path.isfile(dataset1)
         and os.path.isfile(dataset2)
         and os.path.isfile(dataset3)
+        and os.path.isfile(dataset4)
+        and os.path.isfile(dataset5)
     )
 
 

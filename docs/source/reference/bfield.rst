@@ -12,7 +12,9 @@ Here is a list of the availiable q-factor configurations:
 Large Aspect Ratio               :py:class:`LAR`
 (Numerical) SmartPositve         :py:class:`SmartPositive`
 (Numerical) SmartNegative        :py:class:`SmartNegative`
-(Numerical) DivertorNegative     :py:class:`DivertorNegative`
+(Numerical) SmartNegative2       :py:class:`SmartNegative2`
+(Numerical) DTTPositive          :py:class:`DTTPositive`
+(Numerical) DTTNegative          :py:class:`DTTNegative`
 ============================     ============================
 
 Their parameters are documented below.
@@ -83,7 +85,17 @@ Available magnetic fields
 .. autoclass:: SmartNegative
    :class-doc-from: class
 
-.. rubric:: DivertorNegative
+.. rubric:: SmartNegative2
 
-.. autoclass:: DivertorNegative
+.. autoclass:: SmartNegative2
+   :class-doc-from: class
+
+.. rubric:: DTTPositive
+
+.. autoclass:: DTTPositive
+   :class-doc-from: class
+
+.. rubric:: DTTNegative
+
+.. autoclass:: DTTNegative
    :class-doc-from: class
