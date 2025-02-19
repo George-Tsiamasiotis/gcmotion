@@ -105,15 +105,15 @@ class SmartNegativeInit(_NumericalInitializer):
         super().__init__(filename=filename, species=species)
 
 
-class DivertorNegativeInit(_NumericalInitializer):
+class SmartNegative2Init(_NumericalInitializer):
     r"""Imports the necessary constants (R, B0, :math:`\psi_{wall}`) from the
-    **Divertor - Negative** dataset to initialize the Quantity Constructor.
+    **Smart - Negative 2** dataset to initialize the Quantity Constructor.
 
     The particle's species must be defined by the user, while the rest of the
     Quantities are already stored in the dataset.
 
     Dataset location should be at
-    gcmotion/tokamak/reconstructed/divertor_negative.nc
+    gcmotion/tokamak/reconstructed/smart_negative2.nc
 
     Parameters
     ----------
@@ -123,5 +123,49 @@ class DivertorNegativeInit(_NumericalInitializer):
     """
 
     def __init__(self, species: str):
-        filename = "divertor_negative.nc"
+        filename = "smart_negative2.nc"
+        super().__init__(filename=filename, species=species)
+
+
+class DTTPositiveInit(_NumericalInitializer):
+    r"""Imports the necessary constants (R, B0, :math:`\psi_{wall}`) from the
+    **DTT - Positive** dataset to initialize the Quantity Constructor.
+
+    The particle's species must be defined by the user, while the rest of the
+    Quantities are already stored in the dataset.
+
+    Dataset location should be at
+    gcmotion/tokamak/reconstructed/dtt_positive.nc
+
+    Parameters
+    ----------
+    species : {'p', 'e', 'D', 'T', 'He3', 'He4'}
+        The particle's species. This field is case-insensitive.
+
+    """
+
+    def __init__(self, species: str):
+        filename = "dtt_positive.nc"
+        super().__init__(filename=filename, species=species)
+
+
+class DTTNegativeInit(_NumericalInitializer):
+    r"""Imports the necessary constants (R, B0, :math:`\psi_{wall}`) from the
+    **DTT - Negative** dataset to initialize the Quantity Constructor.
+
+    The particle's species must be defined by the user, while the rest of the
+    Quantities are already stored in the dataset.
+
+    Dataset location should be at
+    gcmotion/tokamak/reconstructed/dtt_negative.nc
+
+    Parameters
+    ----------
+    species : {'p', 'e', 'D', 'T', 'He3', 'He4'}
+        The particle's species. This field is case-insensitive.
+
+    """
+
+    def __init__(self, species: str):
+        filename = "dtt_negative.nc"
         super().__init__(filename=filename, species=species)

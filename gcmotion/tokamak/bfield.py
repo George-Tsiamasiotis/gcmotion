@@ -378,45 +378,65 @@ class SmartNegative(NumericalMagneticField):
         )
 
 
-class DivertorPositive(NumericalMagneticField):
-    r"""Initializes a bfield object with numerical data from the Divertor
-    Tokamak with **Positive** Triangularity.
+class SmartNegative2(NumericalMagneticField):
+    r"""Initializes a bfield object with numerical data from the Smart Tokamak
+    with **Negative** Triangularity.
 
     The dataset must be stored in
-    *./gcmotion/tokamak/reconstructed/divertor_positive.nc*.
+    *./gcmotion/tokamak/reconstructed/smart_negative.nc*.
 
     """
 
     def __init__(self):
-        filename = "divertor_negative.nc"
+        filename = "smart_negative2.nc"
         super().__init__(filename=filename)
 
-        self.plain_name = "Divertor - Positive"
+        self.plain_name = "Smart - Negative 2"
 
     def __repr__(self):
         return (
-            colored("Divertor - Positive", "light_blue")
+            colored("Smart - Negative 2", "light_blue")
             + f": B0={self.B0:.4g~}."
         )
 
 
-class DivertorNegative(NumericalMagneticField):
-    r"""Initializes a bfield object with numerical data from the Divertor
-    Tokamak with **Negative** Triangularity.
+class DTTPositive(NumericalMagneticField):
+    r"""Initializes a bfield object with numerical data from the Divertor Test
+    Tokamak with **Positive** Triangularity..
 
     The dataset must be stored in
-    *./gcmotion/tokamak/reconstructed/divertor_negative.nc*.
+    *./gcmotion/tokamak/reconstructed/dtt_positive.nc*.
 
     """
 
     def __init__(self):
-        filename = "divertor_negative.nc"
+        filename = "dtt_positive.nc"
         super().__init__(filename=filename)
 
-        self.plain_name = "Divertor - Negative"
+        self.plain_name = "DTT - Positive"
 
     def __repr__(self):
         return (
-            colored("Divertor - Negative", "light_blue")
-            + f": B0={self.B0:.4g~}."
+            colored("DTT - Positive", "light_blue") + f": B0={self.B0:.4g~}."
+        )
+
+
+class DTTNegative(NumericalMagneticField):
+    r"""Initializes a bfield object with numerical data from the Divertor Test
+    Tokamak with **Negative** Triangularity.
+
+    The dataset must be stored in
+    *./gcmotion/tokamak/reconstructed/dtt_negative.nc*.
+
+    """
+
+    def __init__(self):
+        filename = "dtt_negative.nc"
+        super().__init__(filename=filename)
+
+        self.plain_name = "DTT - Negative"
+
+    def __repr__(self):
+        return (
+            colored("DTT - Negative", "light_blue") + f": B0={self.B0:.4g~}."
         )

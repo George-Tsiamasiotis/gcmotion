@@ -4,7 +4,7 @@ import numpy as np
 
 # Quantity Constructor
 species = "p"
-div_init = gcm.DivertorNegativeInit(species)
+div_init = gcm.DTTNegativeInit(species)
 Q = div_init.QuantityConstructor()
 
 # Intermediate Quantities
@@ -15,8 +15,8 @@ a = div_init.a
 tokamak = gcm.Tokamak(
     R=R,
     a=a,
-    qfactor=gcm.qfactor.DivertorNegative(),
-    bfield=gcm.bfield.DivertorNegative(),
+    qfactor=gcm.qfactor.DTTNegative(),
+    bfield=gcm.bfield.DTTNegative(),
     efield=gcm.efield.Nofield(),
 )
 
