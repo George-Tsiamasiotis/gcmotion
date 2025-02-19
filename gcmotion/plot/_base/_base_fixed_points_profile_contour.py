@@ -138,8 +138,8 @@ def _base_fixed_points_plot(
     ax.set_xticklabels([r"$-\pi$", "0", r"$\pi$"])
     ax.set_xlim([-np.pi, np.pi])
 
-    ax.scatter(X_thetas, X_psis, marker="x", color="#80FF80", s=100)
-    ax.scatter(O_thetas, O_psis, marker="o", edgecolor="yellow", facecolors="none", s=100)
+    ax.scatter(X_thetas, X_psis.m, marker="x", color="#80FF80", s=100)
+    ax.scatter(O_thetas, O_psis.m, marker="o", edgecolor="yellow", facecolors="none", s=100)
 
     logger.info(
         f"Plotted fixed points for fixed_points_plot with Pz={profile.PzetaNU} and mu={profile.muNU}"
