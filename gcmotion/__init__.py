@@ -35,11 +35,14 @@ from gcmotion.entities.particle import Particle
 # Scripts
 from gcmotion.scripts import events
 
+<<<<<<< HEAD
 # TEMP
 from gcmotion.scripts.frequency_analysis.frequency_analysis import (
     frequency_analysis,
 )
 
+=======
+>>>>>>> main
 
 # main namespace
 __all__ = [
@@ -60,5 +63,12 @@ __all__ = [
     "Particle",
     # Scripts
     "events",
+<<<<<<< HEAD
     "frequency_analysis",
 ]
+=======
+]
+
+# Uncomment to switch from pygt6 (default) backend. Requires PyGObject
+# matplotlib.use("gtk3agg")
+>>>>>>> main

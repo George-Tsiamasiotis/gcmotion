@@ -358,12 +358,32 @@ class SmartNegative(NumericalQFactor):
         )
 
 
+class DivertorPositive(NumericalQFactor):
+    r"""Initializes an object q with numerical data from the Divertor Tokamak
+    with **Positive** Triangularity.
+
+    The dataset must be stored in
+    *./gcmotion/tokamak/reconstructed/divertor_positive.nc*.
+
+    """
+
+    def __init__(self):
+        filename = "divertor_positive.nc"
+        super().__init__(filename=filename)
+
+    def __repr__(self):
+        return (
+            colored("Divertor - Negative", "light_blue")
+            + f": q0={self.q0:.4g}, q_wall={self.q_wall:.4g}."
+        )
+
+
 class DivertorNegative(NumericalQFactor):
     r"""Initializes an object q with numerical data from the Divertor Tokamak
     with **Negative** Triangularity.
 
     The dataset must be stored in
-    *./gcmotion/tokamak/reconstructed/divertor.nc*.
+    *./gcmotion/tokamak/reconstructed/divertor_positive.nc*.
 
     """
 
