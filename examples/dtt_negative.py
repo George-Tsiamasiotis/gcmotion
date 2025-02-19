@@ -4,7 +4,7 @@ import numpy as np
 
 # Quantity Constructor
 species = "p"
-div_init = gcm.DivertorNegativeInit(species)
+div_init = gcm.DTTNegativeInit(species)
 Q = div_init.QuantityConstructor()
 
 # Intermediate Quantities
@@ -15,8 +15,8 @@ a = div_init.a
 tokamak = gcm.Tokamak(
     R=R,
     a=a,
-    qfactor=gcm.qfactor.DivertorNegative(),
-    bfield=gcm.bfield.DivertorNegative(),
+    qfactor=gcm.qfactor.DTTNegative(),
+    bfield=gcm.bfield.DTTNegative(),
     efield=gcm.efield.Nofield(),
 )
 
@@ -24,10 +24,10 @@ tokamak = gcm.Tokamak(
 init = gcm.InitialConditions(
     species="p",
     muB=Q(1e-4, "NUMagnetic_moment"),
-    Pzeta0=Q(-0.025, "NUCanonical_momentum"),
+    Pzeta0=Q(-0.05, "NUCanonical_momentum"),
     theta0=0,
     zeta0=0,
-    psi0=Q(0.3, "psi_wall"),
+    psi0=Q(0.05411, "NUMagnetic_flux"),
     t_eval=Q(np.linspace(0, 1e-4, 100000), "seconds"),
 )
 
@@ -43,7 +43,7 @@ gplt.magnetic_profile(particle.profile, coord="rho")
 gplt.particle_evolution(particle, units="NU")
 gplt.particle_poloidal_drift(
     particle,
-    psilim=[0, 0.5],
+    psilim=[0.5, 1],
     flux_units="NUMagnetic_flux",
     canmon_units="NUCanonical_momentum",
     E_units="keV",

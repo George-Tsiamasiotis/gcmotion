@@ -15,7 +15,9 @@ Parabolic q-factor             :py:class:`Parabolic`
 Hypergeometric q-factor        :py:class:`Hypergeometric`
 (Numerical) SmartPositive      :py:class:`SmartPositive`
 (Numerical) SmartNegative      :py:class:`SmartNegative`
-(Numerical) DivertorNegative   :py:class:`SmartNegative`
+(Numerical) SmartNegative2     :py:class:`SmartNegative2`
+(Numerical) DTTPositive        :py:class:`DTTPositive`
+(Numerical) DTTNegative        :py:class:`DTTNegative`
 =============================  ==========================
 
 Their parameters are documented below.
@@ -104,9 +106,19 @@ Available q-factors
 .. autoclass:: SmartNegative
    :class-doc-from: class
 
-.. rubric:: DivertorNegative
+.. rubric:: SmartNegative2
 
-.. autoclass:: DivertorNegative
+.. autoclass:: SmartNegative2
+   :class-doc-from: class
+
+.. rubric:: DTTPositive
+
+.. autoclass:: DTTPositive
+   :class-doc-from: class
+
+.. rubric:: DTTNegative
+
+.. autoclass:: DTTNegative
    :class-doc-from: class
 
 .. rubric:: Chris's q-factor

@@ -1,8 +1,18 @@
+from gcmotion.utils.logger_setup import logger
 import matplotlib
+
+# gtk3agg backend needs PyGObject, which needs a C compiler to be installed.
+try:
+    import gi
+except ModuleNotFoundError:
+    logger.warning("PyGobject not found. Using default backend")
+    pass
+else:
+    logger.info("PyGObject availiable. using 'gtk3agg' backend")
+    matplotlib.use("gtk3agg")
 
 # Utilities
 # Import the logger first
-from gcmotion.utils import logger_setup
 from gcmotion.utils.quantity_constructor import QuantityConstructor
 from gcmotion.utils.get_size import get_size
 
@@ -13,7 +23,9 @@ from gcmotion.tokamak import efield
 from gcmotion.tokamak.reconstructed.initializers import (
     SmartPositiveInit,
     SmartNegativeInit,
-    DivertorNegativeInit,
+    SmartNegative2Init,
+    DTTPositiveInit,
+    DTTNegativeInit,
 )
 
 # Entities
@@ -34,7 +46,9 @@ __all__ = [
     # Tokamak objects
     "SmartPositiveInit",
     "SmartNegativeInit",
-    "DivertorNegativeInit",
+    "SmartNegative2Init",
+    "DTTPositiveInit",
+    "DTTNegativeInit",
     "qfactor",
     "bfield",
     "efield",
@@ -46,5 +60,3 @@ __all__ = [
     # Scripts
     "events",
 ]
-
-# matplotlib.use("gtk3agg")
