@@ -4,7 +4,11 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
 from matplotlib.collections import LineCollection
 
-from gcmotion.scripts.frequency_analysis.contour_orbits import ContourOrbit
+from gcmotion.entities.profile import Profile
+from gcmotion.plot.profile_contour import profile_energy_contour
+from gcmotion.scripts.frequency_analysis.contours.contour_orbits import (
+    ContourOrbit,
+)
 
 
 def _plot_results(paths: ContourOrbit, config):
@@ -113,3 +117,18 @@ def _plot_results(paths: ContourOrbit, config):
     ax_dict["zetas"].legend(handles=[trapped, copassing, cupassing, undefined])
 
     plt.show()
+
+
+# =============================== Debug Plots ===============================
+
+
+def debug_plot_valid_orbits(profile: Profile):
+    r"""Prints Profile Contour with all valid isoenergy orbits found"""
+
+    ax = profile_energy_contour(profile, psilim=profile.psilim, show=False)
+
+    for orbit in profile.valid_orbits:
+        ax.plot(*orbit.vertices.T, color="red")
+
+    plt.show()
+    plt.close()

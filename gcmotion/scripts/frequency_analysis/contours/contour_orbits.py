@@ -1,11 +1,10 @@
 import numpy as np
 from math import isclose
 
-from gcmotion.utils.logger_setup import logger
 from gcmotion.entities.profile import Profile
-from gcmotion.configuration.scripts_configuration import ContourFreqConfig
+from gcmotion.configuration.scripts_configuration import ContourOrbitConfig
 
-config = ContourFreqConfig()
+config = ContourOrbitConfig()
 tau = 2 * np.pi
 
 
@@ -20,15 +19,13 @@ class ContourOrbit:
     def __init__(
         self,
         E: float,
-        ylim: tuple,
         vertices: np.ndarray,
     ):
 
-        self.E = E
-        self.ylim = ylim
         self.vertices = vertices
+        self.E = E
 
-    def _bbox_extends(self):
+    def calculate_bbox(self) -> None:
         r"""Calculates the orbit's bounding box (smallest rectangle fully
         containing the orbit).
 
@@ -39,12 +36,12 @@ class ContourOrbit:
         self.xmin, self.ymin = self.vertices.min(axis=0)
         self.xmax, self.ymax = self.vertices.max(axis=0)
 
-    def validate(self) -> None:
+    def validate(self, ylim: tuple) -> None:
         r"""Checks if the bbox of the contour line touches the upper or lower
         walls, which means the path gets cut off and must be discarded.
         """
 
-        self.valid = _is_inbounds(self) and not _is_cutoff_trapped(self)
+        self.valid = is_inbounds(self, ylim) and not is_cutoff_trapped(self)
 
     def classify(self, profile: Profile = None):
         r"""Classifies the segment to trapped/passing and left-to-right, needed
@@ -55,13 +52,13 @@ class ContourOrbit:
         necessary.
         """
 
-        self.passing, self.trapped = _tp_classify(self)
-        self.left_to_right = _is_left_to_right(self)
+        self.passing, self.trapped = tp_classify(self)
+        self.left_to_right = is_left_to_right(self)
         if profile is None:
             return
         if self.trapped:
             return
-        self.undefined, self.copassing, self.cupassing = _cocu_classify(
+        self.undefined, self.copassing, self.cupassing = cocu_classify(
             self, profile
         )
 
@@ -119,19 +116,24 @@ class ContourOrbit:
 # ================================ Validation ================================
 
 
-def _is_inbounds(path: ContourOrbit) -> bool:
+def is_inbounds(orbit: ContourOrbit, ylim: tuple) -> bool:
     r"""Checks if the path's bounding box is in bounds of the whole contour,
     e.g the contour line doesn't get cutoff.
     """
     # Must not be 0(default) when comparing with
-    atol = config.is_inbounds_atol
+    atol = config.inbounds_atol
+    rtol = config.inbounds_rtol
     return not (
-        isclose(path.ymin, path.ylim[0], abs_tol=atol)  # Touches floor
-        or isclose(path.ymax, path.ylim[1], abs_tol=atol)  # Touches ceil
+        isclose(
+            orbit.ymin, ylim[0], abs_tol=atol, rel_tol=rtol
+        )  # Touches floor
+        or isclose(
+            orbit.ymax, ylim[1], abs_tol=atol, rel_tol=rtol
+        )  # Touches ceil
     )
 
 
-def _is_cutoff_trapped(path: ContourOrbit) -> bool:
+def is_cutoff_trapped(orbit: ContourOrbit) -> bool:
     r"""Checks if the segment is cut off by left or the right walls.
 
     Checks that the bounding box doesn't touch the left *and* the right wall
@@ -139,15 +141,15 @@ def _is_cutoff_trapped(path: ContourOrbit) -> bool:
     a trapped orbit that gets cutoff by the contour. This orbit is reduntant
     since it will be found at θ=0 too.
     """
-    return (isclose(path.xmin, -tau) and not isclose(path.xmax, tau)) or (
-        isclose(path.xmax, tau) and not isclose(path.xmin, -tau)
+    return (isclose(orbit.xmin, -tau) and not isclose(orbit.xmax, tau)) or (
+        isclose(orbit.xmax, tau) and not isclose(orbit.xmin, -tau)
     )
 
 
 # ===================== Trapped - Passing Classification =====================
 
 
-def _tp_classify(path: ContourOrbit) -> list[bool, bool]:
+def tp_classify(path: ContourOrbit) -> list[bool, bool]:
     r"""Checks the left and right bbox edges to check if passing or trapped."""
 
     # NOTE: isclose() is needed here
@@ -157,7 +159,7 @@ def _tp_classify(path: ContourOrbit) -> list[bool, bool]:
         return False, True
 
 
-def _cocu_classify(path: ContourOrbit, profile: Profile) -> list[bool, bool]:
+def cocu_classify(path: ContourOrbit, profile: Profile) -> list[bool, bool]:
     r"""Classifies the segment as co-passing or counter-passing depending on
     the sign of rho"""
     # psis = path.vertices.T[1]
@@ -174,7 +176,7 @@ def _cocu_classify(path: ContourOrbit, profile: Profile) -> list[bool, bool]:
 # ======================= Left-to-Right Classification =======================
 
 
-def _is_left_to_right(path: ContourOrbit) -> bool:
+def is_left_to_right(path: ContourOrbit) -> bool:
     r"""In the case that the path is passing, it returns True if the *first*
     point touches the left wall. It also checks that the *last* point touches
     the third wall, which might be reduntant."""
