@@ -24,12 +24,15 @@ class SolverConfig:
 
 @dataclass
 class CalculateQkinConfig:
-    pass
+    pzeta_rtol: float = 1e-2
 
 
 @dataclass
 class ContourGeneratorConfig:
     main_grid_density: int = 500
+    local_grid_density: int = 100
+    theta_expansion: float = 1.5
+    psi_expansion: float = 1.5
 
 
 @dataclass

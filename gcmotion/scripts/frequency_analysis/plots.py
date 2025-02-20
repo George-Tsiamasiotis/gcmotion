@@ -122,13 +122,20 @@ def _plot_results(paths: ContourOrbit, config):
 # =============================== Debug Plots ===============================
 
 
-def debug_plot_valid_orbits(profile: Profile):
+def debug_plot_valid_orbits(profile: Profile, orbits: list):
     r"""Prints Profile Contour with all valid isoenergy orbits found"""
 
-    ax = profile_energy_contour(profile, psilim=profile.psilim, show=False)
+    ax = profile_energy_contour(
+        profile,
+        psilim=profile.psilim,
+        E_units="NUJoule",
+        flux_units="NUMagnetic_flux",
+        canmom_units="NUCanonical_momentum",
+        show=False,
+    )
 
-    for orbit in profile.valid_orbits:
-        ax.plot(*orbit.vertices.T, color="red")
+    for orbit in orbits:
+        ax.plot(*orbit.vertices.T, color="red", zorder=10)
 
     plt.show()
     plt.close()

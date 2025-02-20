@@ -36,12 +36,15 @@ class ContourOrbit:
         self.xmin, self.ymin = self.vertices.min(axis=0)
         self.xmax, self.ymax = self.vertices.max(axis=0)
 
-    def validate(self, ylim: tuple) -> None:
+        # (bottom left point, top right point)
+        self.bbox = ((self.xmin, self.ymin), (self.xmax, self.ymax))
+
+    def validate(self, psilim: tuple) -> None:
         r"""Checks if the bbox of the contour line touches the upper or lower
         walls, which means the path gets cut off and must be discarded.
         """
 
-        self.valid = is_inbounds(self, ylim) and not is_cutoff_trapped(self)
+        self.valid = is_inbounds(self, psilim) and not is_cutoff_trapped(self)
 
     def classify(self, profile: Profile = None):
         r"""Classifies the segment to trapped/passing and left-to-right, needed
@@ -116,7 +119,7 @@ class ContourOrbit:
 # ================================ Validation ================================
 
 
-def is_inbounds(orbit: ContourOrbit, ylim: tuple) -> bool:
+def is_inbounds(orbit: ContourOrbit, psilim: tuple) -> bool:
     r"""Checks if the path's bounding box is in bounds of the whole contour,
     e.g the contour line doesn't get cutoff.
     """
@@ -125,10 +128,10 @@ def is_inbounds(orbit: ContourOrbit, ylim: tuple) -> bool:
     rtol = config.inbounds_rtol
     return not (
         isclose(
-            orbit.ymin, ylim[0], abs_tol=atol, rel_tol=rtol
+            orbit.ymin, psilim[0], abs_tol=atol, rel_tol=rtol
         )  # Touches floor
         or isclose(
-            orbit.ymax, ylim[1], abs_tol=atol, rel_tol=rtol
+            orbit.ymax, psilim[1], abs_tol=atol, rel_tol=rtol
         )  # Touches ceil
     )
 
