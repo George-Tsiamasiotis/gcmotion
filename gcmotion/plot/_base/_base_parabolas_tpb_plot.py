@@ -29,6 +29,12 @@ def _plot_parabolas_tpb(
     ax : Axes
         The axes upon which the plot will be realized.
 
+    Notes
+    -----
+    For a full list of all available optional parameters, see the dataclass
+    ParabolasPlotConfig at gcmotion/configuration/plot_parameters. The
+    defaults values are set there, and are overwritten if passed as arguements.
+
     """
     logger.info("\t==> Plotting Base Parabolas Trapped Passing Boundary...")
 

@@ -103,3 +103,7 @@ class _FixedPointsPlotConfig:
     # Fixed points keywords
     fp_plot_init_cond: bool = False
     flux_units: str = "Tesla * meter^2"
+    # IC Keywords
+    ic_marker: str = ">"
+    ic_markercolor: str = "red"
+    ic_markersize: float = 100
