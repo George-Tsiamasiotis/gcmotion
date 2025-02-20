@@ -97,7 +97,14 @@ def _base_profile_energy_contour(profile: Profile, ax: Axes, **kwargs):
 
     # Contour plot
     if config.mode == "lines":
-        C = ax.contour("theta", "ycoord", "Energy", data=data, **kw)
+        C = ax.contour(
+            "theta",
+            "ycoord",
+            "Energy",
+            data=data,
+            linewidths=config.linewidths,
+            **kw,
+        )
         logger.debug("\t\tContour mode: lines")
     else:
         C = ax.contourf(
@@ -105,7 +112,6 @@ def _base_profile_energy_contour(profile: Profile, ax: Axes, **kwargs):
             "ycoord",
             "Energy",
             data=data,
-            linewidths=config.linewidths,
             **kw,
         )
         logger.debug("\t\tContour mode: filled")
