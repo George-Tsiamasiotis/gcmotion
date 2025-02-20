@@ -46,32 +46,29 @@ class ContourOrbit:
 
         self.valid = is_inbounds(self, psilim) and not is_cutoff_trapped(self)
 
-    def classify(self, profile: Profile = None):
-        r"""Classifies the segment to trapped/passing and left-to-right, needed
-        to correctly add the bottom points in the correct order.
-
-        Since the same class is used to create 'phony orbits' to calclulate dE
-        and dJtheta localy, co-/counter-passing classification is not
-        necessary.
+    def distance_from(self, bbox: tuple[tuple, tuple]) -> float:
+        r"""Returns a distance-like quantity of the origin point from self's
+        origin point. The closest bbox is the correct contour to calculate J.
         """
+        return abs(self.xmin - bbox[0][0]) + abs(self.ymin - bbox[0][1])
+
+    def classify_as_tp(self):
+        r"""Classifies orbit as trapped or passing."""
 
         self.passing, self.trapped = tp_classify(self)
-        self.left_to_right = is_left_to_right(self)
-        if profile is None:
-            return
-        if self.trapped:
-            return
-        self.undefined, self.copassing, self.cupassing = cocu_classify(
-            self, profile
-        )
 
     def close_segment(self):
-        r"""If the segment is passing, append the two bottom points, as well as
-        the first point to close the segment. Not needed for the shoelace
-        algorithm, but makes plotting clearer.
+        r"""If the segment is passing, figure out if the points are
+        left-to-right or right-to-left and append the two bottom points
+        coorectly.
+
+        Also append the first point to the end to close the orbit, even though
+        it doesn't affect the shoelace algorithm.
         """
         if self.trapped:
             return
+
+        self.left_to_right = is_left_to_right(self)
 
         closeoff_point = [self.vertices[0]]  # same for bot cases
         if self.left_to_right:
@@ -81,18 +78,25 @@ class ContourOrbit:
             extra = [[-tau, 0], [tau, 0]] + closeoff_point
             self.vertices = np.append(self.vertices, extra, axis=0)
 
+    def convert_to_ptheta(self, profile: Profile):
+        r"""Converts all ycoords of the vertices from ψ to Pθ."""
+        # Could not find a better way, but this isn't as slow as I thought.
+        self.vertices = np.vstack(
+            (
+                self.vertices.T[0],  # Thetas as they were
+                profile.findPtheta(
+                    profile.Q(self.vertices.T[1], "NUMagnetic_flux"),
+                    "NUCanonical_momentum",
+                ).magnitude,
+            )
+        ).T
+
     def calculate_Jtheta(self):
         r"""Calculates the action J."""
         area = shoelace(self.vertices)
         if self.passing:
             area /= 2  # because theta span = 4π
         self.Jtheta = area / (2 * np.pi)
-
-    def distance_from(self, xy: tuple[float, float]) -> float:
-        r"""Returns a distance-like quantity of the origin point from self's
-        origin point. The closest bbox is the correct contour to calculate J.
-        """
-        return abs(self.xmin - xy[0]) + abs(self.ymin - xy[1])
 
     def pick_color(self):
         r"""Sets the segment's color depending on its orbit type."""

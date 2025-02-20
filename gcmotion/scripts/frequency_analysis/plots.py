@@ -131,6 +131,7 @@ def debug_plot_valid_orbits(profile: Profile, orbits: list):
         E_units="NUJoule",
         flux_units="NUMagnetic_flux",
         canmom_units="NUCanonical_momentum",
+        cursor=False,  # ?
         show=False,
     )
 

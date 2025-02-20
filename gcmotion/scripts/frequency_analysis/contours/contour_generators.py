@@ -58,7 +58,8 @@ def local_contour(profile: Profile, bbox: tuple[tuple, tuple]):
 
     config = ContourGeneratorConfig()
 
-    # Expand theta and psi grids but dont let theta out of (-tau, tau)
+    # Expand theta and psi grids but dont let theta out of (-tau, tau) or psi
+    # out of psiwall_lim
     thetamean = (bbox[0][0] + bbox[1][0]) / 2
     thetaspan = bbox[1][0] - bbox[0][0]
     psimean = (bbox[0][1] + bbox[1][1]) / 2
@@ -66,8 +67,9 @@ def local_contour(profile: Profile, bbox: tuple[tuple, tuple]):
 
     thetamin = max(thetamean - config.theta_expansion * thetaspan / 2, -tau)
     thetamax = min(thetamean + config.theta_expansion * thetaspan / 2, tau)
-    psimin = psimean - config.psi_expansion * psispan / 2
-    psimax = psimean + config.psi_expansion * psispan / 2
+    psilim = profile.Q(profile.psiwall_lim, "psi_wall").to("NUmagnetic_flux")
+    psimin = max(psimean - config.psi_expansion * psispan / 2, psilim[0].m)
+    psimax = min(psimean + config.psi_expansion * psispan / 2, psilim[1].m)
 
     # Calculate local Contour
     thetalim = profile.Q((thetamin, thetamax), "radians")

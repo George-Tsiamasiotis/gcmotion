@@ -34,9 +34,9 @@ def generate_contour_orbits(Contour: dict, level: float, config):
     ]
     print(f"Valid Isoenergy Orbits found: {len(valid_isoenergy_orbits)}")
 
-    for orbit in valid_isoenergy_orbits:
-        plt.plot(*orbit.vertices.T, color="red")
-    plt.show()
+    # for orbit in valid_isoenergy_orbits:
+    #     plt.plot(*orbit.vertices.T, color="red")
+    # plt.show()
 
     return valid_isoenergy_orbits
 
