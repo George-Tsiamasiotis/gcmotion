@@ -12,7 +12,7 @@ def generate_contour_orbits(Contour: dict, level: float, config):
 
     # Step 1a: Generate lines and return if none found
     isoenergy_lines = Contour["C"].lines(level=level)
-    print(f"Isoenergy lines found: {len(isoenergy_lines)}")
+    # print(f"Isoenergy lines found: {len(isoenergy_lines)}")
 
     if len(isoenergy_lines) == 0:
         return []
@@ -32,7 +32,7 @@ def generate_contour_orbits(Contour: dict, level: float, config):
     valid_isoenergy_orbits = [
         orbit for orbit in isoenergy_orbits if orbit.valid
     ]
-    print(f"Valid Isoenergy Orbits found: {len(valid_isoenergy_orbits)}")
+    # print(f"Valid Isoenergy Orbits found: {len(valid_isoenergy_orbits)}")
 
     # for orbit in valid_isoenergy_orbits:
     #     plt.plot(*orbit.vertices.T, color="red")

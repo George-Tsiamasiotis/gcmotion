@@ -31,8 +31,8 @@ class CalculateQkinConfig:
 class ContourGeneratorConfig:
     main_grid_density: int = 500
     local_grid_density: int = 100
-    theta_expansion: float = 1.5
-    psi_expansion: float = 1.5
+    theta_expansion: float = 2.5
+    psi_expansion: float = 2.5
 
 
 @dataclass

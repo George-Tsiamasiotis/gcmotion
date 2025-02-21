@@ -44,7 +44,7 @@ def main_contour(profile: Profile, psilim: tuple, **kwargs):
 
     MainContour = {
         "C": C,
-        "psilim": psilim.to("psi_wall").m,
+        "psilim": psilim.to("NUMagnetic_flux").m,
         # "energymin": energy_grid.min(),
         # "energymax": energy_grid.max(),
     }
@@ -52,7 +52,7 @@ def main_contour(profile: Profile, psilim: tuple, **kwargs):
     return MainContour
 
 
-def local_contour(profile: Profile, bbox: tuple[tuple, tuple]):
+def local_contour(profile: Profile, orbit: ContourOrbit):
     r"""Expands bounding box and creates a local contour generator inside of
     it."""
 
@@ -60,13 +60,18 @@ def local_contour(profile: Profile, bbox: tuple[tuple, tuple]):
 
     # Expand theta and psi grids but dont let theta out of (-tau, tau) or psi
     # out of psiwall_lim
-    thetamean = (bbox[0][0] + bbox[1][0]) / 2
-    thetaspan = bbox[1][0] - bbox[0][0]
+    # TODO: use xmin/ymax to make it more readable
+    bbox = orbit.bbox
+    if orbit.trapped:
+        thetamean = (bbox[0][0] + bbox[1][0]) / 2
+        thetaspan = (bbox[1][0] - bbox[0][0]) / 2
+        thetamin = max(thetamean - config.theta_expansion * thetaspan, -tau)
+        thetamax = min(thetamean + config.theta_expansion * thetaspan, tau)
+    elif orbit.passing:
+        thetamin, thetamax = -tau, tau
+
     psimean = (bbox[0][1] + bbox[1][1]) / 2
     psispan = bbox[1][1] - bbox[0][1]
-
-    thetamin = max(thetamean - config.theta_expansion * thetaspan / 2, -tau)
-    thetamax = min(thetamean + config.theta_expansion * thetaspan / 2, tau)
     psilim = profile.Q(profile.psiwall_lim, "psi_wall").to("NUmagnetic_flux")
     psimin = max(psimean - config.psi_expansion * psispan / 2, psilim[0].m)
     psimax = min(psimean + config.psi_expansion * psispan / 2, psilim[1].m)

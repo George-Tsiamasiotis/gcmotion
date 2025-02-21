@@ -138,5 +138,7 @@ def debug_plot_valid_orbits(profile: Profile, orbits: list):
     for orbit in orbits:
         ax.plot(*orbit.vertices.T, color="red", zorder=10)
 
+    ax.set_title(f"Valid orbits found: {len(orbits)}")
+
     plt.show()
     plt.close()
