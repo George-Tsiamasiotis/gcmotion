@@ -242,8 +242,11 @@ class Profile:
 
         """
         # Do all operations in NU units, and Quantify at the end.
-        psiNU = psi.to("NUMagnetic_flux")
-        psiNU = psiNU.magnitude
+        if isinstance(psi, pint.Quantity):
+            psiNU = psi.to("NUMagnetic_flux")
+            psiNU = psiNU.magnitude
+        else:
+            psiNU = psi
 
         # Calculate currents. B not needed so theta value doesnt matter
         _, iNU, gNU = self.bfield.bigNU(psiNU, 0)
@@ -253,8 +256,11 @@ class Profile:
         PthetaNU = psiNU + rhoNU * iNU
 
         # Quantify, convert to input units and return
-        PthetaNU = self.Q(PthetaNU, "NUCanonical_momentum")
-        return PthetaNU.to(units)
+        if isinstance(psi, pint.Quantity):
+            PthetaNU = self.Q(PthetaNU, "NUCanonical_momentum")
+            return PthetaNU.to(units)
+        else:
+            return PthetaNU
 
     def findEnergy(
         self, psi: Quantity, theta: float, units: str, potential: bool = True
@@ -280,8 +286,11 @@ class Profile:
             The calculated Energy Quantity in the specified units.
         """
         # Do all operations in NU floats, and Quantify at the end.
-        _ = psi.to("NUMagnetic_flux")
-        psiNU = _.magnitude
+        if isinstance(psi, pint.Quantity):
+            psiNU = psi.to("NUMagnetic_flux")
+            psiNU = psiNU.magnitude
+        else:
+            psiNU = psi
 
         # Calculate currents. B not needed so theta value doesnt matter
         bNU, iNU, gNU = self.bfield.bigNU(psiNU, theta)
@@ -298,8 +307,11 @@ class Profile:
             EnergyNU += PhiNU
 
         # Quantify, convert to input units and return
-        EnergyNU = self.Q(EnergyNU, "NUJoule")
-        return EnergyNU.to(units)
+        if isinstance(psi, pint.Quantity):
+            EnergyNU = self.Q(EnergyNU, "NUJoule")
+            return EnergyNU.to(units)
+        else:
+            return EnergyNU
 
     def findPzeta(
         self, psi: Quantity, theta: float, units: str, potential: bool = True
@@ -439,7 +451,8 @@ class Profile:
         energy,
         units: str,
         potential: bool = True,
-    ):
+    ):  # FIXME: Might be redundant
+
         # Do all operations in NU floats, and Quantify at the end.
         psiNU = psi.to("NUMagnetic_flux")
         psiNU = psiNU.magnitude

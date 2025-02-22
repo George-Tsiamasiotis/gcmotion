@@ -6,7 +6,7 @@ from matplotlib.collections import LineCollection
 
 from gcmotion.entities.profile import Profile
 from gcmotion.plot.profile_contour import profile_energy_contour
-from gcmotion.scripts.frequency_analysis.contours.contour_orbits import (
+from gcmotion.scripts.frequency_analysis.contours.contour_orbit import (
     ContourOrbit,
 )
 

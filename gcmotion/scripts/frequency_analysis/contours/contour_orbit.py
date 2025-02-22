@@ -16,6 +16,28 @@ class ContourOrbit:
     frequency_analysis() since some extra parameters are needed
     """
 
+    vertices: np.ndarray = None
+    E: float = None
+    xmin: float = None
+    ymin: float = None
+    xmax: float = None
+    ymax: float = None
+    bbox: tuple[tuple[float, float], tuple[float, float]] = None
+
+    valid: bool = None
+    edge_orbit: bool = None
+    passing: bool = None
+    trapped: bool = None
+    copassing: bool = None
+    cupassing: bool = None
+    area: float = None
+    Jtheta: float = None
+    Jzeta: float = None
+    omega_theta: float = None
+    omega_zeta: float = None
+    qkinetic: float = None
+    color: str = config.undefined_color
+
     def __init__(
         self,
         E: float,
@@ -68,10 +90,10 @@ class ContourOrbit:
         if self.trapped:
             return
 
-        self.left_to_right = is_left_to_right(self)
+        left_to_right = is_left_to_right(self)
 
         closeoff_point = [self.vertices[0]]  # same for bot cases
-        if self.left_to_right:
+        if left_to_right:
             extra = [[tau, 0], [-tau, 0]] + closeoff_point
             self.vertices = np.append(self.vertices, extra, axis=0)
         else:
@@ -93,10 +115,10 @@ class ContourOrbit:
 
     def calculate_Jtheta(self):
         r"""Calculates the action J."""
-        area = shoelace(self.vertices)
+        self.area = shoelace(self.vertices)
         if self.passing:
-            area /= 2  # because theta span = 4π
-        self.Jtheta = area / (2 * np.pi)
+            self.area /= 2  # because theta span = 4π
+        self.Jtheta = self.area / (2 * np.pi)
 
     def pick_color(self):
         r"""Sets the segment's color depending on its orbit type."""

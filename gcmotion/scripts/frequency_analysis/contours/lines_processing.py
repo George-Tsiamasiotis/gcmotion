@@ -1,14 +1,16 @@
 from collections import deque
-import matplotlib.pyplot as plt
 
-from gcmotion.entities.profile import Profile
-from gcmotion.scripts.frequency_analysis.contours.contour_orbits import (
+from gcmotion.scripts.frequency_analysis.contours.contour_orbit import (
     ContourOrbit,
 )
 
 
 def generate_contour_orbits(Contour: dict, level: float, config):
-    r"""[Steps 1-1e]"""
+    r"""[Steps 1-1e] Creates the contour lines from contourpy's
+    ContourGenerator for a *specific* level. Then creates a ContourObrit object
+    out of every segment, calculates their bounding boxes, validates them, and
+    returns the valid ones..
+    """
 
     # Step 1a: Generate lines and return if none found
     isoenergy_lines = Contour["C"].lines(level=level)

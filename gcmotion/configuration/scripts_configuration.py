@@ -22,23 +22,49 @@ class SolverConfig:
     rtol: float = 1e-8  # Scipy's default is 1e-3
 
 
+# ============================ Frequency Analysis ============================
+
+
+@dataclass
+class FrequencyAnalysisConfig:
+    tqdm_enable: bool = True
+    tqdm_ascii: str = "-#"
+    tqdm_colour: str = "green"
+    tqdm_dynamic_ncols: bool = False
+    tqdm_mu_desc: str = f"{'Iterating through mus':^28}"
+    tqdm_pzeta_desc: str = f"{'Iterating through pzetas':^28}"
+    tqdm_energy_desc: str = f"{'Iterating through energies':^28}"
+    tqdm_mu_unit: str = f"{'mus':^10}"
+    tqdm_pzeta_unit: str = f"{'Pzetas':^10}"
+    tqdm_energy_unit: str = f"{'Energies':^10}"
+
+
 @dataclass
 class CalculateQkinConfig:
     pzeta_rtol: float = 1e-2
 
 
 @dataclass
+class CalculateOmegaThetaConfig:
+    energy_rtol: float = 1e-3
+
+
+@dataclass
 class ContourGeneratorConfig:
-    main_grid_density: int = 500
+    main_grid_density: int = 400
     local_grid_density: int = 100
-    theta_expansion: float = 2.5
-    psi_expansion: float = 2.5
+    theta_expansion: float = 2
+    psi_expansion: float = 2
 
 
 @dataclass
 class ContourOrbitConfig:
     inbounds_atol: float = 1e-7  # Must not be 0
     inbounds_rtol: float = 1e-7
+    trapped_color: str = "red"
+    copassing_color: str = "xkcd:light purple"
+    cupassing_color: str = "xkcd:navy blue"
+    undefined_color: str = "xkcd:blue"
 
 
 # @dataclass
