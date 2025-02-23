@@ -157,3 +157,10 @@ class ParticlePoloidalDrift:
 class AutoYspan:
     zoomout: float = 0.75
     hardylim: float = 3  # times psi_wall
+
+
+@dataclass
+class FrequencyAnalysisPlotConfig:
+    scatter_figsize: tuple = figsize
+    scatter_dpi: int = dpi
+    scatter_size: float = 4

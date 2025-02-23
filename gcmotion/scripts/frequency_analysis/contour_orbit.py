@@ -9,11 +9,11 @@ tau = 2 * np.pi
 
 
 class ContourOrbit:
-    r"""Path-like object containing vertices as well as flags and the methods
-    needed to classify the orbit.
+    r"""Path-like object containing the vertices as well as flags and the
+    methods needed to classify the orbit.
 
     The methods should be called in a specific order, which is done inside
-    frequency_analysis() since some extra parameters are needed
+    profile_analysis() since some extra parameters are needed
     """
 
     vertices: np.ndarray = None
@@ -120,6 +120,12 @@ class ContourOrbit:
             self.area /= 2  # because theta span = 4π
         self.Jtheta = self.area / (2 * np.pi)
 
+    def classify_as_cocu(self, profile: Profile):
+        r"""Classifies orbit as co-/counter-passing."""
+        self.undefined, self.copassing, self.cupassing = cocu_classify(
+            self, profile
+        )
+
     def pick_color(self):
         r"""Sets the segment's color depending on its orbit type."""
         # TODO: find a better way to do this
@@ -140,6 +146,14 @@ class ContourOrbit:
                 )
             )
         )
+
+    def str_dumb(self):
+
+        tp = "t" * self.trapped + "p" * self.passing
+        cocu = "co" * self.copassing + "cu" * self.cupassing
+        edge = "/edge" * self.edge_orbit
+
+        self.string = tp + "/" + cocu + edge
 
 
 # ================================ Validation ================================
@@ -191,11 +205,6 @@ def tp_classify(path: ContourOrbit) -> list[bool, bool]:
 def cocu_classify(path: ContourOrbit, profile: Profile) -> list[bool, bool]:
     r"""Classifies the segment as co-passing or counter-passing depending on
     the sign of rho"""
-    # psis = path.vertices.T[1]
-    # sample_idx = np.round(
-    #     np.linspace(1, len(psis) - 1, config.rho_sample_size)
-    # ).astype(int)
-    # co = profile._rhosign(psis[sample_idx])
 
     undefined, co = profile._rhosign(psiNU=path.vertices.T[1])
 

@@ -1,4 +1,5 @@
 import pandas as pd
+import matplotlib.pyplot as plt
 
 from tqdm import tqdm
 from dataclasses import asdict
@@ -9,6 +10,9 @@ from gcmotion.entities.profile import Profile
 
 from gcmotion.configuration.scripts_configuration import (
     FrequencyAnalysisConfig,
+)
+from gcmotion.configuration.plot_parameters import (
+    FrequencyAnalysisPlotConfig,
 )
 from gcmotion.scripts.frequency_analysis.profile_analysis import (
     profile_analysis,
@@ -127,10 +131,49 @@ class FrequencyAnalysis:
             "qkinetic": pd.Series([orb.qkinetic for orb in self.orbits]),
             "omega_theta": pd.Series([orb.omega_theta for orb in self.orbits]),
             "omega_zeta": pd.Series([orb.omega_zeta for orb in self.orbits]),
+            "orbit_type": pd.Series([orb.string for orb in self.orbits]),
         }
 
         self.df = pd.DataFrame(d)
         return self.df
 
+    def scatter(self, x: str, y: str, **kwargs):
+
+        config = FrequencyAnalysisPlotConfig()
+        for key, value in kwargs.items():
+            setattr(config, key, value)
+
+        fig_kw = {
+            "figsize": config.scatter_figsize,
+            "dpi": config.scatter_dpi,
+            "layout": "constrained",
+        }
+        fig = plt.figure(**fig_kw)
+        ax = fig.add_subplot()
+
+        xs, ys = self.df[x], self.df[y]
+        colors = tuple(orb.color for orb in self.orbits)
+
+        scatter_kw = {
+            "s": config.scatter_size,
+        }
+        ax.scatter(xs, ys, c=colors, **scatter_kw)
+        ax.set_xlabel(scatter_labels(x))
+        ax.set_ylabel(scatter_labels(y))
+        ax.set_title(ax.get_xlabel() + "-" + ax.get_ylabel())
+        plt.show()
+
     def dump(self):
         pass
+
+
+def scatter_labels(index: str):
+    titles = {
+        "Energy": r"$Energy [NU]$",
+        "Pzeta": r"$P_\zeta [NU]$",
+        "mu": r"$\mu [NU]$",
+        "qkinetic": r"$q_{kinetic}$",
+        "omega_theta": r"$\omega_\theta [\omega_0]$",
+        "omega_zeta": r"$\omega_\zeta [\omega_0]$",
+    }
+    return titles[index]

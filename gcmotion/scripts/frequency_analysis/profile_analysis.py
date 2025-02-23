@@ -1,50 +1,59 @@
+r"""
+Analyses a single *slice* of a Profile and tries to find all valid segments to
+ccalculate their frequencies and qkinetics.
+
+A slice is a contour graph over the ω-Ρθ space, with fixed μ and Ρζ.
+Valid orbits consist of isoenergy lines that are fully contained inside the
+graph, without getting cuttoff by its edges.
+
+Functions
+---------
+profile_analysis():
+    Creates the Main Contour and the Upper and Lower profiles used to extract
+    the needed contour lines.
+"""
+
 import numpy as np
 from copy import deepcopy
 
+from gcmotion.entities.profile import Profile
+from gcmotion.scripts.frequency_analysis.contour_orbit import ContourOrbit
+import gcmotion.scripts.frequency_analysis.lines_processing as lp
 from gcmotion.configuration.scripts_configuration import (
     CalculateQkinConfig,
     CalculateOmegaThetaConfig,
 )
-from gcmotion.scripts.frequency_analysis.contours.contour_orbit import (
-    ContourOrbit,
-)
-from gcmotion.scripts.frequency_analysis.contours.contour_generators import (
+from gcmotion.scripts.frequency_analysis.contour_generators import (
     main_contour,
     local_contour,
 )
-from gcmotion.scripts.frequency_analysis.contours.lines_processing import (
-    generate_contour_orbits,
-)
-
-from gcmotion.scripts.frequency_analysis.plots import debug_plot_valid_orbits
-from gcmotion.entities.profile import Profile
 
 
 def profile_analysis(profile: Profile, psilim: tuple = (0.05, 1), **kwargs):
+    r""""""
 
     config = CalculateQkinConfig()
     for key, value in kwargs.items():
         setattr(config, key, value)
 
-    # Step 1: Generate valid isoenergy orbits. Store them in Profile for
-    # conviniency.
+    # Step 1: Generate valid isoenergy orbits.
     MainContour = main_contour(profile=profile, psilim=psilim)
 
-    valid_orbits = generate_contour_orbits(
+    valid_orbits = lp.generate_contour_orbits(
         Contour=MainContour, level=profile.ENU.m, config=config
     )
 
     if len(valid_orbits) == 0:
-        # print("No valid orbits found.")
         return None
 
     # debug_plot_valid_orbits(profile, valid_orbits, psilim)
 
     # Step 2: Create adjecent Pzeta profiles. Fastest way I could find.
     lower_profile, upper_profile = deepcopy(profile), deepcopy(profile)
+    assert upper_profile is not lower_profile
+
     lower_profile.PzetaNU = profile.PzetaNU * (1 - config.pzeta_rtol)
     upper_profile.PzetaNU = profile.PzetaNU * (1 + config.pzeta_rtol)
-    assert upper_profile is not lower_profile
 
     Profiles = {
         "Main": profile,
@@ -57,6 +66,8 @@ def profile_analysis(profile: Profile, psilim: tuple = (0.05, 1), **kwargs):
         orbit.Pzeta = profile.PzetaNU.m
         orbit.mu = profile.muNU.m
 
+        # Omega_theta seems to be the fastest of the two, so try this one first
+        # and abort if no omega is found.
         orbit.omega_theta = calculate_omegatheta(
             orbit=orbit,
             main_contour=MainContour,
@@ -70,10 +81,12 @@ def profile_analysis(profile: Profile, psilim: tuple = (0.05, 1), **kwargs):
             continue
 
         orbit.omega_zeta = calculate_omegazeta(orbit=orbit)
-        del orbit.vertices
+        orbit.classify_as_cocu(profile=Profiles["Main"])
+        orbit.pick_color()
+        orbit.str_dumb()
 
     return_orbits = [
-        orbit for orbit in valid_orbits if hasattr(orbit, "omega_zeta")
+        orbit for orbit in valid_orbits if hasattr(orbit, "string")
     ]
 
     if len(return_orbits) > 0:
@@ -98,10 +111,10 @@ def calculate_orbit_qkin(orbit: ContourOrbit, profiles: dict) -> float:
     profiles["Upper"].psilim = UpperContour["psilim"]
 
     # Step 2c: Try to find contour lines with the same E in each Contour
-    lower_orbits = generate_contour_orbits(
+    lower_orbits = lp.generate_contour_orbits(
         Contour=LowerContour, level=profiles["Main"].ENU.m, config=config
     )
-    upper_orbits = generate_contour_orbits(
+    upper_orbits = lp.generate_contour_orbits(
         Contour=UpperContour, level=profiles["Main"].ENU.m, config=config
     )
 
@@ -172,10 +185,10 @@ def calculate_omegatheta(
     Eupper = E * (1 + config.energy_rtol)
     Elower = E * (1 - config.energy_rtol)
 
-    lower_orbits = generate_contour_orbits(
+    lower_orbits = lp.generate_contour_orbits(
         Contour=main_contour, level=Elower, config=config
     )
-    upper_orbits = generate_contour_orbits(
+    upper_orbits = lp.generate_contour_orbits(
         Contour=main_contour, level=Eupper, config=config
     )
 
@@ -211,7 +224,7 @@ def calculate_omegatheta(
     dE = Eupper - Elower
 
     upper_orbit.calculate_Jtheta()
-    upper_orbit.calculate_Jtheta()
+    lower_orbit.calculate_Jtheta()
     dJtheta = upper_orbit.Jtheta - lower_orbit.Jtheta
 
     omega_theta = dE / dJtheta
