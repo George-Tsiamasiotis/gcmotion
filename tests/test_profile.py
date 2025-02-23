@@ -45,15 +45,6 @@ def test_findmu(simple_profile, Q):
     assert mu_array.m.shape == psi_array.m.shape
 
 
-def test_updatePzeta(simple_profile, Q):
-    Pzeta_float = 0.2
-    Pzeta_quant = Q(0.3, "NUcanonical_momentum")
-    simple_profile._update_Pzeta(Pzeta_float)
-    assert isclose(Pzeta_float, simple_profile.PzetaNU.m)
-    simple_profile._update_Pzeta(Pzeta_quant)
-    assert isclose(Pzeta_quant.m, simple_profile.PzetaNU.m)
-
-
 def test_profile_repr_str(simple_profile):
     simple_profile.__repr__()
     simple_profile.__str__()

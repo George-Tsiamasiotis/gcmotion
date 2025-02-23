@@ -100,14 +100,14 @@ class ContourOrbit:
             extra = [[-tau, 0], [tau, 0]] + closeoff_point
             self.vertices = np.append(self.vertices, extra, axis=0)
 
-    def convert_to_ptheta(self, profile: Profile):
+    def convert_to_ptheta(self, findPtheta: Profile, Q):
         r"""Converts all ycoords of the vertices from ψ to Pθ."""
         # Could not find a better way, but this isn't as slow as I thought.
         self.vertices = np.vstack(
             (
                 self.vertices.T[0],  # Thetas as they were
-                profile.findPtheta(
-                    profile.Q(self.vertices.T[1], "NUMagnetic_flux"),
+                findPtheta(
+                    Q(self.vertices.T[1], "NUMagnetic_flux"),
                     "NUCanonical_momentum",
                 ).magnitude,
             )
@@ -118,7 +118,7 @@ class ContourOrbit:
         self.area = shoelace(self.vertices)
         if self.passing:
             self.area /= 2  # because theta span = 4π
-        self.Jtheta = self.area / (2 * np.pi)
+        self.Jtheta = self.area / (tau)
 
     def classify_as_cocu(self, profile: Profile):
         r"""Classifies orbit as co-/counter-passing."""
@@ -128,30 +128,22 @@ class ContourOrbit:
 
     def pick_color(self):
         r"""Sets the segment's color depending on its orbit type."""
-        # TODO: find a better way to do this
-        if getattr(self, "undefined", False):
-            self.color = config.undefined_color
-            return
 
-        self.color = (
-            config.trapped_color
-            if self.trapped
-            else (
-                config.copassing_color
-                if self.copassing
-                else (
-                    config.cupassing_color
-                    if self.cupassing
-                    else config.undefined_color
-                )
-            )
-        )
+        if self.trapped:
+            self.color = config.trapped_color
+        elif self.copassing:
+            self.color = config.copassing_color
+        elif self.cupassing:
+            self.color = config.cupassing_color
+        elif self.undefined:
+            self.color = config.undefined_color
 
     def str_dumb(self):
 
-        tp = "t" * self.trapped + "p" * self.passing
-        cocu = "co" * self.copassing + "cu" * self.cupassing
-        edge = "/edge" * self.edge_orbit
+        # Use bool() to default to False if None
+        tp = "t" * bool(self.trapped) + "p" * bool(self.passing)
+        cocu = "co" * bool(self.copassing) + "cu" * bool(self.cupassing)
+        edge = "/edge" * bool(self.edge_orbit)
 
         self.string = tp + "/" + cocu + edge
 

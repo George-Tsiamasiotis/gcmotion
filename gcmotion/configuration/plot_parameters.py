@@ -1,3 +1,5 @@
+from gcmotion.configuration.scripts_configuration import ContourOrbitConfig
+
 from dataclasses import dataclass
 from numpy import pi
 
@@ -160,7 +162,7 @@ class AutoYspan:
 
 
 @dataclass
-class FrequencyAnalysisPlotConfig:
+class FrequencyAnalysisPlotConfig(ContourOrbitConfig):
     scatter_figsize: tuple = figsize
     scatter_dpi: int = dpi
-    scatter_size: float = 4
+    scatter_size: float = 7
