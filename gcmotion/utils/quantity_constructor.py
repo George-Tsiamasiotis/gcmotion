@@ -6,17 +6,7 @@ from pint import UnitRegistry, set_application_registry
 from gcmotion.configuration.physical_constants import PhysicalConstants
 
 from gcmotion.utils.logger_setup import logger
-
-
-def _calls_counter(func):
-    r"""Decorator counting how many times a function has been called."""
-
-    def wrapped(*args, **kwargs):
-        wrapped.calls += 1
-        return func(*args, **kwargs)
-
-    wrapped.calls = 0
-    return wrapped
+from gcmotion.utils.decorators import _calls_counter
 
 
 @_calls_counter

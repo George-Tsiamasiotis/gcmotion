@@ -100,14 +100,14 @@ class ContourOrbit:
             extra = [[-tau, 0], [tau, 0]] + closeoff_point
             self.vertices = np.append(self.vertices, extra, axis=0)
 
-    def convert_to_ptheta(self, profile: Profile):
+    def convert_to_ptheta(self, findPtheta: Profile, Q):
         r"""Converts all ycoords of the vertices from ψ to Pθ."""
         # Could not find a better way, but this isn't as slow as I thought.
         self.vertices = np.vstack(
             (
                 self.vertices.T[0],  # Thetas as they were
-                profile.findPtheta(
-                    profile.Q(self.vertices.T[1], "NUMagnetic_flux"),
+                findPtheta(
+                    Q(self.vertices.T[1], "NUMagnetic_flux"),
                     "NUCanonical_momentum",
                 ).magnitude,
             )
@@ -149,9 +149,10 @@ class ContourOrbit:
 
     def str_dumb(self):
 
-        tp = "t" * self.trapped + "p" * self.passing
-        cocu = "co" * self.copassing + "cu" * self.cupassing
-        edge = "/edge" * self.edge_orbit
+        # Use bool() to default to False if None
+        tp = "t" * bool(self.trapped) + "p" * bool(self.passing)
+        cocu = "co" * bool(self.copassing) + "cu" * bool(self.cupassing)
+        edge = "/edge" * bool(self.edge_orbit)
 
         self.string = tp + "/" + cocu + edge
 

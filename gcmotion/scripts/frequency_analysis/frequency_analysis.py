@@ -2,10 +2,12 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from tqdm import tqdm
+from copy import deepcopy
 from dataclasses import asdict
 from collections import deque
 
 from numpy.typing import ArrayLike
+from matplotlib.patches import Patch
 from gcmotion.entities.profile import Profile
 
 from gcmotion.configuration.scripts_configuration import (
@@ -17,6 +19,7 @@ from gcmotion.configuration.plot_parameters import (
 from gcmotion.scripts.frequency_analysis.profile_analysis import (
     profile_analysis,
 )
+from gcmotion.scripts.frequency_analysis.contour_generators import main_contour
 
 
 class FrequencyAnalysis:
@@ -89,30 +92,30 @@ class FrequencyAnalysis:
             **global_pbar_kw,
         )
 
+        profile = deepcopy(self.profile)
         # This loop runs through all given parameters and returns all contour
         # orbits that managed to calculate their frequencies
         self.orbits = deque()
         for mu in self.muspan:
             pzeta_pbar.reset()
+            profile.muNU = mu
+
             for Pzeta in self.Pzetaspan:
                 energy_pbar.reset()
-                for E in self.Espan:
+                profile.PzetaNU = Pzeta
+                MainContour = main_contour(profile, self.psilim)
 
-                    # Update profile
-                    self.profile.muNU = mu
-                    self.profile.PzetaNU = Pzeta
-                    self.profile.ENU = E
+                for E in self.Espan:
+                    profile.ENU = E
 
                     # Profile Analysis returs either a list with found orbits,
                     # or None
-                    result = profile_analysis(
-                        profile=self.profile,
+                    self.orbits += profile_analysis(
+                        main_contour=MainContour,
+                        profile=profile,
                         psilim=self.psilim,
                         **asdict(self.config),
                     )
-
-                    if result is not None:
-                        self.orbits += result
 
                     energy_pbar.update()
                 pzeta_pbar.update()
@@ -143,6 +146,12 @@ class FrequencyAnalysis:
         for key, value in kwargs.items():
             setattr(config, key, value)
 
+        # Manual lengend entries patches
+        trapped = Patch(color=config.trapped_color, label="Trapped")
+        copassing = Patch(color=config.copassing_color, label="Co-passing")
+        cupassing = Patch(color=config.cupassing_color, label="Cu-Passing")
+        undefined = Patch(color=config.undefined_color, label="Undefined")
+
         fig_kw = {
             "figsize": config.scatter_figsize,
             "dpi": config.scatter_dpi,
@@ -158,9 +167,12 @@ class FrequencyAnalysis:
             "s": config.scatter_size,
         }
         ax.scatter(xs, ys, c=colors, **scatter_kw)
+        ax.axhline(y=0, ls="--", lw=1.5, c="k")
         ax.set_xlabel(scatter_labels(x))
         ax.set_ylabel(scatter_labels(y))
-        ax.set_title(ax.get_xlabel() + "-" + ax.get_ylabel())
+        ax.set_title(ax.get_xlabel() + " - " + ax.get_ylabel())
+        ax.legend(handles=[trapped, copassing, cupassing, undefined])
+        ax.grid(True)
         plt.show()
 
     def dump(self):

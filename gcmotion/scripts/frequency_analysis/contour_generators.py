@@ -2,10 +2,8 @@ import contourpy
 import numpy as np
 
 from gcmotion.entities.profile import Profile
+from gcmotion.scripts.frequency_analysis.contour_orbit import ContourOrbit
 from gcmotion.configuration.scripts_configuration import ContourGeneratorConfig
-from gcmotion.scripts.frequency_analysis.contours.contour_orbit import (
-    ContourOrbit,
-)
 
 tau = 2 * np.pi
 

@@ -6,7 +6,7 @@ from matplotlib.collections import LineCollection
 
 from gcmotion.entities.profile import Profile
 from gcmotion.plot.profile_contour import profile_energy_contour
-from gcmotion.scripts.frequency_analysis.contours.contour_orbit import (
+from gcmotion.scripts.frequency_analysis.contour_orbit import (
     ContourOrbit,
 )
 
@@ -122,12 +122,12 @@ def _plot_results(paths: ContourOrbit, config):
 # =============================== Debug Plots ===============================
 
 
-def debug_plot_valid_orbits(profile: Profile, orbits: list):
+def debug_plot_valid_orbits(profile: Profile, orbits: list, psilim=(0.05, 1)):
     r"""Prints Profile Contour with all valid isoenergy orbits found"""
 
     ax = profile_energy_contour(
         profile,
-        psilim=profile.psilim,
+        psilim=psilim,
         E_units="NUJoule",
         flux_units="NUMagnetic_flux",
         canmom_units="NUCanonical_momentum",
