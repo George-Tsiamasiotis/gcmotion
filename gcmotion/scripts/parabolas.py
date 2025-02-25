@@ -19,10 +19,7 @@ from gcmotion.scripts.bifurcation import bifurcation
 
 def calc_parabolas_tpb(
     profile: Profile,
-    # Pzetalim: list | tuple = [-1.5, 1],
-    # Pzeta_density: int = 1000,
     calc_TPB: bool = False,
-    # TPB_density: int = 100,
     **kwargs,
 ) -> dict:
     r"""
