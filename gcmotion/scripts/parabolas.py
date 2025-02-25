@@ -165,7 +165,7 @@ def calc_parabolas_tpb(
     else:
         # 0 <psi<psi_wall and at trapped - passing boundary E_O/(μΒ0)=B(θ=0,psi)/B0
         #                        and                        E_X/(μΒ0)=B(θ=π,psi)/B0
-        psis = np.linspace(psi_wallNU, 1e-4, config.Pzeta_density)
+        psis = np.linspace(psi_wallNU, 0, config.Pzeta_density)
         TPB_O, _, _ = bfield.bigNU(psis, 0)  # E_O(x)/μ
         TPB_X, _, _ = bfield.bigNU(psis, np.pi)  # E_X(x)/μ
 
