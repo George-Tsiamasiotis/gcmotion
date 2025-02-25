@@ -101,7 +101,7 @@ def calc_parabolas_tpb(
     x = PzetasNU
 
     # Currents are poloidally symmetrical --> independent of theta. Calculate g.
-    _, _, g_psipwNU = bfield.bigNU(psi_wallNU, 0)
+    _, _, g_psipwNU = bfield.bigNU(psip_wallNU, 0)
     _, _, g0NU = bfield.bigNU(0, 0)
 
     logger.info(f"Upacked parabolas g values with g(psip_wall)={g_psipwNU}, g(0)={g0NU}")
@@ -168,11 +168,9 @@ def calc_parabolas_tpb(
     else:
         # 0 <psi<psi_wall and at trapped - passing boundary E_O/(μΒ0)=B(θ=0,psi)/B0
         #                        and                        E_X/(μΒ0)=B(θ=π,psi)/B0
-        # Also ψp=ψ and Pz=-ψp=-ψ --> ψ=-ψpw*x where x=Pz/ψpw.
-        # So E_O/μΒ0=B(θ=0,-ψpw*x)/B0 and E_X/μΒ0=B(θ=π,-ψpw*x)/B0
-
-        TPB_O, _, _ = bfield.bigNU(-x_TPB * psi_wallNU, 0)  # E_O(x)/μ
-        TPB_X, _, _ = bfield.bigNU(-x_TPB * psi_wallNU, np.pi)  # E_X(x)/μ
+        psis = np.linspace(psi_wallNU, 1e-4, config.Pzeta_density)
+        TPB_O, _, _ = bfield.bigNU(psis, 0)  # E_O(x)/μ
+        TPB_X, _, _ = bfield.bigNU(psis, np.pi)  # E_X(x)/μ
 
         TPB_O /= B0NU  # E_O/(μΒ0)
         TPB_X /= B0NU  # E_X/(μΒ0)
