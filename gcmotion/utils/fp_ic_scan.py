@@ -7,8 +7,10 @@ import numpy as np
 
 from gcmotion.entities.profile import Profile
 from gcmotion.utils.fp_system import system
+from numba import njit
 
 
+@njit("int64[:,:](float64[:,:])")
 def _find_local_minima(arr: np.ndarray):
     r"""
     Finds local minima in a 2D array.
@@ -39,9 +41,9 @@ def _find_local_minima(arr: np.ndarray):
                 and (arr[i, j] < arr[i, j - 1])
             ):
 
-                indices.append((i, j))
+                indices.append((int(i), int(j)))
 
-    return indices
+    return np.array(indices)
 
 
 def fp_ic_scan(
