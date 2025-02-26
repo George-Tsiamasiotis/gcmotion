@@ -118,7 +118,7 @@ class ContourOrbit:
         self.area = shoelace(self.vertices)
         if self.passing:
             self.area /= 2  # because theta span = 4π
-        self.Jtheta = self.area / (2 * np.pi)
+        self.Jtheta = self.area / (tau)
 
     def classify_as_cocu(self, profile: Profile):
         r"""Classifies orbit as co-/counter-passing."""
@@ -128,24 +128,15 @@ class ContourOrbit:
 
     def pick_color(self):
         r"""Sets the segment's color depending on its orbit type."""
-        # TODO: find a better way to do this
-        if getattr(self, "undefined", False):
-            self.color = config.undefined_color
-            return
 
-        self.color = (
-            config.trapped_color
-            if self.trapped
-            else (
-                config.copassing_color
-                if self.copassing
-                else (
-                    config.cupassing_color
-                    if self.cupassing
-                    else config.undefined_color
-                )
-            )
-        )
+        if self.trapped:
+            self.color = config.trapped_color
+        elif self.copassing:
+            self.color = config.copassing_color
+        elif self.cupassing:
+            self.color = config.cupassing_color
+        elif self.undefined:
+            self.color = config.undefined_color
 
     def str_dumb(self):
 

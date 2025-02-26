@@ -148,20 +148,12 @@ def calculate_orbit_omegatheta(
     else:
         orbit.edge_orbit = False
 
-    # Pick closest orbits
-    for orbit in lower_orbits:
-        orbit.validate(main_contour["psilim"])
-        orbit.calculate_bbox()
-    for orbit in upper_orbits:
-        orbit.validate(main_contour["psilim"])
-        orbit.calculate_bbox()
-
-    lower_distances = (
+    lower_distances = [
         orbit.distance_from(lower_orbit.bbox) for lower_orbit in lower_orbits
-    )
-    upper_distances = (
+    ]
+    upper_distances = [
         orbit.distance_from(upper_orbit.bbox) for upper_orbit in upper_orbits
-    )
+    ]
 
     lower_orbit = lower_orbits[np.argmin(lower_distances)]
     upper_orbit = upper_orbits[np.argmin(upper_distances)]

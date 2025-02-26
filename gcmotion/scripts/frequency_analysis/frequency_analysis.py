@@ -59,9 +59,10 @@ class FrequencyAnalysis:
         else:
             self.Espan = [profile.ENU]
 
-    def start(self):
+    def start(self, pbar: bool = True):
         # Progress bars
         # qkin and omegas calculations
+        self.config.tqdm_enable = pbar
 
         global_pbar_kw = {  # Shared through all 3 colour bars
             "ascii": self.config.tqdm_ascii,
@@ -135,6 +136,7 @@ class FrequencyAnalysis:
             "omega_theta": pd.Series([orb.omega_theta for orb in self.orbits]),
             "omega_zeta": pd.Series([orb.omega_zeta for orb in self.orbits]),
             "orbit_type": pd.Series([orb.string for orb in self.orbits]),
+            # "color": pd.Series([orb.color for orb in self.orbits]),
         }
 
         self.df = pd.DataFrame(d)
@@ -173,6 +175,12 @@ class FrequencyAnalysis:
         ax.set_title(ax.get_xlabel() + " - " + ax.get_ylabel())
         ax.legend(handles=[trapped, copassing, cupassing, undefined])
         ax.grid(True)
+        # giannhsdf = pd.read_csv("~/Dev/python/gcmotion/usr/Ratios.csv").astype(
+        #     float
+        # )
+        # giannhsdf["-0.698"] *= 0.023
+        # giannhsdf.plot(x="-0.698", y="3.236353", kind="scatter", ax=ax)
+        #
         plt.show()
 
     def dump(self):

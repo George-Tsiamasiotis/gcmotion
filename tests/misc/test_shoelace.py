@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 from math import isclose, pi
 
-from gcmotion.scripts.utils.contour_segment import shoelace
+from gcmotion.scripts.frequency_analysis.contour_orbit import shoelace
 
 
 @pytest.fixture(scope="module")

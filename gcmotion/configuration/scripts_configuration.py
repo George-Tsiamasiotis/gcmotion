@@ -41,8 +41,8 @@ class FrequencyAnalysisConfig:
 
 @dataclass
 class ProfileAnalysisConfig:
-    pzeta_rtol: float = 1e-2
-    energy_rtol: float = 1e-3
+    pzeta_rtol: float = 1e-5
+    energy_rtol: float = 1e-5
     cocu_classification: bool = True
 
 
