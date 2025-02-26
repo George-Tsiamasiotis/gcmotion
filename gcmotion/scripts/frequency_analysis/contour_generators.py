@@ -72,8 +72,8 @@ def local_contour(profile: Profile, orbit: ContourOrbit):
     if orbit.trapped:
         thetamean = (xmin + xmax) / 2
         thetaspan = (xmax - xmin) / 2
-        thetamin = max(thetamean - config.theta_expansion * thetaspan, -tau)
-        thetamax = min(thetamean + config.theta_expansion * thetaspan, tau)
+        thetamin = max(thetamean - config.theta_expansion * thetaspan, -np.pi)
+        thetamax = min(thetamean + config.theta_expansion * thetaspan, np.pi)
     elif orbit.passing:
         thetamin, thetamax = -tau, tau
 

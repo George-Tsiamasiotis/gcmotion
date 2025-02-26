@@ -127,6 +127,7 @@ def debug_plot_valid_orbits(profile: Profile, orbits: list, psilim=(0.05, 1)):
 
     ax = profile_energy_contour(
         profile,
+        thetalim=[-2 * np.pi, 2 * np.pi],
         psilim=psilim,
         E_units="NUJoule",
         flux_units="NUMagnetic_flux",

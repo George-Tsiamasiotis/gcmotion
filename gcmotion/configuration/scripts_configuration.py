@@ -41,17 +41,17 @@ class FrequencyAnalysisConfig:
 
 @dataclass
 class ProfileAnalysisConfig:
-    pzeta_rtol: float = 1e-5
-    energy_rtol: float = 1e-5
+    pzeta_rtol: float = 1e-3
+    energy_rtol: float = 1e-3
     cocu_classification: bool = True
 
 
 @dataclass
 class ContourGeneratorConfig:
-    main_grid_density: int = 300
-    local_grid_density: int = 70
-    theta_expansion: float = 2
-    psi_expansion: float = 2
+    main_grid_density: int = 500
+    local_grid_density: int = 150
+    theta_expansion: float = 1.2
+    psi_expansion: float = 1.2
 
 
 @dataclass

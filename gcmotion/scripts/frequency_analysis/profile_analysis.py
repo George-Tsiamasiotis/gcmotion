@@ -12,7 +12,6 @@ Functions
 
 import numpy as np
 
-from copy import deepcopy
 from collections import deque
 
 from gcmotion.entities.profile import Profile
@@ -104,7 +103,7 @@ def calculate_frequencies(
         return None
 
     main_orbit.qkinetic = calculate_orbit_qkin(
-        orbit=main_orbit, profile=profile, config=config
+        main_orbit=main_orbit, profile=profile, config=config
     )
     if main_orbit.qkinetic is None:
         return None
@@ -176,7 +175,7 @@ def calculate_orbit_omegatheta(
 
 
 def calculate_orbit_qkin(
-    orbit: ContourOrbit, profile: Profile, config: ProfileAnalysisConfig
+    main_orbit: ContourOrbit, profile: Profile, config: ProfileAnalysisConfig
 ) -> float:
     r"""Step 2: For each contour orbit found, calculate qkinetic.
 
@@ -187,8 +186,8 @@ def calculate_orbit_qkin(
     """
 
     # Calculate orbits bounding box and t/p classification
-    orbit.calculate_bbox()
-    orbit.classify_as_tp()
+    main_orbit.calculate_bbox()
+    main_orbit.classify_as_tp()
 
     # Create 2 local contours, 1 from each adjacent profile.
     Pzeta = profile.PzetaNU
@@ -196,9 +195,9 @@ def calculate_orbit_qkin(
     PzetaUpper = Pzeta * (1 + config.pzeta_rtol)
 
     profile.Pzeta = PzetaLower
-    LowerContour = local_contour(profile=profile, orbit=orbit)
+    LowerContour = local_contour(profile=profile, orbit=main_orbit)
     profile.Pzeta = PzetaUpper
-    UpperContour = local_contour(profile=profile, orbit=orbit)
+    UpperContour = local_contour(profile=profile, orbit=main_orbit)
 
     profile.Pzeta = Pzeta
 
@@ -212,10 +211,10 @@ def calculate_orbit_qkin(
 
     # Return if orbit is about to disappear
     if len(lower_orbits) == 0 or len(upper_orbits) == 0:
-        orbit.edge_orbit = True
+        main_orbit.edge_orbit = True
         return
     else:
-        orbit.edge_orbit = False
+        main_orbit.edge_orbit = False
 
     # Validate orbits, and calculate
     for orbit in lower_orbits:
@@ -226,12 +225,12 @@ def calculate_orbit_qkin(
         orbit.calculate_bbox()
 
     # Pick closest adjacent orbits
-    lower_distances = (
+    lower_distances = [
         orbit.distance_from(lower_orbit.bbox) for lower_orbit in lower_orbits
-    )
-    upper_distances = (
+    ]
+    upper_distances = [
         orbit.distance_from(upper_orbit.bbox) for upper_orbit in upper_orbits
-    )
+    ]
 
     lower_orbit = lower_orbits[np.argmin(lower_distances)]
     upper_orbit = upper_orbits[np.argmin(upper_distances)]
@@ -248,7 +247,10 @@ def calculate_orbit_qkin(
     dJtheta = upper_orbit.Jtheta - lower_orbit.Jtheta
     dPzeta = PzetaUpper.m - PzetaLower.m
 
-    # debug_plot_valid_orbits(profile, (lower_orbit, upper_orbit))
+    # print(f"{upper_distances=}, {lower_distances=}")
+    # print(f"{upper_orbit.xmin=}, {upper_orbit.xmax=}")
+    # debug_plot_valid_orbits(profile, (lower_orbit, main_orbit, upper_orbit))
+    # print(f"{main_orbit.E=}")
 
     qkinetic = -dJtheta / dPzeta
     if abs(qkinetic) < 8:
