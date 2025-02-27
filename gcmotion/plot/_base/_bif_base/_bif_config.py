@@ -71,7 +71,7 @@ class _TPBPlotConfig:
     figsize: tuple = (13, 7)
     dpi: int = 100
     layout: str = "constrained"
-    facecolor: str = "lightskyblue"
+    facecolor: str = "white"
     # Energies of X points keywords
     tpb_X_marker: str = "."
     tpb_X_markersize: float = 2

@@ -12,7 +12,7 @@ class ProfileEnergyContourConfig:
     figsize: tuple = figsize
     dpi: int = dpi
     layout: str = "constrained"
-    facecolor: str = "lightskyblue"
+    facecolor: str = "white"
     projection: str | None = None  # None = default
     # Default parameter values
     thetalim: tuple = (-pi, pi)
@@ -36,7 +36,7 @@ class ProfilePzetaContourConfig:
     figsize: tuple = figsize
     dpi: int = dpi
     layout: str = "constrained"
-    facecolor: str = "lightskyblue"
+    facecolor: str = "white"
     # Default parameter values
     zetalim: tuple = (-pi, pi)
     psilim: tuple = (0, 1.2)  # times psi_wall
@@ -58,7 +58,7 @@ class QfactorProfileConfig:
     figsize: tuple = (13, 5)
     dpi: int = dpi
     layout: str = "constrained"
-    facecolor: str = "lightskyblue"
+    facecolor: str = "white"
     titlesize: float = 20
     titlecolor: str = "blue"
     # Default parameter values
@@ -76,12 +76,34 @@ class QfactorProfileConfig:
 
 
 @dataclass
+class EfieldProfileConfig:
+    # Figure keywords
+    figsize: tuple = (13, 5)
+    dpi: int = dpi
+    layout: str = "constrained"
+    facecolor: str = "white"
+    titlesize: float = 20
+    titlecolor: str = "blue"
+    # Default parameter values
+    span: tuple = (0, 1.1)
+    show: bool = True
+    # Plot options
+    points: int = 400
+    wall_color: str = "red"
+    labelsize: float = 10
+    ax_title_size: float = 20
+    # Units options
+    field_units: str = "kV/m"
+    potential_units: str = "kV"
+
+
+@dataclass
 class MagneticProfileConfig:
     # Figure keywords
     figsize: tuple = (13, 7)
     dpi: int = dpi
     layout: str = "constrained"
-    facecolor: str = "lightskyblue"
+    facecolor: str = "white"
     titlesize: float = 20
     titlecolor: str = "blue"
     # Default parameter values
@@ -114,7 +136,7 @@ class ParticleEvolutionConfig:
     figsize: tuple = figsize
     dpi: int = dpi
     layout: str = "constrained"
-    facecolor: str = "lightskyblue"
+    facecolor: str = "white"
     titlesize: float = 20
     titlecolor: str = "blue"
     # Default parameter values
@@ -136,7 +158,7 @@ class ParticlePoloidalDrift:
     figsize: tuple = figsize
     dpi: int = dpi
     layout: str = "constrained"
-    facecolor: str = "lightskyblue"
+    facecolor: str = "white"
     # Default parameter values
     projection: str | None = None  # None = default
     thetalim: tuple = (-pi, pi)
@@ -166,7 +188,7 @@ class ParabolasPlotConfig:
     figsize: tuple = figsize
     dpi: int = dpi
     layout: str = "constrained"
-    facecolor: str = "lightskyblue"
+    facecolor: str = "white"
     linewidth: int = 2
     # Title keywords
     title_fontsize: float = 15
@@ -204,7 +226,7 @@ class BifurcationPlotConfig:
     figsize: tuple = figsize
     dpi: int = dpi
     layout: str = "constrained"
-    facecolor: str = "lightskyblue"
+    facecolor: str = "white"
     sharex: bool = True
     # x Label keywords
     xlabel_fontsize: float = 10
@@ -216,3 +238,38 @@ class BifurcationPlotConfig:
     psilim: tuple = (0, 1.8)
     plot_energy_bif: bool = True
     which_COM: str = "Pzeta"
+
+
+@dataclass
+class RZBigContoursConfig:
+    # Figure keywords
+    figsize_B: tuple = (17, 8)
+    figsize_E_flux: tuple = (11, 8)
+    figsize_I: tuple = (11, 8)
+    figsize_g: tuple = (11, 8)
+    dpi: int = dpi
+    layout: str = "constrained"
+    facecolor: str = "white"
+    # Plots kwywords
+    which: str = "E b i g"
+    # E, flux figure keywords
+    E_flux_suptitle_fontsize: float = 15
+    E_flux_suptitle_color: str = "black"
+    flux_units: str = "NUmf"
+    E_units: str = "keV"
+    # B figure keywords
+    B_suptitle_fontsize: float = 15
+    B_suptitle_color: str = "black"
+    B_units: str = "Tesla"
+    # I figure keywords
+    I_suptitle_fontsize: float = 15
+    I_suptitle_color: str = "black"
+    I_units: str = "NUpc"
+    # g figure keywords
+    g_suptitle_fontsize: float = 15
+    g_suptitle_color: str = "black"
+    g_units: str = "NUpc"
+    # Numerical keywords
+    parametric_density: int = 500
+    # Contours keywords
+    levels: int = 20
