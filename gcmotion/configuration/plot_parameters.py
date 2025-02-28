@@ -12,7 +12,7 @@ class ProfileEnergyContourConfig:
     figsize: tuple = figsize
     dpi: int = dpi
     layout: str = "constrained"
-    facecolor: str = "lightskyblue"
+    facecolor: str = "white"
     projection: str | None = None  # None = default
     # Default parameter values
     thetalim: tuple = (-pi, pi)
@@ -36,7 +36,7 @@ class ProfilePzetaContourConfig:
     figsize: tuple = figsize
     dpi: int = dpi
     layout: str = "constrained"
-    facecolor: str = "lightskyblue"
+    facecolor: str = "white"
     # Default parameter values
     zetalim: tuple = (-pi, pi)
     psilim: tuple = (0, 1.2)  # times psi_wall
@@ -58,7 +58,7 @@ class QfactorProfileConfig:
     figsize: tuple = (13, 5)
     dpi: int = dpi
     layout: str = "constrained"
-    facecolor: str = "lightskyblue"
+    facecolor: str = "white"
     titlesize: float = 20
     titlecolor: str = "blue"
     # Default parameter values
@@ -81,7 +81,7 @@ class MagneticProfileConfig:
     figsize: tuple = (13, 7)
     dpi: int = dpi
     layout: str = "constrained"
-    facecolor: str = "lightskyblue"
+    facecolor: str = "white"
     titlesize: float = 20
     titlecolor: str = "blue"
     # Default parameter values
@@ -114,7 +114,7 @@ class ParticleEvolutionConfig:
     figsize: tuple = figsize
     dpi: int = dpi
     layout: str = "constrained"
-    facecolor: str = "lightskyblue"
+    facecolor: str = "white"
     titlesize: float = 20
     titlecolor: str = "blue"
     # Default parameter values
@@ -136,7 +136,7 @@ class ParticlePoloidalDrift:
     figsize: tuple = figsize
     dpi: int = dpi
     layout: str = "constrained"
-    facecolor: str = "lightskyblue"
+    facecolor: str = "white"
     # Default parameter values
     projection: str | None = None  # None = default
     thetalim: tuple = (-pi, pi)
@@ -166,7 +166,7 @@ class ParabolasPlotConfig:
     figsize: tuple = figsize
     dpi: int = dpi
     layout: str = "constrained"
-    facecolor: str = "lightskyblue"
+    facecolor: str = "white"
     linewidth: int = 2
     # Title keywords
     title_fontsize: float = 15
@@ -204,7 +204,7 @@ class BifurcationPlotConfig:
     figsize: tuple = figsize
     dpi: int = dpi
     layout: str = "constrained"
-    facecolor: str = "lightskyblue"
+    facecolor: str = "white"
     sharex: bool = True
     # x Label keywords
     xlabel_fontsize: float = 10
@@ -216,3 +216,30 @@ class BifurcationPlotConfig:
     psilim: tuple = (0, 1.8)
     plot_energy_bif: bool = True
     which_COM: str = "Pzeta"
+
+
+@dataclass
+class RZFluxContourConfig:
+    # Figure keywords
+    figsize: tuple = (7, 9)
+    dpi: int = dpi
+    layout: str = "constrained"
+    facecolor: str = "white"
+    # Contour keywords
+    cmap: str = "plasma"
+    levels: int = 20
+    mode: str = None
+    flux_units: str = "NUmf"
+    # Boundary keywords
+    black_boundary: bool = True
+    boundary_linewidth: int = 1
+    # Labels - Title keywords
+    xlabel_fontsize: float = 15
+    ylabel_fontsize: float = 15
+    title_fontsize: float = 15
+    # Colorbar keywords
+    cbarlabel_fontsize: float = 10
+    # Numerical keywords
+    parametric_density: int = 500
+    xmargin_perc: float = 0.1
+    ymargin_perc: float = 0.1
