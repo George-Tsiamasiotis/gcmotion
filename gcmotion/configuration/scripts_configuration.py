@@ -22,6 +22,11 @@ class SolverConfig:
     rtol: float = 1e-8  # Scipy's default is 1e-3
 
 
+@dataclass
+class PrecomputedConfig:
+    hyp2f1_density: int = 100000
+
+
 # ============================ Frequency Analysis ============================
 
 
