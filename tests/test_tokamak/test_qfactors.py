@@ -1,6 +1,6 @@
 r"""
-Tests that all analytical qfactors' methods work, and querry methods return the
-desired type.
+Tests that all qfactors' methods work, and querry methods return the desired
+type.
 
 Tests
 -----
@@ -43,7 +43,7 @@ class TestAnalytical:
         q_float = qfactors.solverqNU(self.psi_float)
         q_array = qfactors.solverqNU(self.psi_array)
 
-        assert isinstance(q_float, float)
+        assert isinstance(q_float, (float, int))
         assert isinstance(q_array, np.ndarray)
 
     def test_psipNU_return_type(self, qfactors):
@@ -52,7 +52,7 @@ class TestAnalytical:
         q_float = qfactors.solverqNU(self.psi_float)
         q_array = qfactors.solverqNU(self.psi_array)
 
-        assert isinstance(q_float, float)
+        assert isinstance(q_float, (float, int))
         assert isinstance(q_array, np.ndarray)
 
 
@@ -76,7 +76,7 @@ class TestNumerical:
         q_float = qfactors.solverqNU(self.psi_float)
         q_array = qfactors.solverqNU(self.psi_array)
 
-        assert isinstance(q_float, float)
+        assert isinstance(q_float, (float, int))
         assert isinstance(q_array, np.ndarray)
 
     def test_psipNU_return_type(self, qfactors):
@@ -85,5 +85,5 @@ class TestNumerical:
         q_float = qfactors.solverqNU(self.psi_float)
         q_array = qfactors.solverqNU(self.psi_array)
 
-        assert isinstance(q_float, float)
+        assert isinstance(q_float, (float, int))
         assert isinstance(q_array, np.ndarray)

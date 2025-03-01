@@ -56,9 +56,7 @@ class MagneticField(ABC):
         """
 
     @abstractmethod
-    def solverbNU(
-        self, psi: float, theta: float
-    ) -> tuple[float, float, float]:
+    def solverbNU(self, psi: float, theta: float) -> tuple[float]:
         r"""Calculates all the values needed by the solver:
         :math:`B,I,g` (by calling ``self.bigNU()``) and the derivatives
         :math:`\dfrac{\partial B}{\partial \psi}, \dfrac{\partial B}{\partial\
@@ -117,6 +115,9 @@ class NumericalMagneticField(MagneticField):
         minimum/maximum value.
 
     """
+
+    is_analytical = False
+    is_numerical = True
 
     def __init__(self, filename: str):
 
@@ -178,8 +179,10 @@ class NumericalMagneticField(MagneticField):
         da = dataset.b_field_norm
         mins = da.where(da == da.min(), drop=True).squeeze()
         maxs = da.where(da == da.max(), drop=True).squeeze()
-        self.Bmin = Q(mins.values, "NUTesla").to("Tesla")
-        self.Bmax = Q(maxs.values, "NUTesla").to("Tesla")
+        # Flatten()[0] is needed since it sometimes finds 2 extremums with
+        # effectively the same value
+        self.Bmin = Q(mins.values.flatten()[0], "NUTesla").to("Tesla")
+        self.Bmax = Q(maxs.values.flatten()[0], "NUTesla").to("Tesla")
         self.theta_min = float(mins.boozer_theta.values.flatten()[0])
         self.theta_max = float(maxs.boozer_theta.values.flatten()[0])
 
@@ -204,17 +207,20 @@ class NumericalMagneticField(MagneticField):
         duration = Q(end - start, "seconds")
         logger.info(f"Numerical bfield extremum search took {duration:.4g~#P}")
 
-        self.is_numerical = True
-
-    def bigNU(self, psi: float | np.ndarray, theta: float | np.ndarray):
+    def bigNU(
+        self, psi: float | np.ndarray, theta: float | np.ndarray
+    ) -> tuple:
         theta = theta % (2 * np.pi)
         b = self.b_spline(x=theta, y=psi, grid=False)
         i = self.i_spline(x=psi)
         g = self.g_spline(x=psi)
 
-        return (b, i, g)
+        if isinstance(psi, (float, int)):
+            return (float(b), float(i), float(g))
+        else:
+            return (b, i, g)
 
-    def solverbNU(self, psi: float, theta: float):
+    def solverbNU(self, psi: float, theta: float) -> tuple:
 
         theta = theta % (2 * np.pi)
         # Field and currents
@@ -229,9 +235,10 @@ class NumericalMagneticField(MagneticField):
         g_der = self.gder_spline(psi)
 
         # Pack them up
-        currents = (i, g)
-        b_der = (db_dpsi, db_dtheta)
-        currents_der = (i_der, g_der)
+        b = float(b)
+        currents = (float(i), float(g))
+        b_der = (float(db_dpsi), float(db_dtheta))
+        currents_der = (float(i_der), float(g_der))
 
         return b, b_der, currents, currents_der
 
@@ -254,6 +261,9 @@ class LAR(MagneticField):
 
     """
 
+    is_analytical = True
+    is_numerical = False
+
     def __init__(self, B0: Quantity, i: Quantity, g: Quantity):
 
         # SI Quantities
@@ -273,7 +283,6 @@ class LAR(MagneticField):
         # Flags
         self.has_i = bool(i.m)
         self.plain_name = "LAR"
-        self.is_analytic = True
 
         # Minimum/Maximum values and locations
         Q = pint.UnitRegistry.Quantity
@@ -294,9 +303,11 @@ class LAR(MagneticField):
                 "correctly first."
             )
 
-    def bigNU(self, psi: float | np.ndarray, theta: float | np.ndarray):
+    def bigNU(
+        self, psi: float | np.ndarray, theta: float | np.ndarray
+    ) -> tuple[float]:
 
-        if isinstance(psi, (int, float)):
+        if isinstance(psi, float):
             b = 1 - sqrt(2 * psi) * cos(theta)
             g = self._gNU
             i = self._iNU
@@ -307,7 +318,7 @@ class LAR(MagneticField):
 
         return (b, i, g)
 
-    def solverbNU(self, psi: float, theta: float):
+    def solverbNU(self, psi: float, theta: float) -> tuple:
 
         # Field and currents
         b, i, g = self.bigNU(psi, theta)

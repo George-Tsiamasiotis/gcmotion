@@ -119,7 +119,7 @@ class NumericalQFactor(QFactor):
         self.q0 = q_values[0]
         self.q_wall = q_values[-1]
 
-    def solverqNU(self, psi: float) -> float:
+    def solverqNU(self, psi: float | np.ndarray) -> float | np.ndarray:
         if isinstance(psi, float):
             return float(self.qspline(psi))
         elif isinstance(psi, np.ndarray):
@@ -149,7 +149,7 @@ class Unity(QFactor):
         r"""Always returns 1."""
         return psi / psi
 
-    def psipNU(self, psi):
+    def psipNU(self, psi: float | np.ndarray) -> float | np.ndarray:
         """Always returns `psi`."""
         return psi
 
@@ -214,12 +214,12 @@ class Parabolic(QFactor):
         self.q0 = q0
         self.q_wall = q_wall
 
-    def solverqNU(self, psi):
+    def solverqNU(self, psi: float | np.ndarray) -> float | np.ndarray:
         return (
             self.q0 + (self.q_wall - self.q0) * (psi / self._psi_wallNU) ** 2
         )
 
-    def psipNU(self, psi):
+    def psipNU(self, psi: float | np.ndarray) -> float | np.ndarray:
         if isinstance(psi, float):
             return (self._psi_wallNU / (self.sra * self.srb)) * atan(
                 self.srb * psi / (self.sra * self._psi_wallNU)
@@ -299,14 +299,14 @@ class Hypergeometric(QFactor):
         self.q_wall = q_wall
         self.n = n
 
-    def solverqNU(self, psi):
+    def solverqNU(self, psi: float | np.ndarray) -> float | np.ndarray:
         return self.q0 * (
             1
             + ((self.q_wall / self.q0) ** self.n - 1)
             * (psi / self._psi_wallNU) ** self.n
         ) ** (1 / self.n)
 
-    def psipNU(self, psi):
+    def psipNU(self, psi: float | np.ndarray) -> float | np.ndarray:
 
         a = b = 1 / self.n
         c = 1 + 1 / self.n
@@ -353,7 +353,7 @@ class PrecomputedHypergeometric(Hypergeometric):
         self.z_spline = InterpolatedUnivariateSpline(x=z, y=values)
         logger.info("Using Precomputed Hyp2F1 values.")
 
-    def psipNU(self, psi):
+    def psipNU(self, psi: float | np.ndarray) -> float | np.ndarray:
 
         z = (1 - (self.q_wall / self.q0) ** self.n) * (
             psi / self._psi_wallNU
