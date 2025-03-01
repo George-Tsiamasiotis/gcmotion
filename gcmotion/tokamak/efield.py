@@ -22,7 +22,7 @@ class ElectricField(ABC):
         r"""Contains all the needed parameters"""
 
     @abstractmethod
-    def solverPhiderNU(self, psi: float, theta: float) -> tuple[float, float]:
+    def solverPhiderNU(self, psi: float, theta: float) -> tuple[float]:
         r"""Calculates the derivatives of :math:`\Phi` with respect to
         :math:`\psi_p` and :math:`\theta`.
         Input and output must be floats, in [NU].
@@ -54,8 +54,8 @@ class ElectricField(ABC):
     @abstractmethod
     def PhiNU(
         self, psi: float | np.ndarray, theta: float | np.ndarray
-    ) -> np.ndarray:
-        r"""Calculates :math:`\Phi(\psi, theta)`.
+    ) -> float | np.ndarray:
+        r"""Calculates :math:`\Phi(\psi, \theta)`.
         Input can be either a float or a np.ndarray, but output is always
         np.ndarray, in [NU].
 
@@ -103,12 +103,15 @@ class Nofield(ElectricField):
     Exists to avoid compatibility issues.
     """
 
+    is_analytical = True
+    is_numerical = False
+
     def __init__(self):
         pass
 
-    def solverPhiderNU(self, psi: float, theta: float) -> tuple[float, float]:
+    def solverPhiderNU(self, psi: float, theta: float) -> tuple[float]:
         r"""Always returns `(0,0)`."""
-        return (0, 0)
+        return (0.0, 0.0)
 
     def PhiNU(
         self, psi: float | np.ndarray, theta: float | np.ndarray
@@ -162,6 +165,9 @@ class Radial(ElectricField):
 
     """
 
+    is_analytical = True
+    is_numerical = False
+
     def __init__(
         self,
         a: Quantity,
@@ -197,7 +203,7 @@ class Radial(ElectricField):
         self._sr_psi_peakNU = sqrt(self._psi_peakNU)
         self._sr_psi_waistNU = sqrt(self._psi_waistNU)
 
-    def solverPhiderNU(self, psi: float, theta: float) -> tuple[float, float]:
+    def solverPhiderNU(self, psi: float, theta: float) -> tuple[float]:
         Phi_der_psi = (
             self._EaNU
             / (sqrt(2 * psi))

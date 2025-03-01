@@ -30,7 +30,6 @@ than numpy's when calculating single values (often by a factor of 10 or more)..
 from scipy.integrate import solve_ivp
 from collections import namedtuple
 
-from gcmotion.utils.logger_setup import logger
 from gcmotion.entities.profile import Profile
 
 from gcmotion.configuration.scripts_configuration import (
