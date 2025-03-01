@@ -124,7 +124,7 @@ def _get_grid_values(ds: xr.Dataset, density: int, flux_units: str) -> tuple:
     Q = QuantityConstructor(R=R0, B0=B0, _psi_wallNU=psi_wallNU, species="p")
 
     _psi_values = ds.psi.data
-    # We do not have measurement data at psi=0 so we add it. It is needed do
+    # We do not have measurement data at psi=0 so we add it. It is needed so
     # that there is not a void in the middle of the contour plot because
     # there was not data to interpolate in the middle (psi=0).
     _psi_values = np.insert(_psi_values, 0, 0)
@@ -152,7 +152,7 @@ def _get_grid_values(ds: xr.Dataset, density: int, flux_units: str) -> tuple:
 
     # Grid for plotting
     psi_plot = np.linspace(psi_values.min(), psi_values.max(), density)
-    theta_plot = np.linspace(0, 2 * np.pi, density)
+    theta_plot = np.linspace(theta_values.min(), theta_values.max(), density)
 
     # Compute meshgrid
     theta_grid, psi_grid = np.meshgrid(theta_plot, psi_plot)
