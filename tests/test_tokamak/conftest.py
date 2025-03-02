@@ -50,14 +50,34 @@ def precomputed_hypergeometric_qfactor(Q):
     )
 
 
-def numerical_qfactor():
-    r"""Creates an example Numerical Qfactor."""
-    return gcm.qfactor.SmartPositive()
-
-
 """
 No need for other numerical qfactors, they work in the exact same way.
 """
+
+
+def smart_pt_qfactor():
+    r"""Creates the Smart PT qfactor"""
+    return gcm.qfactor.SmartPositive()
+
+
+def smart_nt_qfactor():
+    r"""Creates the Smart NT qfactor"""
+    return gcm.qfactor.SmartNegative()
+
+
+def smart_nt_qfactor2():
+    r"""Creates the Smart NT2 qfactor"""
+    return gcm.qfactor.SmartNegative2()
+
+
+def dtt_pt_qfactor():
+    r"""Creates the DTT PT qfactor"""
+    return gcm.qfactor.DTTPositive()
+
+
+def dtt_nt_qfactor():
+    r"""Creates the DTT NT qfactor"""
+    return gcm.qfactor.DTTNegative()
 
 
 @pytest.fixture(scope="module")
@@ -72,8 +92,16 @@ def qfactors(request, Q):
         return hypergeometric_qfactor(Q)
     if request.param == "precomputed hypergeometric":
         return precomputed_hypergeometric_qfactor(Q)
-    if request.param == "numerical":
-        return numerical_qfactor()
+    if request.param == "smart_nt":
+        return smart_pt_qfactor()
+    if request.param == "smart_pt":
+        return smart_nt_qfactor()
+    if request.param == "smart_nt2":
+        return smart_nt_qfactor2()
+    if request.param == "dtt_pt":
+        return dtt_pt_qfactor()
+    if request.param == "dtt_nt":
+        return dtt_nt_qfactor()
 
 
 # =============================================================================

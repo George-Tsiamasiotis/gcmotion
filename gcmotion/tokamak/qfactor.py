@@ -471,54 +471,54 @@ class DTTNegative(NumericalQFactor):
         )
 
 
-class Chris(QFactor):
-    r"""Chris's thesis qfactor."""
-
-    def __init__(self, B0: Quantity, a: Quantity, q0: float, q_wall: float):
-
-        # SI Quantities
-        self.B0 = B0.to("Tesla")
-        self.a = a.to("meters")
-        self.psi_wall = (B0 * a**2 / 2).to("Magnetic_flux")
-
-        # [NU] Conversions
-        self.psi_wallNU = self.psi_wall.to("NUMagnetic_flux")
-
-        # Unitless quantities, makes it a bit faster if defined here
-        for key, value in self.__dict__.copy().items():
-            self.__setattr__("_" + key, value.magnitude)
-
-        # Purely Numerical Quantities
-        self.q0 = q0
-        self.q_wall = q_wall
-
-        self.is_analytic = True
-
-    def solverqNU(self, psi: float):
-
-        return self.q0 * (
-            1
-            + (-1 + (self.q_wall / self.q0) ** 2) * (psi / self._psi_wall) ** 2
-        ) ** (1 / 2)
-
-    def psipNU(self, psi: float):
-        if isinstance(psi, (int, float)):
-            sinh = asinh(
-                (psi * sqrt(-1 + (self.q_wall / self.q0) ** 2))
-                / self._psi_wall
-            )
-        else:
-            sinh = np.arcsinh(
-                (psi * sqrt(-1 + (self.q_wall / self.q0) ** 2))
-                / self._psi_wall
-            )
-        return (
-            self._psi_wall
-            / (self.q0 * sqrt(-1 + (self.q_wall / self.q0) ** 2))
-        ) * sinh
-
-    def __repr__(self):
-        return (
-            colored("Chris's q-factor", "light_blue")
-            + f": q0={self.q0:.4g}, q_wall={self.q_wall:.4g}"
-        )
+# class Chris(QFactor):
+#     r"""Chris's thesis qfactor."""
+#
+#     def __init__(self, B0: Quantity, a: Quantity, q0: float, q_wall: float):
+#
+#         # SI Quantities
+#         self.B0 = B0.to("Tesla")
+#         self.a = a.to("meters")
+#         self.psi_wall = (B0 * a**2 / 2).to("Magnetic_flux")
+#
+#         # [NU] Conversions
+#         self.psi_wallNU = self.psi_wall.to("NUMagnetic_flux")
+#
+#         # Unitless quantities, makes it a bit faster if defined here
+#         for key, value in self.__dict__.copy().items():
+#             self.__setattr__("_" + key, value.magnitude)
+#
+#         # Purely Numerical Quantities
+#         self.q0 = q0
+#         self.q_wall = q_wall
+#
+#         self.is_analytic = True
+#
+#     def solverqNU(self, psi: float):
+#
+#         return self.q0 * (
+#             1
+#             + (-1 + (self.q_wall / self.q0) ** 2) * (psi / self._psi_wall) ** 2
+#         ) ** (1 / 2)
+#
+#     def psipNU(self, psi: float):
+#         if isinstance(psi, (int, float)):
+#             sinh = asinh(
+#                 (psi * sqrt(-1 + (self.q_wall / self.q0) ** 2))
+#                 / self._psi_wall
+#             )
+#         else:
+#             sinh = np.arcsinh(
+#                 (psi * sqrt(-1 + (self.q_wall / self.q0) ** 2))
+#                 / self._psi_wall
+#             )
+#         return (
+#             self._psi_wall
+#             / (self.q0 * sqrt(-1 + (self.q_wall / self.q0) ** 2))
+#         ) * sinh
+#
+#     def __repr__(self):
+#         return (
+#             colored("Chris's q-factor", "light_blue")
+#             + f": q0={self.q0:.4g}, q_wall={self.q_wall:.4g}"
+#         )

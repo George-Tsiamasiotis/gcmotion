@@ -193,11 +193,7 @@ class InitialConditions:
         t0 = self.t_eval[0].m
         dt = self.t_eval[1].m - t0
         tf = self.t_eval[-1].m
-        muB = (
-            f"{self.muB:.4g~P}"
-            if isinstance(self.muB, pint.Quantity)
-            else None
-        )
+        muB = f"{self.muB:.4g~P}" if self._full_set_calculated else None
 
         return (
             "InitialConditions: "

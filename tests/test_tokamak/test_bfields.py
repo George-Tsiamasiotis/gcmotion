@@ -14,6 +14,7 @@ Tests
 import pint
 import pytest
 import numpy as np
+import gcmotion as gcm
 
 
 @pytest.mark.parametrize(
@@ -129,3 +130,9 @@ class TestNumerical:
 
         assert bfields.Bmin.ndim == 0
         assert bfields.Bmax.ndim == 0
+
+
+@pytest.mark.filterwarnings("ignore:numpy.ndarray size changed")
+def test_numerical_missing_dataset():
+    with pytest.raises(FileNotFoundError):
+        gcm.bfield.NumericalMagneticField(filename="not_a_file.nc")

@@ -1,5 +1,8 @@
+import pytest
 import numpy as np
 from numba import njit
+
+pytestmark = pytest.mark.benchmark(group="shoelace")
 
 
 # @pytest.fixture(scope="module")

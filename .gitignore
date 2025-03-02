@@ -26,3 +26,7 @@ examples/**/**.ipynb
 
 # Numerical data
 **/**.nc
+
+# Profiling
+**/profile_stats
+**/htmlcov

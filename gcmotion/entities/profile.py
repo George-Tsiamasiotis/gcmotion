@@ -349,7 +349,7 @@ class Profile:
         if potential:
             PhiNU = self.efield.PhiNU(psiNU, theta)
         else:
-            PhiNU = np.zeros(psiNU.shape)  # Keep psi's shape
+            PhiNU = 0 * psiNU  # Keep psi's shape
 
         PzetaNU = (
             (2 * gNU**2 / bNU**2) * (self.ENU.m - self.muNU.m * bNU - PhiNU)
@@ -394,7 +394,7 @@ class Profile:
         if potential:
             PhiNU = self.efield.PhiNU(psiNU, theta)
         else:
-            PhiNU = 0 * psi  # Keep psi's shape
+            PhiNU = 0 * psiNU  # Keep psi's shape
 
         rhoNU = (self.PzetaNU.m + psipNU) / gNU
 
@@ -443,39 +443,6 @@ class Profile:
             return undefined, True
         else:
             return undefined, False
-
-    def _findPzeta(
-        self,
-        psi: Quantity,
-        theta: float,
-        energy,
-        units: str,
-        potential: bool = True,
-    ):  # FIXME: Might be redundant
-
-        # Do all operations in NU floats, and Quantify at the end.
-        psiNU = psi.to("NUMagnetic_flux")
-        psiNU = psiNU.magnitude
-        energyNU = energy.to("NUJoule")
-        energyNU = energy.magnitude
-
-        # Calculate currents. B not needed so theta value doesnt matter
-        bNU, iNU, gNU = self.bfield.bigNU(psiNU, theta)
-        psipNU = self.qfactor.psipNU(psiNU)
-        psipNU = self.qfactor.psipNU(psiNU)
-
-        if potential:
-            PhiNU = self.efield.PhiNU(psiNU, theta)
-        else:
-            PhiNU = np.zeros(psiNU.shape)  # Keep psi's shape
-
-        PzetaNU = (
-            (2 * gNU**2 / bNU**2) * (energyNU - self.muNU.m * bNU - PhiNU)
-        ) ** (1 / 2) - psipNU
-
-        # Quantify, convert to input units and return
-        PzetaNU = self.Q(PzetaNU, "NUCanonical_momentum")
-        return PzetaNU.to(units)
 
     def __repr__(self):
         string = Tokamak.__repr__(self)

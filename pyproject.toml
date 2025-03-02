@@ -52,6 +52,7 @@ dependencies = [
 [project.optional-dependencies]
 test = [
   "pytest",
+  "pytest-benchmark",
 ]
 test-all = [
   "gcmotion[test]",
@@ -72,7 +73,13 @@ line-length = 79
 
 [tool.pytest.ini_options]
 testpaths = "tests"
-addopts = "-vv --doctest-modules --durations 3 --import-mode=importlib"
+addopts = """
+--durations 3 
+--doctest-modules 
+--benchmark-skip
+--import-mode=importlib
+--benchmark-name=short
+"""
 console_output_style = "progress-even-when-capture-no"
 filterwarnings = [
   "ignore::DeprecationWarning:jupyter_client.*",

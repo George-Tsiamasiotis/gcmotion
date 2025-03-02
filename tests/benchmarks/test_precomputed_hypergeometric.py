@@ -1,3 +1,4 @@
+import pytest
 import numpy as np
 import gcmotion as gcm
 
@@ -24,10 +25,12 @@ hyper_pre = gcm.qfactor.PrecomputedHypergeometric(
 psis = Q(np.linspace(0, 1, 10000), "psi_wall").to("NUmf").m
 
 
+@pytest.mark.benchmark(group="precomputed hypergeometric")
 def test_normal_hypergeometric_benchmark(benchmark):
     benchmark(hyper.psipNU, psis)
 
 
+@pytest.mark.benchmark(group="precomputed hypergeometric")
 def test_precomputed_hypergeomteric_benchmark(benchmark):
     benchmark(hyper_pre.psipNU, psis)
 

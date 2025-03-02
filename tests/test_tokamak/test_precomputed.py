@@ -22,7 +22,7 @@ def hyper_pre(Q):
 
 
 def test_analytic_and_precomputed_hyp3f1(Q, hyper, hyper_pre):
-    psis = Q(np.linspace(0, 1, 1000), "psi_wall").to("NUmf").magnitude
+    psis = Q(np.linspace(0, 1, 100000), "psi_wall").to("NUmf").magnitude
     psips = hyper.psipNU(psis)
     psips_pre = hyper_pre.psipNU(psis)
     assert np.all(np.isclose(psips, psips_pre))

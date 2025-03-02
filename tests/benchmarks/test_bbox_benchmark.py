@@ -1,6 +1,9 @@
+import pytest
 import numpy as np
 
-from gcmotion.scripts.frequency_analysis.contour_orbit import calculate_bbox
+from gcmotion.scripts.frequency_analysis.contour_orbit import _calculate_bbox
+
+pytestmark = pytest.mark.benchmark(group="bbox")
 
 vertices = np.random.random((10000, 2))
 
@@ -28,12 +31,12 @@ def test_calculate_bbox_transpose(benchmark):
 
 
 def test_calculate_bbox_jit(benchmark):
-    benchmark(calculate_bbox, *vertices.T)
+    benchmark(_calculate_bbox, *vertices.T)
 
 
 def test_bbox_benchmark_results():
     assert np.all(
         np.isclose(
-            calculate_bbox_normal(vertices), calculate_bbox(*vertices.T)
+            calculate_bbox_normal(vertices), _calculate_bbox(*vertices.T)
         )
     )
