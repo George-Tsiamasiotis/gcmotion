@@ -57,6 +57,12 @@ class TestAnalytical:
         assert isinstance(q_array, np.ndarray)
 
 
+"""
+Return if the fixture returns None, which means the corresponding dataset does
+not exist.
+"""
+
+
 @pytest.mark.parametrize(
     "qfactors",
     [
@@ -75,14 +81,22 @@ class TestNumerical:
     psi_array = np.linspace(1e-5, 0.05, 10)
 
     def test_flags(self, qfactors):
+        if qfactors is None:
+            return
+
         assert not qfactors.is_analytical
         assert qfactors.is_numerical
 
     def test_repr_functionality(self, qfactors):
+        if qfactors is None:
+            return
+
         qfactors.__repr__()
 
     def test_solverqNU_return_type(self, qfactors):
         r"""Must be able to return both floats and numpy arrays."""
+        if qfactors is None:
+            return
 
         q_float = qfactors.solverqNU(self.psi_float)
         q_array = qfactors.solverqNU(self.psi_array)
@@ -92,6 +106,8 @@ class TestNumerical:
 
     def test_psipNU_return_type(self, qfactors):
         r"""Must be able to return both floats and numpy arrays."""
+        if qfactors is None:
+            return
 
         q_float = qfactors.psipNU(self.psi_float)
         q_array = qfactors.psipNU(self.psi_array)

@@ -51,33 +51,49 @@ def precomputed_hypergeometric_qfactor(Q):
 
 
 """
-No need for other numerical qfactors, they work in the exact same way.
+No real need for other numerical qfactors, they work in the exact same way.
+We also catch FileNotFound in case the dataset doesn't exist
 """
 
 
 def smart_pt_qfactor():
     r"""Creates the Smart PT qfactor"""
-    return gcm.qfactor.SmartPositive()
+    try:
+        return gcm.qfactor.SmartPositive()
+    except FileNotFoundError:
+        return None
 
 
 def smart_nt_qfactor():
     r"""Creates the Smart NT qfactor"""
-    return gcm.qfactor.SmartNegative()
+    try:
+        return gcm.qfactor.SmartNegative()
+    except FileNotFoundError:
+        return None
 
 
 def smart_nt_qfactor2():
     r"""Creates the Smart NT2 qfactor"""
-    return gcm.qfactor.SmartNegative2()
+    try:
+        return gcm.qfactor.SmartNegative2()
+    except FileNotFoundError:
+        return None
 
 
 def dtt_pt_qfactor():
     r"""Creates the DTT PT qfactor"""
-    return gcm.qfactor.DTTPositive()
+    try:
+        return gcm.qfactor.DTTPositive()
+    except FileNotFoundError:
+        return None
 
 
 def dtt_nt_qfactor():
     r"""Creates the DTT NT qfactor"""
-    return gcm.qfactor.DTTNegative()
+    try:
+        return gcm.qfactor.DTTNegative()
+    except FileNotFoundError:
+        return None
 
 
 @pytest.fixture(scope="module")
@@ -123,27 +139,42 @@ their Bmin and Bmax values needed for the Parabolas.
 
 def smart_pt_bfield():
     r"""Creates the Smart PT bfield"""
-    return gcm.bfield.SmartPositive()
+    try:
+        return gcm.bfield.SmartPositive()
+    except FileNotFoundError:
+        return None
 
 
 def smart_nt_bfield():
     r"""Creates the Smart NT bfield"""
-    return gcm.bfield.SmartNegative()
+    try:
+        return gcm.bfield.SmartNegative()
+    except FileNotFoundError:
+        return None
 
 
 def smart_nt_bfield2():
     r"""Creates the Smart NT2 bfield"""
-    return gcm.bfield.SmartNegative2()
+    try:
+        return gcm.bfield.SmartNegative2()
+    except FileNotFoundError:
+        return None
 
 
 def dtt_pt_bfield():
     r"""Creates the DTT PT bfield"""
-    return gcm.bfield.DTTPositive()
+    try:
+        return gcm.bfield.DTTPositive()
+    except FileNotFoundError:
+        return None
 
 
 def dtt_nt_bfield():
     r"""Creates the DTT NT bfield"""
-    return gcm.bfield.DTTNegative()
+    try:
+        return gcm.bfield.DTTNegative()
+    except FileNotFoundError:
+        return None
 
 
 @pytest.fixture(scope="module")

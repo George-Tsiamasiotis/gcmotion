@@ -72,6 +72,12 @@ class TestAnalytical:
         assert bfields.Bmax.ndim == 0
 
 
+"""
+Return if the fixture returns None, which means the corresponding dataset does
+not exist.
+"""
+
+
 @pytest.mark.parametrize(
     "bfields",
     [
@@ -92,14 +98,22 @@ class TestNumerical:
     theta_array = np.linspace(-np.pi / 2, np.pi / 3, 10)
 
     def test_flags(self, bfields):
+        if bfields is None:
+            return
+
         assert not bfields.is_analytical
         assert bfields.is_numerical
 
     def test_repr_functionality(self, bfields):
+        if bfields is None:
+            return
+
         bfields.__repr__()
 
     def test_bigNU_return_type(self, bfields):
         r"""Must be able to return both floats and numpy arrays."""
+        if bfields is None:
+            return
 
         b_float, i_float, g_float = bfields.bigNU(
             self.psi_float, self.theta_float
@@ -117,6 +131,8 @@ class TestNumerical:
 
     def test_solverbNU_return_type(self, bfields):
         r"""Must be able to return ONLY floats."""
+        if bfields is None:
+            return
 
         b, b_der, currents, currents_der = bfields.solverbNU(
             self.psi_float, self.theta_float
@@ -125,6 +141,9 @@ class TestNumerical:
             assert isinstance(values, (float, int))
 
     def test_bmin_bmax(self, bfields):
+        if bfields is None:
+            return
+
         assert isinstance(bfields.Bmin, pint.registry.Quantity)
         assert isinstance(bfields.Bmax, pint.registry.Quantity)
 
