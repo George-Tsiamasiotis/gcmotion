@@ -57,6 +57,8 @@ test = [
 test-all = [
   "gcmotion[test]",
   "pytest-cov",
+  "pytest-random-order",
+  "pytest-reverse",
 ]
 docs = [
   "Sphinx",
