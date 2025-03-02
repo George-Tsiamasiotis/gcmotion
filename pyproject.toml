@@ -53,6 +53,10 @@ dependencies = [
 test = [
   "pytest",
 ]
+test-all = [
+  "gcmotion[test]",
+  "pytest-cov",
+]
 docs = [
   "Sphinx",
   "numpydoc",
@@ -68,7 +72,7 @@ line-length = 79
 
 [tool.pytest.ini_options]
 testpaths = "tests"
-addopts = "-vv --doctest-modules --durations 3"
+addopts = "-vv --doctest-modules --durations 3 --import-mode=importlib"
 console_output_style = "progress-even-when-capture-no"
 filterwarnings = [
   "ignore::DeprecationWarning:jupyter_client.*",

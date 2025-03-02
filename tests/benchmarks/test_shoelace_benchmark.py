@@ -1,6 +1,5 @@
-import pytest
 import numpy as np
-from numba import njit, guvectorize, float64
+from numba import njit
 
 
 # @pytest.fixture(scope="module")
@@ -25,10 +24,8 @@ _ = shoelace_jit(x=x, y=y)
 
 
 def test_shoelace(benchmark):
-    result = benchmark(shoelace, x=x, y=y)
-    assert True
+    benchmark(shoelace, x=x, y=y)
 
 
 def test_shoelace_jit(benchmark):
-    result = benchmark(shoelace_jit, x=x, y=y)
-    assert True
+    benchmark(shoelace_jit, x=x, y=y)
