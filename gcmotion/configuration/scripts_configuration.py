@@ -24,7 +24,7 @@ class SolverConfig:
 
 @dataclass
 class PrecomputedConfig:
-    hyp2f1_density: int = 100000
+    hyp2f1_density: int = 1000
 
 
 # ============================ Frequency Analysis ============================

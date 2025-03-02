@@ -8,13 +8,17 @@ from gcmotion.scripts.frequency_analysis.contour_orbit import shoelace
 @pytest.fixture(scope="module")
 def _unit_square():
     r"""Creates a np.array with the points of the unit square."""
-    return np.array([[0, 0], [0, 1], [1, 1], [1, 0]])
+    x = [0, 0, 1, 1]
+    y = [0, 1, 1, 0]
+    return np.array([x, y]).astype(float)
 
 
 @pytest.fixture(scope="module")
 def _unit_square_n():
     r"""Creates a np.array with the points of the unit square, backwards."""
-    return np.array([[0, 0], [1, 0], [1, 1], [0, 1]])
+    x = [0, 1, 1, 0]
+    y = [0, 0, 1, 1]
+    return np.array([x, y]).astype(float)
 
 
 @pytest.fixture(scope="module")
@@ -23,7 +27,7 @@ def _unit_circle():
     t = np.linspace(0, 2 * pi, 1000)
     x = np.cos(t)
     y = np.sin(t)
-    return np.array([x, y]).T
+    return np.array([x, y])
 
 
 @pytest.fixture(scope="module")
@@ -32,7 +36,7 @@ def _unit_circle_n():
     t = np.linspace(0, 2 * pi, 1000)
     x = -np.cos(t)
     y = -np.sin(t)
-    return np.array([x, y]).T
+    return np.array([x, y])
 
 
 @pytest.fixture(scope="module")
@@ -41,7 +45,7 @@ def _unit_half_circle():
     t = np.linspace(0, pi, 1000)
     x = np.cos(t)
     y = np.sin(t)
-    return np.array([x, y]).T
+    return np.array([x, y])
 
 
 @pytest.fixture(scope="module")
@@ -50,7 +54,7 @@ def _unit_half_circle_n():
     t = np.linspace(0, pi, 1000)
     x = -np.cos(t)
     y = -np.sin(t)
-    return np.array([x, y]).T
+    return np.array([x, y])
 
 
 def test_shoelace(
@@ -63,11 +67,11 @@ def test_shoelace(
 ):
 
     # Positives
-    assert isclose(shoelace(_unit_square), 1, abs_tol=0.01)
-    assert isclose(shoelace(_unit_circle), pi, abs_tol=0.01)
-    assert isclose(shoelace(_unit_half_circle), pi / 2, abs_tol=0.01)
+    assert isclose(shoelace(*_unit_square), 1, abs_tol=0.01)
+    assert isclose(shoelace(*_unit_circle), pi, abs_tol=0.01)
+    assert isclose(shoelace(*_unit_half_circle), pi / 2, abs_tol=0.01)
     # Negatives
-    assert isclose(shoelace(_unit_square_n), 1, abs_tol=0.01)
-    assert isclose(shoelace(_unit_circle_n), pi, abs_tol=0.01)
-    assert isclose(shoelace(_unit_half_circle_n), pi / 2, abs_tol=0.01)
+    assert isclose(shoelace(*_unit_square_n), 1, abs_tol=0.01)
+    assert isclose(shoelace(*_unit_circle_n), pi, abs_tol=0.01)
+    assert isclose(shoelace(*_unit_half_circle_n), pi / 2, abs_tol=0.01)
     pass

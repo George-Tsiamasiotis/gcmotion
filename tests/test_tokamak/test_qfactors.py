@@ -13,6 +13,7 @@ Tests
 
 import pytest
 import numpy as np
+import gcmotion as gcm
 
 
 @pytest.mark.parametrize(
@@ -49,14 +50,24 @@ class TestAnalytical:
     def test_psipNU_return_type(self, qfactors):
         r"""Must be able to return both floats and numpy arrays."""
 
-        q_float = qfactors.solverqNU(self.psi_float)
-        q_array = qfactors.solverqNU(self.psi_array)
+        q_float = qfactors.psipNU(self.psi_float)
+        q_array = qfactors.psipNU(self.psi_array)
 
         assert isinstance(q_float, (float, int))
         assert isinstance(q_array, np.ndarray)
 
 
-@pytest.mark.parametrize("qfactors", ["numerical"], indirect=True)
+@pytest.mark.parametrize(
+    "qfactors",
+    [
+        "smart_pt",
+        "smart_nt",
+        "smart_nt2",
+        "dtt_pt",
+        "dtt_nt",
+    ],
+    indirect=True,
+)
 @pytest.mark.filterwarnings("ignore:numpy.ndarray size changed")
 class TestNumerical:
 
@@ -82,8 +93,14 @@ class TestNumerical:
     def test_psipNU_return_type(self, qfactors):
         r"""Must be able to return both floats and numpy arrays."""
 
-        q_float = qfactors.solverqNU(self.psi_float)
-        q_array = qfactors.solverqNU(self.psi_array)
+        q_float = qfactors.psipNU(self.psi_float)
+        q_array = qfactors.psipNU(self.psi_array)
 
         assert isinstance(q_float, (float, int))
         assert isinstance(q_array, np.ndarray)
+
+
+@pytest.mark.filterwarnings("ignore:numpy.ndarray size changed")
+def test_numerical_missing_dataset():
+    with pytest.raises(FileNotFoundError):
+        gcm.qfactor.NumericalQFactor(filename="not_a_file.nc")

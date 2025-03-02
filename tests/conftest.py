@@ -60,6 +60,7 @@ def simple_tokamak(Q):
 @pytest.fixture(scope="session")
 def simple_profile(simple_tokamak, Q):
     """Simplest profile object (B=LAR, q=Unity, E=Nofield)"""
+    # If changed, test_rhosign must be updated
     return gcm.Profile(
         tokamak=simple_tokamak,
         species="p",
