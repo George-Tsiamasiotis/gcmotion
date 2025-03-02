@@ -170,7 +170,7 @@ class NumericalMagneticField(MagneticField):
         self.gder_spline = self.g_spline.derivative(n=1)
 
         # Useful attributes
-        Q = pint.UnitRegistry.Quantity
+        Q = pint.get_application_registry().Quantity
         _B0 = float(dataset.Baxis.data)  # Tesla
         self.B0 = Q(_B0, "Tesla")
 
@@ -185,24 +185,8 @@ class NumericalMagneticField(MagneticField):
         self.Bmax = Q(maxs.values.flatten()[0], "NUTesla").to("Tesla")
         self.theta_min = float(mins.boozer_theta.values.flatten()[0])
         self.theta_max = float(maxs.boozer_theta.values.flatten()[0])
-
-        # WARN: NU units must have been defined in the unit registry already.
-        # The quantity_constructor module sets the global "application
-        # registry" when imported, and *then* defines NU units. This means
-        # quantifying psi raises an exception if the object is created without
-        # having the Quantity constructor instantiated first. There is no way
-        # around that, but there is really no reason to do that.
-        # WARN: "type(self.Bmax) is Q" returns False which might cause
-        # problems.
-        try:
-            self.psi_min = Q(mins.psi.values, "NUMagnetic_flux")
-            self.psi_max = Q(maxs.psi.values, "NUMagnetic_flux")
-        except UndefinedUnitError:
-            logger.warning(
-                "psi coordinates of Bmin and Bmax cannot be defined. "
-                "Ensure that the Quantity Constructor has been instantiated "
-                "correctly first."
-            )
+        self.psi_min = Q(mins.psi.values, "NUMagnetic_flux")
+        self.psi_max = Q(maxs.psi.values, "NUMagnetic_flux")
         end = time()
         duration = Q(end - start, "seconds")
         logger.info(f"Numerical bfield extremum search took {duration:.4g~#P}")
@@ -285,23 +269,15 @@ class LAR(MagneticField):
         self.plain_name = "LAR"
 
         # Minimum/Maximum values and locations
-        Q = pint.UnitRegistry.Quantity
-        try:
-            self.psi_wall = Q(1, "psi_wall")
-            self.theta_min, self.theta_max = 0, np.pi
-            self.psi_min = self.psi_max = self.psi_wall.to("NUMagnetic_flux").m
+        Q = pint.get_application_registry().Quantity
+        self.psi_wall = Q(1, "psi_wall")
+        self.theta_min, self.theta_max = 0, np.pi
+        self.psi_min = self.psi_max = self.psi_wall.to("NUMagnetic_flux").m
 
-            _BminNU = self.bigNU(psi=self.psi_min, theta=self.theta_min)[0]
-            _BmaxNU = self.bigNU(psi=self.psi_max, theta=self.theta_max)[0]
-            self.Bmin = Q(_BminNU, "NUTesla").to("Tesla")
-            self.Bmax = Q(_BmaxNU, "NUTesla").to("Tesla")
-
-        except UndefinedUnitError:
-            logger.warning(
-                "psi coordinates of Bmin and Bmax cannot be defined. "
-                "Ensure that the Quantity Constructor has been instantiated "
-                "correctly first."
-            )
+        _BminNU = self.bigNU(psi=self.psi_min, theta=self.theta_min)[0]
+        _BmaxNU = self.bigNU(psi=self.psi_max, theta=self.theta_max)[0]
+        self.Bmin = Q(_BminNU, "NUTesla").to("Tesla")
+        self.Bmax = Q(_BmaxNU, "NUTesla").to("Tesla")
 
     def bigNU(
         self, psi: float | np.ndarray, theta: float | np.ndarray
