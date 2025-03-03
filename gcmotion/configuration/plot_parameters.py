@@ -76,6 +76,28 @@ class QfactorProfileConfig:
 
 
 @dataclass
+class EfieldProfileConfig:
+    # Figure keywords
+    figsize: tuple = (13, 5)
+    dpi: int = dpi
+    layout: str = "constrained"
+    facecolor: str = "white"
+    titlesize: float = 20
+    titlecolor: str = "blue"
+    # Default parameter values
+    span: tuple = (0, 1.1)
+    show: bool = True
+    # Plot options
+    points: int = 400
+    wall_color: str = "red"
+    labelsize: float = 10
+    ax_title_size: float = 20
+    # Units options
+    field_units: str = "kV/m"
+    potential_units: str = "kV"
+
+
+@dataclass
 class MagneticProfileConfig:
     # Figure keywords
     figsize: tuple = (13, 7)
@@ -221,7 +243,7 @@ class BifurcationPlotConfig:
 @dataclass
 class RZFluxContourConfig:
     # Figure keywords
-    figsize: tuple = (7, 9)
+    figsize: tuple = (6, 8)
     dpi: int = dpi
     layout: str = "constrained"
     facecolor: str = "white"
