@@ -24,6 +24,7 @@ class SolverConfig:
 
 @dataclass
 class PrecomputedConfig:
+    psi_max: int = 2  # Max spline extend relative to psi_wall
     hyp2f1_density: int = 1000
 
 

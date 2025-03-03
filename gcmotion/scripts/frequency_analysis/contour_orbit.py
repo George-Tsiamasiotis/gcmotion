@@ -1,5 +1,6 @@
 import numpy as np
 from math import isclose
+from numba import njit
 
 from gcmotion.entities.profile import Profile
 from gcmotion.configuration.scripts_configuration import ContourOrbitConfig
@@ -30,6 +31,7 @@ class ContourOrbit:
     trapped: bool = None
     copassing: bool = None
     cupassing: bool = None
+    undefined: bool = None
     area: float = None
     Jtheta: float = None
     Jzeta: float = None
@@ -54,16 +56,16 @@ class ContourOrbit:
         Matplotlib's Path object does the exact same thing, so there is no
         reason to extend it.
         """
-
-        self.xmin, self.ymin = self.vertices.min(axis=0)
-        self.xmax, self.ymax = self.vertices.max(axis=0)
+        self.xmin, self.ymin, self.xmax, self.ymax = (
+            *_calculate_bbox(*self.vertices.T),
+        )
 
         # (bottom left point, top right point)
         self.bbox = ((self.xmin, self.ymin), (self.xmax, self.ymax))
 
     def validate(self, psilim: tuple) -> None:
         r"""Checks if the bbox of the contour line touches the upper or lower
-        walls, which means the path gets cut off and must be discarded.
+        walls, which means the orbit gets cut off and must be discarded.
         """
 
         self.valid = is_inbounds(self, psilim) and not is_cutoff_trapped(self)
@@ -115,7 +117,7 @@ class ContourOrbit:
 
     def calculate_Jtheta(self):
         r"""Calculates the action J."""
-        self.area = shoelace(self.vertices)
+        self.area = shoelace(*self.vertices.T)
         if self.passing:
             self.area /= 2  # because theta span = 4π
         self.Jtheta = self.area / (tau)
@@ -129,43 +131,39 @@ class ContourOrbit:
     def pick_color(self):
         r"""Sets the segment's color depending on its orbit type."""
 
+        if self.undefined:
+            self.color = config.undefined_color
+            return
         if self.trapped:
             self.color = config.trapped_color
         elif self.copassing:
             self.color = config.copassing_color
         elif self.cupassing:
             self.color = config.cupassing_color
-        elif self.undefined:
-            self.color = config.undefined_color
 
-    def str_dumb(self):
+    def str_dump(self):
 
         # Use bool() to default to False if None
-        tp = "t" * bool(self.trapped) + "p" * bool(self.passing)
-        cocu = "co" * bool(self.copassing) + "cu" * bool(self.cupassing)
-        edge = "/edge" * bool(self.edge_orbit)
-
-        self.string = tp + "/" + cocu + edge
+        if self.undefined:
+            self.string = "u"
+        else:
+            self.string = "".join(
+                (
+                    "t" * bool(self.trapped),
+                    "co" * bool(self.copassing),
+                    "cu" * bool(self.cupassing),
+                )
+            )
 
 
 # ================================ Validation ================================
 
 
 def is_inbounds(orbit: ContourOrbit, psilim: tuple) -> bool:
-    r"""Checks if the path's bounding box is in bounds of the whole contour,
+    r"""Checks if the obrit's bounding box is in bounds of the whole contour,
     e.g the contour line doesn't get cutoff.
     """
-    # Must not be 0(default) when comparing with
-    atol = config.inbounds_atol
-    rtol = config.inbounds_rtol
-    return not (
-        isclose(
-            orbit.ymin, psilim[0], abs_tol=atol, rel_tol=rtol
-        )  # Touches floor
-        or isclose(
-            orbit.ymax, psilim[1], abs_tol=atol, rel_tol=rtol
-        )  # Touches ceil
-    )
+    return (orbit.ymin > psilim[0]) and (orbit.ymax < psilim[1])
 
 
 def is_cutoff_trapped(orbit: ContourOrbit) -> bool:
@@ -181,24 +179,34 @@ def is_cutoff_trapped(orbit: ContourOrbit) -> bool:
     )
 
 
+# Evidently the transpose of an np.array is non-contiguous
+@njit(" UniTuple(float64, 4) (float64[:], float64[:])", fastmath=True)
+def _calculate_bbox(x: np.ndarray, y: np.ndarray) -> np.ndarray:
+    xmin = x.min()
+    xmax = x.max()
+    ymin = y.min()
+    ymax = y.max()
+    return xmin, ymin, xmax, ymax
+
+
 # ===================== Trapped - Passing Classification =====================
 
 
-def tp_classify(path: ContourOrbit) -> list[bool, bool]:
+def tp_classify(orbit: ContourOrbit) -> list[bool, bool]:
     r"""Checks the left and right bbox edges to check if passing or trapped."""
 
     # NOTE: isclose() is needed here
-    if isclose(path.xmin, -tau) and isclose(path.xmax, tau):
+    if isclose(orbit.xmin, -tau) and isclose(orbit.xmax, tau):
         return True, False
     else:
         return False, True
 
 
-def cocu_classify(path: ContourOrbit, profile: Profile) -> list[bool, bool]:
+def cocu_classify(orbit: ContourOrbit, profile: Profile) -> list[bool, bool]:
     r"""Classifies the segment as co-passing or counter-passing depending on
     the sign of rho"""
 
-    undefined, co = profile._rhosign(psiNU=path.vertices.T[1])
+    undefined, co = profile._rhosign(psiNU=orbit.vertices.T[1])
 
     return undefined, co, not co
 
@@ -206,19 +214,19 @@ def cocu_classify(path: ContourOrbit, profile: Profile) -> list[bool, bool]:
 # ======================= Left-to-Right Classification =======================
 
 
-def is_left_to_right(path: ContourOrbit) -> bool:
-    r"""In the case that the path is passing, it returns True if the *first*
+def is_left_to_right(orbit: ContourOrbit) -> bool:
+    r"""In the case that the orbit is passing, it returns True if the *first*
     point touches the left wall. It also checks that the *last* point touches
     the third wall, which might be reduntant."""
-    if path.trapped:
+    if orbit.trapped:
         return None
 
     # NOTE: isclose() is needed here
     return (
         True
         if (
-            isclose(path.vertices[0][0], -tau)
-            and isclose(path.vertices[-1][0], tau)
+            isclose(orbit.vertices[0][0], -tau)
+            and isclose(orbit.vertices[-1][0], tau)
         )
         else False
     )
@@ -227,7 +235,9 @@ def is_left_to_right(path: ContourOrbit) -> bool:
 # ================================= Shoelace =================================
 
 
-def shoelace(array: np.ndarray) -> float:
+# Arrays are no longer contiguous after adding the bottom points
+@njit("float64(float64[:], float64[:])")
+def shoelace(x: np.ndarray, y: np.ndarray) -> float:
     r"""Calculates the area of a polygon.
 
     It is not necessary that the polygon is closed. The algorithm assumes the
@@ -235,8 +245,10 @@ def shoelace(array: np.ndarray) -> float:
 
     Parameters
     ----------
-    array: np.ndarray
-        (N,2) numpy array containing the polygon's points.
+    x : np.ndarray
+        Array containing the abscissas of the polygon.
+    y : np.ndarray
+        Array containing the ordinates of the polygon.
 
     Returns
     -------
@@ -244,7 +256,6 @@ def shoelace(array: np.ndarray) -> float:
         The area of the polygon.
 
     """
-    x, y = (*array.T,)
     return float(
         0.5 * np.abs(np.dot(x, np.roll(y, 1)) - np.dot(y, np.roll(x, 1)))
     )
