@@ -166,8 +166,6 @@ def calculate_orbit_omegatheta(
 
     dE = Eupper - Elower
 
-    upper_orbit.calculate_Jtheta()
-    lower_orbit.calculate_Jtheta()
     dJtheta = upper_orbit.Jtheta - lower_orbit.Jtheta
 
     omega_theta = dE / dJtheta
@@ -274,7 +272,7 @@ def finalize_orbits(
         if config.cocu_classification and orbit.passing:
             orbit.classify_as_cocu(profile=main_profile)
         orbit.pick_color()
-        orbit.str_dumb()
+        orbit.str_dump()
         finalized_orbits.append(orbit)
 
     return finalized_orbits
