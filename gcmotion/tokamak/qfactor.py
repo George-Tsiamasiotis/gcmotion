@@ -10,12 +10,13 @@ import xarray as xr
 
 from abc import ABC, abstractmethod
 from termcolor import colored
-from math import sqrt, atan, asinh
+from math import sqrt, atan
 from scipy.special import hyp2f1
 from scipy.interpolate import UnivariateSpline, InterpolatedUnivariateSpline
 
 from gcmotion.utils.logger_setup import logger
 from gcmotion.utils.precompute import precompute_hyp2f1
+from gcmotion.configuration.scripts_configuration import PrecomputedConfig
 
 
 # Quantity alias for type annotations
@@ -348,7 +349,12 @@ class PrecomputedHypergeometric(Hypergeometric):
         super().__init__(a=a, B0=B0, q0=q0, q_wall=q_wall, n=n)
 
         # Make z spline
-        zspan = np.sort([1 - (self.q_wall / self.q0) ** self.n, 0])
+        config = PrecomputedConfig()
+        psimax = config.psi_max * self.psi_wall.m
+        zlower = (1 - (self.q_wall / self.q0) ** self.n) * (
+            psimax / self.psi_wall.m
+        ) ** self.n
+        zspan = (zlower, 0)
         z, values = precompute_hyp2f1(n=n, zspan=zspan)
         self.z_spline = InterpolatedUnivariateSpline(x=z, y=values)
         logger.info("Using Precomputed Hyp2F1 values.")
