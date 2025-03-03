@@ -2,6 +2,8 @@ import pytest
 import numpy as np
 import gcmotion as gcm
 
+from gcmotion.configuration.scripts_configuration import PrecomputedConfig
+
 
 @pytest.fixture(scope="module")
 def hyper(Q):
@@ -21,8 +23,21 @@ def hyper_pre(Q):
     )
 
 
-def test_analytic_and_precomputed_hyp3f1(Q, hyper, hyper_pre):
-    psis = Q(np.linspace(0, 1, 100000), "psi_wall").to("NUmf").magnitude
+psi_max = PrecomputedConfig.psi_max
+
+
+@pytest.mark.parametrize(
+    "zupper",
+    [
+        np.linspace(0.1, psi_max, 11).tolist(),
+        pytest.param(
+            [psi_max + 1, psi_max + 2],
+            marks=pytest.mark.xfail(reason="Over the spline limits"),
+        ),
+    ],
+)
+def test_analytic_and_precomputed_hyp2f1(Q, hyper, hyper_pre, zupper):
+    psis = Q(np.linspace(0, zupper, 100000), "psi_wall").to("NUmf").magnitude
     psips = hyper.psipNU(psis)
     psips_pre = hyper_pre.psipNU(psis)
     assert np.all(np.isclose(psips, psips_pre))
