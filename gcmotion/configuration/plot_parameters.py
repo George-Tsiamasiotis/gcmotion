@@ -256,6 +256,11 @@ class RZContourConfig:
     # Boundary keywords
     black_boundary: bool = True
     boundary_linewidth: int = 1
+    # Stationary curves keywords
+    plot_stationary_curves: bool = True
+    stat_curves_color: str = "black"
+    stat_curves_linewidth: float = 1
+    stat_curves_linestyle: str = "dashed"
     # Labels - Title keywords
     xlabel_fontsize: float = 15
     ylabel_fontsize: float = 15

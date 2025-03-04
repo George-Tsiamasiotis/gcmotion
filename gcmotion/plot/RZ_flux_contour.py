@@ -79,6 +79,18 @@ def R_Z_flux_contour(profile: Profile, **kwargs):
         contour = ax.contourf(R_grid, Z_grid, Y_grid, levels=config.levels, cmap=config.cmap)
         logger.info("\t\tContour mode: filled")
 
+    # Add stationary curves if dbdtheta is plotted and if asked
+    if which_Q == "b_der_theta" and config.plot_stationary_curves:
+        ax.contour(
+            R_grid,
+            Z_grid,
+            Y_grid,
+            levels=[0],
+            colors=config.stat_curves_color,
+            linewidths=config.stat_curves_linewidth,
+            linestyles=config.stat_curves_linestyle,
+        )
+
     # Add black boundary around contourif asked
     if config.black_boundary:
 
@@ -96,7 +108,8 @@ def R_Z_flux_contour(profile: Profile, **kwargs):
     ax.set_ylabel("Z [m]", fontsize=config.ylabel_fontsize)
 
     # Set title
-    ax.set_title(f"Magnetic Flux Ψ ({plain_name})", fontsize=config.title_fontsize)
+    title_Q = _get_title_format(which_Q)
+    ax.set_title(f"{title_Q} ({plain_name})", fontsize=config.title_fontsize)
 
     # Expand limits by adding a margin for better presentation
     x_margin = config.xmargin_perc * (R_grid.max() - R_grid.min())
@@ -107,7 +120,12 @@ def R_Z_flux_contour(profile: Profile, **kwargs):
 
     # Set colorbar
     cbar = fig.colorbar(contour, cax=None, ax=ax)
-    cbar.ax.set_title(label=f"{which_Q} [{config.units}]", fontsize=config.cbarlabel_fontsize)
+    clabel = f"{which_Q[0]} [{config.units}]"
+
+    if which_Q in ["b_der_psi", "b_der_theta", "i_der", "g_der"]:
+        clabel = _get_title_format(which_Q)
+
+    cbar.ax.set_title(label=clabel, fontsize=config.cbarlabel_fontsize)
 
     plt.show()
 
@@ -163,19 +181,45 @@ def _get_grid_values(profile: Profile, which_Q: str, density: int, units: str) -
     Z_grid = Z_spline.ev(_theta_grid, _psi_gridNU)
     Psi_grid = _psi_gridNU  # Psi is constant on flux surfaces [NU]
 
-    if which_Q == "Ψ":
-        Psi_grid = Q(Psi_grid, "NUmf").to(f"{units}").m
-        Y_grid = Psi_grid
-    # WHEN PULL FROM GEORGE DO NOT PUT INPUT QUANTITY NECESSARILY
-    elif which_Q == "E":
+    match which_Q:
+        case "Ψ":
+            Psi_grid = Q(Psi_grid, "NUmf").to(f"{units}").m
+            Y_grid = Psi_grid
+        # WHEN PULL FROM GEORGE DO NOT PUT INPUT QUANTITY NECESSARILY
+        case "Energy":
+            psi_gridNU = Q(_psi_gridNU, "NUMagnetic_flux")
+            Y_grid = profile.findEnergy(psi=psi_gridNU, theta=_theta_grid, units=units).m
 
-        psi_gridNU = Q(_psi_gridNU, "NUMagnetic_flux")
+        case "B":
+            bspline = profile.bfield.b_spline
+            _Y_gridNU = bspline(x=_theta_grid, y=_psi_gridNU, grid=False)
+            Y_grid = Q(_Y_gridNU, "NUTesla").to(f"{units}").m
 
-        Y_grid = profile.findEnergy(psi=psi_gridNU, theta=_theta_grid, units=units).m
+        case "I":
+            ispline = profile.bfield.i_spline
+            _Y_gridNU = ispline(x=_psi_gridNU)
+            Y_grid = Q(_Y_gridNU, "NUpc").to(f"{units}").m
 
-    elif which_Q == "B":
+        case "g":
+            gspline = profile.bfield.g_spline
+            _Y_gridNU = gspline(x=_psi_gridNU)
+            Y_grid = Q(_Y_gridNU, "NUpc").to(f"{units}").m
 
-        Y_grid = 1
+        case "b_der_theta":
+            db_dtheta_spline = profile.bfield.db_dtheta_spline
+            Y_grid = db_dtheta_spline(x=_theta_grid, y=_psi_gridNU, grid=False)
+
+        case "b_der_psi":
+            db_dpsi_spline = profile.bfield.db_dpsi_spline
+            Y_grid = db_dpsi_spline(x=_theta_grid, y=_psi_gridNU, grid=False)
+
+        case "i_der":
+            ider_spline = profile.bfield.ider_spline
+            Y_grid = ider_spline(x=_psi_gridNU)
+
+        case "g_der":
+            gder_spline = profile.bfield.gder_spline
+            Y_grid = gder_spline(x=_psi_gridNU)
 
     return R_grid, Z_grid, Y_grid, Psi_grid
 
@@ -206,10 +250,10 @@ def _handle_quantity_input(input: str) -> str:
         return "B"
 
     if input in ["energy", "Energy", "E"]:
-        return "E"
+        return "Energy"
 
     if input in ["i", "I", "toroidal current", "Toroidal Current"]:
-        return "i"
+        return "I"
 
     if input in ["g", "poloidal current", "Poloidal Current"]:
         return "g"
@@ -220,6 +264,28 @@ def _handle_quantity_input(input: str) -> str:
     if input in ["b_der_psi", "B_der_psi", "db/dpsi", "dB/dpsi", "dbdpsi", "dBdpsi"]:
         return "b_der_psi"
 
+    if input in ["ider", "i_der", "i_der_psi", "didpsi", "dIdpsi", "di_dpsi", "dI_dpsi"]:
+        return "i_der"
+
+    if input in ["gder", "g_der", "g_der_psi", "dgdpsi", "dg_dpsi"]:
+        return "g_der"
+
     print(
         "\n\nWARNING: Selected quantity to be contoured must either be 'flux', 'bfield','energy', 'ider', 'gder', 'dBdtheta', 'dBdpsi'\n\n"
     )
+
+
+def _get_title_format(which_Q: str) -> str:
+
+    d = {
+        "Ψ": "Magnetic Flux 'Ψ'",
+        "B": "Magnetic Field 'B'",
+        "I": "Toroidal Current 'I'",
+        "g": "Poloidal Current 'g'",
+        "b_der_theta": r"$\partial B / \partial \theta$",
+        "b_der_psi": r"$\partial B / \partial \psi$",
+        "i_der": r"$\partial I / \partial \psi$",
+        "g_der": r"$\partial g / \partial \psi$",
+    }
+
+    return d[which_Q]
