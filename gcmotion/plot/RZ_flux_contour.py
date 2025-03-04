@@ -3,7 +3,7 @@ import xarray as xr
 
 import matplotlib.pyplot as plt
 from scipy.interpolate import RectBivariateSpline
-from gcmotion.configuration.plot_parameters import RZFluxContourConfig
+from gcmotion.configuration.plot_parameters import RZContourConfig
 from gcmotion.entities.profile import Profile
 
 from gcmotion.utils.quantity_constructor import QuantityConstructor
@@ -11,7 +11,7 @@ from gcmotion.utils.logger_setup import logger
 
 
 def R_Z_flux_contour(profile: Profile, **kwargs):
-    r"""Plots the Magnetic Flux's contour plot in R, Z tokamak (cylindrical)
+    r"""Plots the Mselected quantity's (Ψ,Β,Ε) contour plot in R, Z tokamak (cylindrical)
     coordinates.
 
     Parameters
@@ -30,23 +30,25 @@ def R_Z_flux_contour(profile: Profile, **kwargs):
     ymargin_perc : float, optional
         y-axis margin of ylim so that there is some blank (white) space in between the
         plot limits and the contour drawing. Defaults to 0.1.
-    flux_units : str, optional
-        The units of the psi/Ptheta axis. Can be "Magnetic_flux"(same as "Tesla
-        * meters^2"), "NUmagnetic_flux" (same as "NUTesla * NUmeters^2"),
-        "psi_wall", "NUpsi_wall", or any other pint unit with the same
-        dimensionality. Defaults to "Tesla * meters^2".
+    units : str, optional
+        The units of the quantity depicted on the contour. Can either be flux units,
+        magnetic field units or energy units
     Notes
     -----
     For a full list of all available optional parameters, see the dataclass
     RZPlotConfig at gcmotion/configuration/plot_parameters. The defaults values
     are set there, and are overwritten if passed as arguments.
     """
-    logger.info("\t==> Plotting RZ Flux Contour...")
 
     # Unpack Parameters
-    config = RZFluxContourConfig()
+    config = RZContourConfig()
     for key, value in kwargs.items():
         setattr(config, key, value)
+
+    # Handle quantity input
+    which_Q = _handle_quantity_input(config.which_Q)
+
+    logger.info(f"\t==> Plotting RZ {which_Q} Contour...")
 
     # Create figure
     fig_kw = {
@@ -57,22 +59,24 @@ def R_Z_flux_contour(profile: Profile, **kwargs):
     }
 
     fig, ax = plt.subplots(1, 1, **fig_kw)
-    logger.info("Created figure for RZ plot.")
+    logger.info("Created figure for RZ contour.")
 
     # Open selected dataset
     plain_name = profile.bfield.plain_name
     ds = profile.bfield.dataset
-    logger.info(f"Opened dataset for {plain_name} in RZ plot.")
+    logger.info(f"Opened dataset for {plain_name} in RZ contour.")
 
     # Calculate grid values for contour
-    R_grid, Z_grid, Psi_grid = _get_grid_values(ds, config.parametric_density, config.flux_units)
+    R_grid, Z_grid, Y_grid, Psi_grid = _get_grid_values(
+        profile, which_Q, config.parametric_density, config.units
+    )
 
     # Plot contour with requaested mode
     if config.mode == "lines":
-        contour = ax.contour(R_grid, Z_grid, Psi_grid, levels=config.levels, cmap=config.cmap)
+        contour = ax.contour(R_grid, Z_grid, Y_grid, levels=config.levels, cmap=config.cmap)
         logger.info("\t\tContour mode: lines")
     else:
-        contour = ax.contourf(R_grid, Z_grid, Psi_grid, levels=config.levels, cmap=config.cmap)
+        contour = ax.contourf(R_grid, Z_grid, Y_grid, levels=config.levels, cmap=config.cmap)
         logger.info("\t\tContour mode: filled")
 
     # Add black boundary around contourif asked
@@ -103,31 +107,31 @@ def R_Z_flux_contour(profile: Profile, **kwargs):
 
     # Set colorbar
     cbar = fig.colorbar(contour, cax=None, ax=ax)
-    cbar.ax.set_title(label=f"Ψ [{config.flux_units}]", fontsize=config.cbarlabel_fontsize)
+    cbar.ax.set_title(label=f"{which_Q} [{config.units}]", fontsize=config.cbarlabel_fontsize)
 
     plt.show()
 
 
-def _get_grid_values(ds: xr.Dataset, density: int, flux_units: str) -> tuple:
-    r"""Simple function that takes in a DataSet and prepares the R, Z, Ψ values
+def _get_grid_values(profile: Profile, which_Q: str, density: int, units: str) -> tuple:
+    r"""Simple function that takes in a DataSet and prepares the R, Z, Y values
     for the RZ contour"""
+
+    ds = profile.bfield.dataset
 
     # Extract some useful quantities
     R0 = ds.raxis.data
     Z0 = ds.zaxis.data
-    B0 = float(ds.Baxis.data)  # Tesla
-    psi_wallNU = float(ds.psi[-1].data)  # NUMagnetic_flux
 
-    Q = QuantityConstructor(R=R0, B0=B0, _psi_wallNU=psi_wallNU, species="p")
+    Q = profile.Q
 
-    _psi_values = ds.psi.data
+    _psi_valuesNU = ds.psi.data
     # We do not have measurement data at psi=0 so we add it. It is needed so
     # that there is not a void in the middle of the contour plot because
     # there was not data to interpolate in the middle (psi=0).
-    _psi_values = np.insert(_psi_values, 0, 0)
+    _psi_valuesNU = np.insert(_psi_valuesNU, 0, 0)
 
     # Convert to requested flux units
-    psi_values = Q(_psi_values, "NUmf").to(f"{flux_units}").m
+    psi_valuesNU = Q(_psi_valuesNU, "NUmf")
 
     # Extract theta, R, Z data
     theta_values = ds.boozer_theta.data
@@ -144,19 +148,78 @@ def _get_grid_values(ds: xr.Dataset, density: int, flux_units: str) -> tuple:
     Z_values = np.hstack((new_Z_column, Z_values))  # (3620, 101)
 
     # Interpolate
-    R_spline = RectBivariateSpline(theta_values, psi_values, R_values)
-    Z_spline = RectBivariateSpline(theta_values, psi_values, Z_values)
+    R_spline = RectBivariateSpline(theta_values, psi_valuesNU.m, R_values)
+    Z_spline = RectBivariateSpline(theta_values, psi_valuesNU.m, Z_values)
 
     # Grid for plotting
-    psi_plot = np.linspace(psi_values.min(), psi_values.max(), density)
-    theta_plot = np.linspace(theta_values.min(), theta_values.max(), density)
+    _psi_plotNU = np.linspace(psi_valuesNU.m.min(), psi_valuesNU.m.max(), density)
+    _theta_plot = np.linspace(theta_values.min(), theta_values.max(), density)
 
     # Compute meshgrid
-    theta_grid, psi_grid = np.meshgrid(theta_plot, psi_plot)
+    _theta_grid, _psi_gridNU = np.meshgrid(_theta_plot, _psi_plotNU)
 
     # Evaluate R and Z on the grid
-    R_grid = R_spline.ev(theta_grid, psi_grid)
-    Z_grid = Z_spline.ev(theta_grid, psi_grid)
-    Psi_grid = psi_grid  # Psi is constant on flux surfaces
+    R_grid = R_spline.ev(_theta_grid, _psi_gridNU)
+    Z_grid = Z_spline.ev(_theta_grid, _psi_gridNU)
+    Psi_grid = _psi_gridNU  # Psi is constant on flux surfaces [NU]
 
-    return R_grid, Z_grid, Psi_grid
+    if which_Q == "Ψ":
+        Psi_grid = Q(Psi_grid, "NUmf").to(f"{units}").m
+        Y_grid = Psi_grid
+    # WHEN PULL FROM GEORGE DO NOT PUT INPUT QUANTITY NECESSARILY
+    elif which_Q == "E":
+
+        psi_gridNU = Q(_psi_gridNU, "NUMagnetic_flux")
+
+        Y_grid = profile.findEnergy(psi=psi_gridNU, theta=_theta_grid, units=units).m
+
+    elif which_Q == "B":
+
+        Y_grid = 1
+
+    return R_grid, Z_grid, Y_grid, Psi_grid
+
+
+def _handle_quantity_input(input: str) -> str:
+    if input in [
+        "psi",
+        "Psi",
+        "flux",
+        "Flux",
+        "magnetic flux",
+        "Magnetic Flux",
+        "mf",
+        "magnetic_flux",
+    ]:
+        return "Ψ"
+
+    if input in [
+        "bfield",
+        "Bfield",
+        "B",
+        "b",
+        "magnetic field",
+        "magnetic_field",
+        "Magnetic Field",
+        "Mf",
+    ]:
+        return "B"
+
+    if input in ["energy", "Energy", "E"]:
+        return "E"
+
+    if input in ["i", "I", "toroidal current", "Toroidal Current"]:
+        return "i"
+
+    if input in ["g", "poloidal current", "Poloidal Current"]:
+        return "g"
+
+    if input in ["b_der_theta", "B_der_theta", "db/dtheta", "dB/dtheta", "dbdtheta", "dBdtheta"]:
+        return "b_der_theta"
+
+    if input in ["b_der_psi", "B_der_psi", "db/dpsi", "dB/dpsi", "dbdpsi", "dBdpsi"]:
+        return "b_der_psi"
+
+    print(
+        "\n\nWARNING: Selected quantity to be contoured must either be 'flux', 'bfield','energy', 'ider', 'gder', 'dBdtheta', 'dBdpsi'\n\n"
+    )

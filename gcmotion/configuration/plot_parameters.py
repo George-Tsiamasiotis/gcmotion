@@ -241,7 +241,7 @@ class BifurcationPlotConfig:
 
 
 @dataclass
-class RZFluxContourConfig:
+class RZContourConfig:
     # Figure keywords
     figsize: tuple = (6, 8)
     dpi: int = dpi
@@ -251,7 +251,8 @@ class RZFluxContourConfig:
     cmap: str = "plasma"
     levels: int = 20
     mode: str = None
-    flux_units: str = "NUmf"
+    units: str = "NUmf"
+    which_Q: str = "flux"
     # Boundary keywords
     black_boundary: bool = True
     boundary_linewidth: int = 1
