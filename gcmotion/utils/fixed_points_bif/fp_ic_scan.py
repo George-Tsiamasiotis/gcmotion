@@ -6,7 +6,7 @@ function's numerical solver as initial conditions (fp_is_scan --> fixed points i
 import numpy as np
 
 from gcmotion.entities.profile import Profile
-from gcmotion.utils.fp_system import system
+from gcmotion.utils.fixed_points_bif.fp_system import system
 from numba import njit
 
 

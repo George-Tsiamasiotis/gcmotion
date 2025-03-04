@@ -6,7 +6,7 @@ as well.
 from gcmotion.scripts.fixed_points import fixed_points as get_fixed_points
 from gcmotion.entities.profile import Profile
 
-from gcmotion.utils.XO_points_classification import XO_points_classification as xoc
+from gcmotion.utils.fixed_points_bif.XO_points_classification import XO_points_classification as xoc
 from gcmotion.plot._base._config import _FixedPointsPlotConfig
 
 import matplotlib.pyplot as plt
