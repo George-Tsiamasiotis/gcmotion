@@ -1,23 +1,23 @@
 import numpy as np
 import xarray as xr
-import os
 
 import matplotlib.pyplot as plt
 from scipy.interpolate import RectBivariateSpline
 from gcmotion.configuration.plot_parameters import RZFluxContourConfig
+from gcmotion.entities.profile import Profile
 
 from gcmotion.utils.quantity_constructor import QuantityConstructor
 from gcmotion.utils.logger_setup import logger
 
 
-def R_Z_flux_contour(eqdsk_filename: str, **kwargs):
+def R_Z_flux_contour(profile: Profile, **kwargs):
     r"""Plots the Magnetic Flux's contour plot in R, Z tokamak (cylindrical)
     coordinates.
 
     Parameters
     ----------
-    eqdsk_filename: str
-        Name of the .nc file that contains eqdsk data for the selected equilibrium.
+    profile : Profile
+        The Profile entity.
 
     Other Parameters
     ----------------
@@ -59,12 +59,10 @@ def R_Z_flux_contour(eqdsk_filename: str, **kwargs):
     fig, ax = plt.subplots(1, 1, **fig_kw)
     logger.info("Created figure for RZ plot.")
 
-    # Get full file path
-    full_path = _get_full_path(eqdsk_filename)
-
     # Open selected dataset
-    ds = xr.open_dataset(full_path)
-    logger.info(f"Opened dataset for {eqdsk_filename} in RZ plot.")
+    plain_name = profile.bfield.plain_name
+    ds = profile.bfield.dataset
+    logger.info(f"Opened dataset for {plain_name} in RZ plot.")
 
     # Calculate grid values for contour
     R_grid, Z_grid, Psi_grid = _get_grid_values(ds, config.parametric_density, config.flux_units)
@@ -94,8 +92,7 @@ def R_Z_flux_contour(eqdsk_filename: str, **kwargs):
     ax.set_ylabel("Z [m]", fontsize=config.ylabel_fontsize)
 
     # Set title
-    formatted_title = _get_formatted_title(eqdsk_filename)
-    ax.set_title(f"Magnetic Flux Ψ ({formatted_title})", fontsize=config.title_fontsize)
+    ax.set_title(f"Magnetic Flux Ψ ({plain_name})", fontsize=config.title_fontsize)
 
     # Expand limits by adding a margin for better presentation
     x_margin = config.xmargin_perc * (R_grid.max() - R_grid.min())
@@ -163,25 +160,3 @@ def _get_grid_values(ds: xr.Dataset, density: int, flux_units: str) -> tuple:
     Psi_grid = psi_grid  # Psi is constant on flux surfaces
 
     return R_grid, Z_grid, Psi_grid
-
-
-def _get_full_path(filename: str) -> str:
-    grandparent_dir = os.path.dirname(os.path.dirname(__file__))
-    target_dir = os.path.join(grandparent_dir, "tokamak", "reconstructed")
-    full_path = os.path.join(target_dir, filename)
-
-    return full_path
-
-
-def _get_formatted_title(eqdsk_filename: str) -> str:
-
-    name_without_ext = eqdsk_filename.rsplit(".", 1)[0]  # Remove file extension
-    words = name_without_ext.split("_")  # Split by underscore
-    formatted_title = " ".join(word.capitalize() for word in words)  # Capitalize and join
-
-    if formatted_title.split()[0] == "Dtt":
-        formatted_title = " ".join(
-            words[0].upper() if i == 0 else word.capitalize() for i, word in enumerate(words)
-        )
-
-    return formatted_title
