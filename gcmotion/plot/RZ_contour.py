@@ -1,7 +1,8 @@
 import numpy as np
-
 from matplotlib.lines import Line2D
 import matplotlib.pyplot as plt
+from pint.errors import DimensionalityError
+
 from scipy.interpolate import RectBivariateSpline
 from gcmotion.configuration.plot_parameters import RZContourConfig
 from gcmotion.entities.profile import Profile
@@ -99,7 +100,7 @@ def R_Z_contour(profile: Profile, **kwargs):
             linestyle=config.stat_curves_linestyle,
             label=r"Stationary Curves  $\partial B / \partial \theta=0$",
         )
-        ax.legend(handles=[legend_entry])
+        ax.legend(handles=[legend_entry], loc="lower left")
 
     # Add black boundary around contourif asked
     if config.black_boundary:
@@ -191,45 +192,52 @@ def _get_grid_values(profile: Profile, which_Q: str, density: int, units: str) -
     Z_grid = Z_spline.ev(_theta_grid, _psi_gridNU)
     Psi_grid = _psi_gridNU  # Psi is constant on flux surfaces [NU]
 
-    match which_Q:
-        case "Ψ":
-            Psi_grid = Q(Psi_grid, "NUmf").to(f"{units}").m
-            Y_grid = Psi_grid
-        # WHEN PULL FROM GEORGE DO NOT PUT INPUT QUANTITY NECESSARILY
-        case "Energy":
-            psi_gridNU = Q(_psi_gridNU, "NUMagnetic_flux")
-            Y_grid = profile.findEnergy(psi=psi_gridNU, theta=_theta_grid, units=units).m
+    try:
+        match which_Q:
+            case "Ψ":
+                Psi_grid = Q(Psi_grid, "NUmf").to(f"{units}").m
+                Y_grid = Psi_grid
+            # WHEN PULL FROM GEORGE DO NOT PUT INPUT QUANTITY NECESSARILY
+            case "Energy":
+                psi_gridNU = Q(_psi_gridNU, "NUMagnetic_flux")
+                Y_grid = profile.findEnergy(psi=psi_gridNU, theta=_theta_grid, units=units).m
 
-        case "B":
-            bspline = profile.bfield.b_spline
-            _Y_gridNU = bspline(x=_theta_grid, y=_psi_gridNU, grid=False)
-            Y_grid = Q(_Y_gridNU, "NUTesla").to(f"{units}").m
+            case "B":
+                bspline = profile.bfield.b_spline
+                _Y_gridNU = bspline(x=_theta_grid, y=_psi_gridNU, grid=False)
+                Y_grid = Q(_Y_gridNU, "NUTesla").to(f"{units}").m
 
-        case "I":
-            ispline = profile.bfield.i_spline
-            _Y_gridNU = ispline(x=_psi_gridNU)
-            Y_grid = Q(_Y_gridNU, "NUpc").to(f"{units}").m
+            case "I":
+                ispline = profile.bfield.i_spline
+                _Y_gridNU = ispline(x=_psi_gridNU)
+                Y_grid = Q(_Y_gridNU, "NUpc").to(f"{units}").m
 
-        case "g":
-            gspline = profile.bfield.g_spline
-            _Y_gridNU = gspline(x=_psi_gridNU)
-            Y_grid = Q(_Y_gridNU, "NUpc").to(f"{units}").m
+            case "g":
+                gspline = profile.bfield.g_spline
+                _Y_gridNU = gspline(x=_psi_gridNU)
+                Y_grid = Q(_Y_gridNU, "NUpc").to(f"{units}").m
 
-        case "b_der_theta":
-            db_dtheta_spline = profile.bfield.db_dtheta_spline
-            Y_grid = db_dtheta_spline(x=_theta_grid, y=_psi_gridNU, grid=False)
+            case "b_der_theta":
+                db_dtheta_spline = profile.bfield.db_dtheta_spline
+                Y_grid = db_dtheta_spline(x=_theta_grid, y=_psi_gridNU, grid=False)
 
-        case "b_der_psi":
-            db_dpsi_spline = profile.bfield.db_dpsi_spline
-            Y_grid = db_dpsi_spline(x=_theta_grid, y=_psi_gridNU, grid=False)
+            case "b_der_psi":
+                db_dpsi_spline = profile.bfield.db_dpsi_spline
+                Y_grid = db_dpsi_spline(x=_theta_grid, y=_psi_gridNU, grid=False)
 
-        case "i_der":
-            ider_spline = profile.bfield.ider_spline
-            Y_grid = ider_spline(x=_psi_gridNU)
+            case "i_der":
+                ider_spline = profile.bfield.ider_spline
+                Y_grid = ider_spline(x=_psi_gridNU)
 
-        case "g_der":
-            gder_spline = profile.bfield.gder_spline
-            Y_grid = gder_spline(x=_psi_gridNU)
+            case "g_der":
+                gder_spline = profile.bfield.gder_spline
+                Y_grid = gder_spline(x=_psi_gridNU)
+
+    except DimensionalityError as e:
+        print(
+            f"Dimensionality error encountered: {e}.\n\nMAKE SURE THE UNITS YOU INPUTED DESCRIBE THE QUANTITY YOU INPUTED TO CONTOUR PLOT.\n\n"
+        )
+        return
 
     return R_grid, Z_grid, Y_grid, Psi_grid
 
