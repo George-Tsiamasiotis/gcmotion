@@ -236,7 +236,7 @@ def is_left_to_right(orbit: ContourOrbit) -> bool:
 
 
 # Arrays are no longer contiguous after adding the bottom points
-@njit("float64(float64[:], float64[:])")
+# @njit("float64(float64[:], float64[:])")
 def shoelace(x: np.ndarray, y: np.ndarray) -> float:
     r"""Calculates the area of a polygon.
 
