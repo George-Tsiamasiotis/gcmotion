@@ -1,5 +1,6 @@
 import numpy as np
 
+from matplotlib.lines import Line2D
 import matplotlib.pyplot as plt
 from scipy.interpolate import RectBivariateSpline
 from gcmotion.configuration.plot_parameters import RZContourConfig
@@ -16,6 +17,7 @@ def R_Z_contour(profile: Profile, **kwargs):
     ----------
     profile : Profile
         The Profile entity.
+
 
     Other Parameters
     ----------------
@@ -88,6 +90,16 @@ def R_Z_contour(profile: Profile, **kwargs):
             linewidths=config.stat_curves_linewidth,
             linestyles=config.stat_curves_linestyle,
         )
+        # Manually add legend entry
+        legend_entry = Line2D(
+            [0],
+            [0],
+            color=config.stat_curves_color,
+            linewidth=config.stat_curves_linewidth,
+            linestyle=config.stat_curves_linestyle,
+            label=r"Stationary Curves  $\partial B / \partial \theta=0$",
+        )
+        ax.legend(handles=[legend_entry])
 
     # Add black boundary around contourif asked
     if config.black_boundary:
@@ -278,6 +290,7 @@ def _get_title_format(which_Q: str) -> str:
     d = {
         "Ψ": "Magnetic Flux 'Ψ'",
         "B": "Magnetic Field 'B'",
+        "Energy": "Energy",
         "I": "Toroidal Current 'I'",
         "g": "Poloidal Current 'g'",
         "b_der_theta": r"$\partial B / \partial \theta$",
