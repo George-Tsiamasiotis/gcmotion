@@ -247,12 +247,16 @@ class RZContourConfig:
     dpi: int = dpi
     layout: str = "constrained"
     facecolor: str = "white"
+    show: bool = True
     # Contour keywords
     cmap: str = "plasma"
     levels: int = 20
     mode: str = None
     units: str = "NUmf"
     which_Q: str = "flux"
+    # Locator keywords
+    log_base: float = 1.0001
+    locator: str = "linear"
     # Boundary keywords
     black_boundary: bool = True
     boundary_linewidth: int = 1
@@ -267,6 +271,7 @@ class RZContourConfig:
     title_fontsize: float = 15
     # Colorbar keywords
     cbarlabel_fontsize: float = 10
+    cbar_ticks: int = 10
     # Numerical keywords
     parametric_density: int = 500
     xmargin_perc: float = 0.1

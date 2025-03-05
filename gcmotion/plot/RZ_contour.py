@@ -3,6 +3,9 @@ from matplotlib.lines import Line2D
 import matplotlib.pyplot as plt
 from pint.errors import DimensionalityError
 
+from matplotlib import ticker
+from matplotlib.axes import Axes
+
 from scipy.interpolate import RectBivariateSpline
 from gcmotion.configuration.plot_parameters import RZContourConfig
 from gcmotion.entities.profile import Profile
@@ -10,7 +13,7 @@ from gcmotion.entities.profile import Profile
 from gcmotion.utils.logger_setup import logger
 
 
-def R_Z_contour(profile: Profile, **kwargs):
+def R_Z_contour(profile: Profile, ax: Axes = None, **kwargs):
     r"""Plots the selected quantity's contour plot in R, Z tokamak (cylindrical)
     coordinates.
 
@@ -63,7 +66,6 @@ def R_Z_contour(profile: Profile, **kwargs):
     fig, ax = plt.subplots(1, 1, **fig_kw)
     logger.info("Created figure for RZ contour.")
 
-    # Open selected dataset
     plain_name = profile.bfield.plain_name
     logger.info(f"Opened dataset for {plain_name} in RZ contour.")
 
@@ -72,12 +74,25 @@ def R_Z_contour(profile: Profile, **kwargs):
         profile, which_Q, config.parametric_density, config.units
     )
 
+    # Set locator
+    locator = (
+        ticker.LogLocator(base=config.log_base, numticks=config.levels)
+        if config.locator == "log"
+        else ticker.MaxNLocator(nbins=config.levels)
+    )
+
+    kw = {
+        "cmap": config.cmap,
+        "locator": locator,
+        "levels": config.levels,
+    }
+
     # Plot contour with requaested mode
     if config.mode == "lines":
-        contour = ax.contour(R_grid, Z_grid, Y_grid, levels=config.levels, cmap=config.cmap)
+        contour = ax.contour(R_grid, Z_grid, Y_grid, **kw)
         logger.info("\t\tContour mode: lines")
     else:
-        contour = ax.contourf(R_grid, Z_grid, Y_grid, levels=config.levels, cmap=config.cmap)
+        contour = ax.contourf(R_grid, Z_grid, Y_grid, **kw)
         logger.info("\t\tContour mode: filled")
 
     # Add stationary curves if dbdtheta is plotted and if asked
@@ -104,7 +119,6 @@ def R_Z_contour(profile: Profile, **kwargs):
 
     # Add black boundary around contourif asked
     if config.black_boundary:
-
         ax.contour(
             R_grid,
             Z_grid,
@@ -131,14 +145,17 @@ def R_Z_contour(profile: Profile, **kwargs):
 
     # Set colorbar
     cbar = fig.colorbar(contour, cax=None, ax=ax)
-    clabel = f"{which_Q[0]} [{config.units}]"
 
-    if which_Q in ["b_der_psi", "b_der_theta", "i_der", "g_der"]:
-        clabel = _get_title_format(which_Q)
+    # Set colorbar ticks and fromat (All this was necessary did not work any other way)
+    if config.locator == "log":
+        _set_up_log_locator(cbar=cbar, Y_grid=Y_grid, ticks=config.cbar_ticks)
+
+    clabel = _get_clabel(which_Q=which_Q, units=config.units)
 
     cbar.ax.set_title(label=clabel, fontsize=config.cbarlabel_fontsize)
 
-    plt.show()
+    if config.show:
+        plt.show()
 
 
 def _get_grid_values(profile: Profile, which_Q: str, density: int, units: str) -> tuple:
@@ -308,3 +325,24 @@ def _get_title_format(which_Q: str) -> str:
     }
 
     return d[which_Q]
+
+
+def _set_up_log_locator(cbar, Y_grid: np.ndarray, ticks: int) -> None:
+    # Define tick positions manually on a log scale
+    vmin, vmax = Y_grid.min(), Y_grid.max()
+    tick_positions = np.logspace(np.log10(vmin), np.log10(vmax), num=ticks)
+
+    # Apply fixed locator to ensure only these positions are used
+    cbar.ax.yaxis.set_major_locator(ticker.FixedLocator(tick_positions))
+
+    # Use a formatter that forces all labels to appear
+    cbar.ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f"{x:.1e}"))
+
+
+def _get_clabel(which_Q: str, units: str) -> str:
+    clabel = f"{which_Q[0]} [{units}]"
+
+    if which_Q in ["b_der_psi", "b_der_theta", "i_der", "g_der"]:
+        clabel = _get_title_format(which_Q)
+
+    return clabel
