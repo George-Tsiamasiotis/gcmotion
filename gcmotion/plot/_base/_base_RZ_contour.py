@@ -1,4 +1,4 @@
-"""Script that draws the selected quantity's contour plot in R, Z tokamak 
+"""Base script that draws the selected quantity's contour plot in R, Z tokamak 
 (cylindrical) coordinates """
 
 import numpy as np
@@ -11,14 +11,14 @@ from matplotlib.axes import Axes
 from matplotlib import ticker
 
 from scipy.interpolate import RectBivariateSpline
-from gcmotion.configuration.plot_parameters import RZContoursConfig
+from gcmotion.plot._base._config import _RZContourConfig
 from gcmotion.entities.profile import Profile
 
 from gcmotion.utils.logger_setup import logger
 
 
 def R_Z_contour(profile: Profile, fig: Figure = None, ax=None, **kwargs):
-    r"""Plots the selected quantity's (:math:`\Psi`, E, B, I, g,
+    r"""Base plots the selected quantity's (:math:`\Psi`, E, B, I, g,
     :math:`\frac{\partial B}{\partial\theta}`, :math:`\frac{\partial B}{\partial\psi}`,
     :math:`\frac{\partial I}{\partial\psi}`, :math:`\frac{\partial g}{\partial\psi}`)
     contour plot in R, Z tokamak (cylindrical) coordinates.
@@ -50,12 +50,12 @@ def R_Z_contour(profile: Profile, fig: Figure = None, ax=None, **kwargs):
     Notes
     -----
     For a full list of all available optional parameters, see the dataclass
-    RZPlotConfig at gcmotion/configuration/plot_parameters. The defaults values
+    RZPlotConfig at gcmotion/plot/_base/_config. The defaults values
     are set there, and are overwritten if passed as arguments.
     """
 
     # Unpack Parameters
-    config = RZContoursConfig()
+    config = _RZContourConfig()
     for key, value in kwargs.items():
         setattr(config, key, value)
 
@@ -147,7 +147,7 @@ def R_Z_contour(profile: Profile, fig: Figure = None, ax=None, **kwargs):
 
     # Set title
     title_Q = _get_title_format(which_Q)
-    ax.set_title(f"{title_Q} ({plain_name})", fontsize=config.title_fontsize)
+    ax.set_title(f"{title_Q}", fontsize=config.title_fontsize)
 
     # Expand limits by adding a margin for better presentation
     x_margin = config.xmargin_perc * (R_grid.max() - R_grid.min())

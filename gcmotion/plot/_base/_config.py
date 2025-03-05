@@ -107,3 +107,41 @@ class _FixedPointsPlotConfig:
     ic_marker: str = ">"
     ic_markercolor: str = "red"
     ic_markersize: float = 100
+
+
+@dataclass
+class _RZContourConfig:
+    # Figure keywords
+    figsize: tuple = (6, 8)
+    dpi: int = 100
+    layout: str = "constrained"
+    facecolor: str = "white"
+    show: bool = True
+    # Contour keywords
+    cmap: str = "plasma"
+    levels: int = 20
+    mode: str = None
+    units: str = "NUmf"
+    which_Q: str = "flux"
+    # Locator keywords
+    log_base: float = 1.0001
+    locator: str = "linear"
+    # Boundary keywords
+    black_boundary: bool = True
+    boundary_linewidth: int = 1
+    # Stationary curves keywords
+    plot_stationary_curves: bool = True
+    stat_curves_color: str = "black"
+    stat_curves_linewidth: float = 1
+    stat_curves_linestyle: str = "dashed"
+    # Labels - Title keywords
+    xlabel_fontsize: float = 15
+    ylabel_fontsize: float = 15
+    title_fontsize: float = 15
+    # Colorbar keywords
+    cbarlabel_fontsize: float = 10
+    cbar_ticks: int = 10
+    # Numerical keywords
+    parametric_density: int = 500
+    xmargin_perc: float = 0.1
+    ymargin_perc: float = 0.1

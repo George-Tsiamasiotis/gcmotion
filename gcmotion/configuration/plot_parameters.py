@@ -241,54 +241,22 @@ class BifurcationPlotConfig:
 
 
 @dataclass
-class RZContoursConfig:
-    # Figure keywords
-    figsize: tuple = (6, 8)
-    dpi: int = dpi
-    layout: str = "constrained"
-    facecolor: str = "white"
-    show: bool = True
-    # Contour keywords
-    cmap: str = "plasma"
-    levels: int = 20
-    mode: str = None
-    units: str = "NUmf"
-    which_Q: str = "flux"
-    # Locator keywords
-    log_base: float = 1.0001
-    locator: str = "linear"
-    # Boundary keywords
-    black_boundary: bool = True
-    boundary_linewidth: int = 1
-    # Stationary curves keywords
-    plot_stationary_curves: bool = True
-    stat_curves_color: str = "black"
-    stat_curves_linewidth: float = 1
-    stat_curves_linestyle: str = "dashed"
-    # Labels - Title keywords
-    xlabel_fontsize: float = 15
-    ylabel_fontsize: float = 15
-    title_fontsize: float = 15
-    # Colorbar keywords
-    cbarlabel_fontsize: float = 10
-    cbar_ticks: int = 10
-    # Numerical keywords
-    parametric_density: int = 500
-    xmargin_perc: float = 0.1
-    ymargin_perc: float = 0.1
-
-
-@dataclass
 class RZBigContoursConfig:
     # Figure keywords
     figsize_B: tuple = (17, 8)
+    figsize_E_flux: tuple = (11, 8)
     figsize_I: tuple = (11, 8)
     figsize_g: tuple = (11, 8)
     dpi: int = dpi
     layout: str = "constrained"
     facecolor: str = "white"
     # Plots kwywords
-    which: str = "b i g"
+    which: str = "E b i g"
+    # E, flux figure keywords
+    E_flux_suptitle_fontsize: float = 15
+    E_flux_suptitle_color: str = "black"
+    flux_units: str = "NUmf"
+    E_units: str = "keV"
     # B figure keywords
     B_suptitle_fontsize: float = 15
     B_suptitle_color: str = "black"

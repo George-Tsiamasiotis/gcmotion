@@ -1,4 +1,4 @@
-"""Function that draws figures depicting the B, i, g quantities' contours in RZ
+"""Function that draws figures depicting the B, i, g, E, Ψ quantities' contours in RZ
 coordinates"""
 
 import re
@@ -6,14 +6,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from gcmotion.configuration.plot_parameters import RZBigContoursConfig
-from gcmotion.plot.RZ_contour import R_Z_contour
+from gcmotion.plot._base._base_RZ_contour import R_Z_contour
 from gcmotion.entities.profile import Profile
 
 from gcmotion.utils.logger_setup import logger
 
 
-def R_Z_big_contour(profile: Profile, **kwargs):
-    r"""Plots the selected quantity's (B, I, g,
+def R_Z_contours(profile: Profile, **kwargs):
+    r"""Plots the selected quantity's (:math:`\Psi`, E, B, I, g,
     :math:`\frac{\partial B}{\partial\theta}`, :math:`\frac{\partial B}{\partial\psi}`,
     :math:`\frac{\partial I}{\partial\psi}`, :math:`\frac{\partial g}{\partial\psi}`)
     contour plot in R, Z tokamak (cylindrical) coordinates, and in separate figures.
@@ -34,10 +34,12 @@ def R_Z_big_contour(profile: Profile, **kwargs):
         y-axis margin of ylim so that there is some blank (white) space in between the
         plot limits and each contour drawing. Defaults to 0.1.
     which : str
-        String of the form 'b i g', 'b i', 'b g', 'i g', 'b', 'i', 'g' (case insensitive)
-        that determines which figures will be plotted, that of the magnetic field and its
-        derivatives and/or that of the toroidal current and its derivative and/or that of
-        the poloidal current and its derivatives. Defaults to 'b i g'.
+        String of the form 'E b i g', E 'b i', 'E b g', 'E i g', 'E b', 'E i', 'E g'
+        'b i g', 'b i', 'b g', 'i g', 'b', 'i', 'g'  (case insensitive) that determines
+        which figures will be plotted, that of the Energy and magnetic flux, that of the
+        magnetic field and its derivatives and/or that of the toroidal current and its
+        derivative and/or that of the poloidal current and its derivatives.
+        Defaults to 'E b i g'.
 
     Notes
     -----
@@ -54,6 +56,64 @@ def R_Z_big_contour(profile: Profile, **kwargs):
         setattr(config, key, value)
 
     plain_name = profile.bfield.plain_name
+
+    # -----------------E, Ψ Figure--------------------
+
+    if "e" in config.which.lower():
+        # Create figure
+        fig_kw = {
+            "figsize": config.figsize_E_flux,
+            "dpi": config.dpi,
+            "layout": config.layout,
+            "facecolor": config.facecolor,
+        }
+
+        fig_E = plt.figure(**fig_kw)
+
+        tit_kw = {
+            "fontsize": config.E_flux_suptitle_fontsize,
+            "color": config.E_flux_suptitle_color,
+        }
+
+        fig_E.suptitle(f"Ψ & E in R-Z Coordinates ({plain_name})", **tit_kw)
+
+        fig_e, fig_psi = fig_E.subfigures(1, 2)
+
+        ax_e = fig_e.subplots(1, 1)
+        ax_psi = fig_psi.subplots(1, 1)
+
+        # -------------Ψ-------------
+
+        R_Z_contour(
+            profile=profile,
+            fig=fig_psi,
+            ax=ax_psi,
+            which_Q="flux",
+            parametric_density=config.parametric_density,
+            units=config.flux_units,
+            levels=config.levels,
+            show=False,
+        )
+
+        ax_psi.set_title("Flux 'Ψ'")
+
+        # -----------E---------------
+
+        R_Z_contour(
+            profile=profile,
+            fig=fig_E,
+            ax=ax_e,
+            which_Q="E",
+            parametric_density=config.parametric_density,
+            units=config.E_units,
+            levels=config.levels,
+            locator="log",
+            show=False,
+        )
+
+        ax_e.set_title("Energy")
+
+        logger.info("Plotted E, Ψ in RZ_contours")
 
     # -----------------B Figure--------------------
 
@@ -81,6 +141,8 @@ def R_Z_big_contour(profile: Profile, **kwargs):
         ax_dbdtheta = fig_dbdtheta.subplots(1, 1)
         ax_dbdpsi = fig_dbdpsi.subplots(1, 1)
 
+        # ------------B--------------
+
         R_Z_contour(
             profile=profile,
             fig=fig_b,
@@ -93,6 +155,8 @@ def R_Z_big_contour(profile: Profile, **kwargs):
         )
 
         ax_b.set_title("Magnetic Field 'B'")
+
+        # -----------dB/dθ---------------
 
         R_Z_contour(
             profile=profile,
@@ -107,6 +171,8 @@ def R_Z_big_contour(profile: Profile, **kwargs):
 
         ax_dbdtheta.set_title(r"$\partial B / \partial \theta$")
 
+        # -----------dB/dψ---------------
+
         R_Z_contour(
             profile=profile,
             fig=fig_dbdpsi,
@@ -120,7 +186,7 @@ def R_Z_big_contour(profile: Profile, **kwargs):
 
         ax_dbdpsi.set_title(r"$\partial B / \partial \psi$")
 
-        logger.info("Plotted B, dB_dtheta, dB_dpsi in RZ_big_contour")
+        logger.info("Plotted B, dB_dtheta, dB_dpsi in RZ_contours")
 
     # -----------------I Figure--------------------
 
@@ -147,6 +213,8 @@ def R_Z_big_contour(profile: Profile, **kwargs):
         ax_i = fig_i.subplots(1, 1)
         ax_ider = fig_ider.subplots(1, 1)
 
+        # -----------I---------------
+
         R_Z_contour(
             profile=profile,
             fig=fig_i,
@@ -159,6 +227,8 @@ def R_Z_big_contour(profile: Profile, **kwargs):
         )
 
         ax_i.set_title("Toroidal Current 'I'")
+
+        # ----------dI/dψ----------------
 
         R_Z_contour(
             profile=profile,
@@ -173,9 +243,10 @@ def R_Z_big_contour(profile: Profile, **kwargs):
 
         ax_ider.set_title(r"$\partial I / \partial \psi$")
 
-        logger.info("Plotted I, dI_dpsi in RZ_big_contour")
+        logger.info("Plotted I, dI_dpsi in RZ_contours")
 
     # -----------------g Figure--------------------
+
     if "g" in config.which.lower():
         # Create figure
         fig_kw = {
@@ -199,6 +270,8 @@ def R_Z_big_contour(profile: Profile, **kwargs):
         ax_g = fig_g.subplots(1, 1)
         ax_gder = fig_gder.subplots(1, 1)
 
+        # ------------g--------------
+
         R_Z_contour(
             profile=profile,
             fig=fig_g,
@@ -210,7 +283,9 @@ def R_Z_big_contour(profile: Profile, **kwargs):
             show=False,
         )
 
-        ax_g.set_title("Poloidal Current 'I'")
+        ax_g.set_title("Poloidal Current 'g'")
+
+        # ----------dg/dψ----------------
 
         R_Z_contour(
             profile=profile,
@@ -225,6 +300,6 @@ def R_Z_big_contour(profile: Profile, **kwargs):
 
         ax_gder.set_title(r"$\partial g / \partial \psi$")
 
-        logger.info("Plotted g, dg_dpsi in RZ_big_contour")
+        logger.info("Plotted g, dg_dpsi in RZ_contours")
 
     plt.show()
