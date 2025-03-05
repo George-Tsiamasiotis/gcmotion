@@ -287,6 +287,8 @@ class RZBigContoursConfig:
     dpi: int = dpi
     layout: str = "constrained"
     facecolor: str = "white"
+    # Plots kwywords
+    which: str = "b i g"
     # B figure keywords
     B_suptitle_fontsize: float = 15
     B_suptitle_color: str = "black"
@@ -301,3 +303,5 @@ class RZBigContoursConfig:
     g_units: str = "NUpc"
     # Numerical keywords
     parametric_density: int = 500
+    # Contours keywords
+    levels: int = 20

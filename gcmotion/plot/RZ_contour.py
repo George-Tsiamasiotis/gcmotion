@@ -36,7 +36,7 @@ def R_Z_contour(profile: Profile, fig: Figure = None, ax=None, **kwargs):
     ----------------
     parametric_density : int, optional
         Practiacally the density of the :math:`\theta`, :math:`\psi` contour
-        meshgrid. Defults to 500.
+        meshgrid, from which the R, Z grid is calculated. Defults to 500.
     xmargin_perc : float, optional
         x-axis margin of xlim so that there is some blank (white) space in between the
         plot limits and the contour drawing. Defaults to 0.1.
@@ -177,7 +177,16 @@ def _get_grid_values(profile: Profile, which_Q: str, density: int, units: str) -
     r"""Simple function that takes in a DataSet and prepares the R, Z, Y values
     for the RZ contour"""
 
-    ds = profile.bfield.dataset
+    try:
+        ds = profile.bfield.dataset
+    except AttributeError:
+        print(
+            """WARNING: LAR MAGNETIC FIELD IS NOT NUMERICAL AND DOES NOT HAVE A DATASET
+              ASSOCIATED WITH IT. USE RZ CONTOUR TO PLOT QUANTITIES ONLY FOR RECONSTRUCTED
+              EQUILIBRIA WITH A DATASET THAT CORRESPONDS TO THEM"""
+        )
+
+        return
 
     # Extract some useful quantities
     R0 = ds.raxis.data
