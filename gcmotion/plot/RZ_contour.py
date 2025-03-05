@@ -1,27 +1,36 @@
+"""Script that draws the selected quantity's contour plot in R, Z tokamak 
+(cylindrical) coordinates """
+
 import numpy as np
 from matplotlib.lines import Line2D
 import matplotlib.pyplot as plt
 from pint.errors import DimensionalityError
 
-from matplotlib import ticker
+from matplotlib.figure import Figure
 from matplotlib.axes import Axes
+from matplotlib import ticker
 
 from scipy.interpolate import RectBivariateSpline
-from gcmotion.configuration.plot_parameters import RZContourConfig
+from gcmotion.configuration.plot_parameters import RZContoursConfig
 from gcmotion.entities.profile import Profile
 
 from gcmotion.utils.logger_setup import logger
 
 
-def R_Z_contour(profile: Profile, ax: Axes = None, **kwargs):
-    r"""Plots the selected quantity's contour plot in R, Z tokamak (cylindrical)
-    coordinates.
+def R_Z_contour(profile: Profile, fig: Figure = None, ax=None, **kwargs):
+    r"""Plots the selected quantity's (:math:`\Psi`, E, B, I, g,
+    :math:`\frac{\partial B}{\partial\theta}`, :math:`\frac{\partial B}{\partial\psi}`,
+    :math:`\frac{\partial I}{\partial\psi}`, :math:`\frac{\partial g}{\partial\psi}`)
+    contour plot in R, Z tokamak (cylindrical) coordinates.
 
     Parameters
     ----------
     profile : Profile
         The Profile entity.
-
+    fig : Figure
+        The figure upon which the image will be drawn. Defaults to none.
+    ax : Axes
+        The ax upon which the image will be drawn. Defaults to none.
 
     Other Parameters
     ----------------
@@ -46,7 +55,7 @@ def R_Z_contour(profile: Profile, ax: Axes = None, **kwargs):
     """
 
     # Unpack Parameters
-    config = RZContourConfig()
+    config = RZContoursConfig()
     for key, value in kwargs.items():
         setattr(config, key, value)
 
@@ -56,15 +65,19 @@ def R_Z_contour(profile: Profile, ax: Axes = None, **kwargs):
     logger.info(f"\t==> Plotting RZ {which_Q} Contour...")
 
     # Create figure
-    fig_kw = {
-        "figsize": config.figsize,
-        "dpi": config.dpi,
-        "layout": config.layout,
-        "facecolor": config.facecolor,
-    }
+    if fig == None:
+        fig_kw = {
+            "figsize": config.figsize,
+            "dpi": config.dpi,
+            "layout": config.layout,
+            "facecolor": config.facecolor,
+        }
 
-    fig, ax = plt.subplots(1, 1, **fig_kw)
-    logger.info("Created figure for RZ contour.")
+        fig, ax = plt.subplots(1, 1, **fig_kw)
+        logger.info("Created figure for RZ contour.")
+
+    else:
+        fig, ax = fig, ax
 
     plain_name = profile.bfield.plain_name
     logger.info(f"Opened dataset for {plain_name} in RZ contour.")
@@ -156,6 +169,8 @@ def R_Z_contour(profile: Profile, ax: Axes = None, **kwargs):
 
     if config.show:
         plt.show()
+
+    return fig
 
 
 def _get_grid_values(profile: Profile, which_Q: str, density: int, units: str) -> tuple:

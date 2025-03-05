@@ -241,7 +241,7 @@ class BifurcationPlotConfig:
 
 
 @dataclass
-class RZContourConfig:
+class RZContoursConfig:
     # Figure keywords
     figsize: tuple = (6, 8)
     dpi: int = dpi
@@ -276,3 +276,28 @@ class RZContourConfig:
     parametric_density: int = 500
     xmargin_perc: float = 0.1
     ymargin_perc: float = 0.1
+
+
+@dataclass
+class RZBigContoursConfig:
+    # Figure keywords
+    figsize_B: tuple = (17, 8)
+    figsize_I: tuple = (11, 8)
+    figsize_g: tuple = (11, 8)
+    dpi: int = dpi
+    layout: str = "constrained"
+    facecolor: str = "white"
+    # B figure keywords
+    B_suptitle_fontsize: float = 15
+    B_suptitle_color: str = "black"
+    B_units: str = "Tesla"
+    # I figure keywords
+    I_suptitle_fontsize: float = 15
+    I_suptitle_color: str = "black"
+    I_units: str = "NUpc"
+    # g figure keywords
+    g_suptitle_fontsize: float = 15
+    g_suptitle_color: str = "black"
+    g_units: str = "NUpc"
+    # Numerical keywords
+    parametric_density: int = 500
