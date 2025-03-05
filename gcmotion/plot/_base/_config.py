@@ -116,10 +116,9 @@ class _RZContourConfig:
     dpi: int = 100
     layout: str = "constrained"
     facecolor: str = "white"
-    show: bool = True
     # Contour keywords
-    cmap: str = "plasma"
-    levels: int = 20
+    cmap: str = "BrBG"
+    levels: int = 25
     mode: str = None
     units: str = "NUmf"
     which_Q: str = "flux"

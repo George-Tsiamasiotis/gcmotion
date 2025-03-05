@@ -167,11 +167,6 @@ def R_Z_contour(profile: Profile, fig: Figure = None, ax=None, **kwargs):
 
     cbar.ax.set_title(label=clabel, fontsize=config.cbarlabel_fontsize)
 
-    if config.show:
-        plt.show()
-
-    return fig
-
 
 def _get_grid_values(profile: Profile, which_Q: str, density: int, units: str) -> tuple:
     r"""Simple function that takes in a DataSet and prepares the R, Z, Y values

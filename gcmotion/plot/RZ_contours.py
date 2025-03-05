@@ -89,10 +89,8 @@ def R_Z_contours(profile: Profile, **kwargs):
             fig=fig_psi,
             ax=ax_psi,
             which_Q="flux",
-            parametric_density=config.parametric_density,
             units=config.flux_units,
-            levels=config.levels,
-            show=False,
+            **kwargs,
         )
 
         ax_psi.set_title("Flux 'Ψ'")
@@ -104,11 +102,9 @@ def R_Z_contours(profile: Profile, **kwargs):
             fig=fig_E,
             ax=ax_e,
             which_Q="E",
-            parametric_density=config.parametric_density,
             units=config.E_units,
-            levels=config.levels,
             locator="log",
-            show=False,
+            **kwargs,
         )
 
         ax_e.set_title("Energy")
@@ -148,10 +144,8 @@ def R_Z_contours(profile: Profile, **kwargs):
             fig=fig_b,
             ax=ax_b,
             which_Q="B",
-            parametric_density=config.parametric_density,
             units=config.B_units,
-            levels=config.levels,
-            show=False,
+            **kwargs,
         )
 
         ax_b.set_title("Magnetic Field 'B'")
@@ -163,10 +157,8 @@ def R_Z_contours(profile: Profile, **kwargs):
             fig=fig_dbdtheta,
             ax=ax_dbdtheta,
             which_Q="dbdtheta",
-            parametric_density=config.parametric_density,
             units="",
-            levels=config.levels,
-            show=False,
+            **kwargs,
         )
 
         ax_dbdtheta.set_title(r"$\partial B / \partial \theta$")
@@ -178,10 +170,8 @@ def R_Z_contours(profile: Profile, **kwargs):
             fig=fig_dbdpsi,
             ax=ax_dbdpsi,
             which_Q="dbdpsi",
-            parametric_density=config.parametric_density,
             units="",
-            levels=config.levels,
-            show=False,
+            **kwargs,
         )
 
         ax_dbdpsi.set_title(r"$\partial B / \partial \psi$")
@@ -220,10 +210,8 @@ def R_Z_contours(profile: Profile, **kwargs):
             fig=fig_i,
             ax=ax_i,
             which_Q="I",
-            parametric_density=config.parametric_density,
             units=config.I_units,
-            levels=config.levels,
-            show=False,
+            **kwargs,
         )
 
         ax_i.set_title("Toroidal Current 'I'")
@@ -235,10 +223,8 @@ def R_Z_contours(profile: Profile, **kwargs):
             fig=fig_ider,
             ax=ax_ider,
             which_Q="ider",
-            parametric_density=config.parametric_density,
             units="",
-            levels=config.levels,
-            show=False,
+            **kwargs,
         )
 
         ax_ider.set_title(r"$\partial I / \partial \psi$")
@@ -277,10 +263,8 @@ def R_Z_contours(profile: Profile, **kwargs):
             fig=fig_g,
             ax=ax_g,
             which_Q="g",
-            parametric_density=config.parametric_density,
             units=config.g_units,
-            levels=config.levels,
-            show=False,
+            **kwargs,
         )
 
         ax_g.set_title("Poloidal Current 'g'")
@@ -292,10 +276,8 @@ def R_Z_contours(profile: Profile, **kwargs):
             fig=fig_gder,
             ax=ax_gder,
             which_Q="gder",
-            parametric_density=config.parametric_density,
             units="",
-            levels=config.levels,
-            show=False,
+            **kwargs,
         )
 
         ax_gder.set_title(r"$\partial g / \partial \psi$")
