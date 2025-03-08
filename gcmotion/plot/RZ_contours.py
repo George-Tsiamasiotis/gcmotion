@@ -1,12 +1,11 @@
 """Function that draws figures depicting the B, i, g, E, Ψ quantities' contours in RZ
-coordinates"""
+coordinates. It can also plot fixed points on certain plots."""
 
-import re
-import numpy as np
 import matplotlib.pyplot as plt
 
 from gcmotion.configuration.plot_parameters import RZBigContoursConfig
-from gcmotion.plot._base._base_RZ_contour import R_Z_contour
+from gcmotion.plot._base._base_RZ_contour import _base_RZ_contour
+from gcmotion.plot._base._base_fixed_points_profile_contour import _base_fixed_points_plot
 from gcmotion.entities.profile import Profile
 
 from gcmotion.utils.logger_setup import logger
@@ -16,7 +15,8 @@ def R_Z_contours(profile: Profile, **kwargs):
     r"""Plots the selected quantity's (:math:`\Psi`, E, B, I, g,
     :math:`\frac{\partial B}{\partial\theta}`, :math:`\frac{\partial B}{\partial\psi}`,
     :math:`\frac{\partial I}{\partial\psi}`, :math:`\frac{\partial g}{\partial\psi}`)
-    contour plot in R, Z tokamak (cylindrical) coordinates, and in separate figures.
+    contour plot in R, Z tokamak (cylindrical) coordinates, and in separate figures. Can
+    also plot fixed points on certain contours.
 
     Parameters
     ----------
@@ -34,12 +34,12 @@ def R_Z_contours(profile: Profile, **kwargs):
         y-axis margin of ylim so that there is some blank (white) space in between the
         plot limits and each contour drawing. Defaults to 0.1.
     which : str
-        String of the form 'E b i g', E 'b i', 'E b g', 'E i g', 'E b', 'E i', 'E g'
-        'b i g', 'b i', 'b g', 'i g', 'b', 'i', 'g'  (case insensitive) that determines
-        which figures will be plotted, that of the Energy and magnetic flux, that of the
-        magnetic field and its derivatives and/or that of the toroidal current and its
-        derivative and/or that of the poloidal current and its derivatives.
-        Defaults to 'E b i g'.
+        String of the form 'fp E b i g', 'fp E b i', 'fp E b g', 'fp E i g', 'fp E b', 'fp E i', 'fp E g'
+        'fp b i g', 'fp b i', 'fp b g', 'fp i g', 'fp b', 'fp i', 'fp g', 'E b i g', E 'b i', 'E b g', 'E i g',
+        'E b', 'E i', 'E g' 'b i g', 'b i', 'b g', 'i g', 'b', 'i', 'g'  (case insensitive)
+        that determines which figures will be plotted, that of the Energy and magnetic flux,
+        that of the magnetic field and its derivatives and/or that of the toroidal current and
+        its derivative and/or that of the poloidal current and its derivatives. Defaults to 'E b i g'.
 
     Notes
     -----
@@ -84,7 +84,7 @@ def R_Z_contours(profile: Profile, **kwargs):
 
         # -------------Ψ-------------
 
-        R_Z_contour(
+        _base_RZ_contour(
             profile=profile,
             fig=fig_psi,
             ax=ax_psi,
@@ -97,7 +97,7 @@ def R_Z_contours(profile: Profile, **kwargs):
 
         # -----------E---------------
 
-        R_Z_contour(
+        _base_RZ_contour(
             profile=profile,
             fig=fig_E,
             ax=ax_e,
@@ -139,7 +139,7 @@ def R_Z_contours(profile: Profile, **kwargs):
 
         # ------------B--------------
 
-        R_Z_contour(
+        _base_RZ_contour(
             profile=profile,
             fig=fig_b,
             ax=ax_b,
@@ -152,7 +152,7 @@ def R_Z_contours(profile: Profile, **kwargs):
 
         # -----------dB/dθ---------------
 
-        R_Z_contour(
+        _base_RZ_contour(
             profile=profile,
             fig=fig_dbdtheta,
             ax=ax_dbdtheta,
@@ -165,7 +165,7 @@ def R_Z_contours(profile: Profile, **kwargs):
 
         # -----------dB/dψ---------------
 
-        R_Z_contour(
+        _base_RZ_contour(
             profile=profile,
             fig=fig_dbdpsi,
             ax=ax_dbdpsi,
@@ -205,7 +205,7 @@ def R_Z_contours(profile: Profile, **kwargs):
 
         # -----------I---------------
 
-        R_Z_contour(
+        _base_RZ_contour(
             profile=profile,
             fig=fig_i,
             ax=ax_i,
@@ -218,7 +218,7 @@ def R_Z_contours(profile: Profile, **kwargs):
 
         # ----------dI/dψ----------------
 
-        R_Z_contour(
+        _base_RZ_contour(
             profile=profile,
             fig=fig_ider,
             ax=ax_ider,
@@ -258,7 +258,7 @@ def R_Z_contours(profile: Profile, **kwargs):
 
         # ------------g--------------
 
-        R_Z_contour(
+        _base_RZ_contour(
             profile=profile,
             fig=fig_g,
             ax=ax_g,
@@ -271,7 +271,7 @@ def R_Z_contours(profile: Profile, **kwargs):
 
         # ----------dg/dψ----------------
 
-        R_Z_contour(
+        _base_RZ_contour(
             profile=profile,
             fig=fig_gder,
             ax=ax_gder,
@@ -283,5 +283,73 @@ def R_Z_contours(profile: Profile, **kwargs):
         ax_gder.set_title(r"$\partial g / \partial \psi$")
 
         logger.info("Plotted g, dg_dpsi in RZ_contours")
+
+    # -----------------Fixed Points Figure--------------------
+
+    if "fp" in config.which.lower():
+        # Create figure
+        fig_kw = {
+            "figsize": config.figsize_fp,
+            "dpi": config.dpi,
+            "layout": config.layout,
+            "facecolor": config.facecolor,
+        }
+
+        fig_fp = plt.figure(**fig_kw)
+
+        tit_kw = {
+            "fontsize": config.fp_suptitle_fontsize,
+            "color": config.fp_suptitle_color,
+        }
+
+        fig_fp.suptitle(f"Fixed Points Analysis in RZ Plain ({plain_name})", **tit_kw)
+
+        fig_fp_E, fig_fp_dB = fig_fp.subfigures(1, 2)
+
+        ax_fp_E = fig_fp_E.subplots(1, 1)
+        ax_fp_dB = fig_fp_dB.subplots(1, 1)
+
+        # ------------Fixed Points on Energy contour--------------
+
+        _base_RZ_contour(
+            profile=profile,
+            fig=fig_fp_E,
+            ax=ax_fp_E,
+            which_Q="E",
+            units=config.E_fp_units,
+            locator="log",
+            **kwargs,
+        )
+
+        _base_fixed_points_plot(
+            profile=profile,
+            ax=ax_fp_E,
+            RZ_coords=config.fp_RZ_coords,
+            **kwargs,
+        )
+
+        ax_fp_E.set_title("Fixed Points on Energy Contour", fontsize=11)
+
+        # ----------Fixed Points on Stationary Curves ----------------
+
+        _base_RZ_contour(
+            profile=profile,
+            fig=fig_fp_dB,
+            ax=ax_fp_dB,
+            which_Q="dbdtheta",
+            units="",
+            **kwargs,
+        )
+
+        _base_fixed_points_plot(
+            profile=profile,
+            ax=ax_fp_dB,
+            RZ_coords=config.fp_RZ_coords,
+            **kwargs,
+        )
+
+        ax_fp_dB.set_title("Fixed Points on Stationary Curves", fontsize=11)
+
+        logger.info("Plotted Fixed Points in RZ_contours")
 
     plt.show()

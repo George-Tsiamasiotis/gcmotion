@@ -107,6 +107,8 @@ class _FixedPointsPlotConfig:
     ic_marker: str = ">"
     ic_markercolor: str = "red"
     ic_markersize: float = 100
+    # RZ coords
+    RZ_coords: bool = False
 
 
 @dataclass
@@ -117,7 +119,7 @@ class _RZContourConfig:
     layout: str = "constrained"
     facecolor: str = "white"
     # Contour keywords
-    cmap: str = "BrBG"
+    cmap: str = "BrBG"  # "managua, viridis"
     levels: int = 25
     mode: str = None
     units: str = "NUmf"

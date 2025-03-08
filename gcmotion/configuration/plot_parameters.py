@@ -247,6 +247,7 @@ class RZBigContoursConfig:
     figsize_E_flux: tuple = (11, 8)
     figsize_I: tuple = (11, 8)
     figsize_g: tuple = (11, 8)
+    figsize_fp: tuple = (11, 8)
     dpi: int = dpi
     layout: str = "constrained"
     facecolor: str = "white"
@@ -269,7 +270,13 @@ class RZBigContoursConfig:
     g_suptitle_fontsize: float = 15
     g_suptitle_color: str = "black"
     g_units: str = "NUpc"
+    # Fixed Points figure keywords
+    fp_suptitle_fontsize: float = 15
+    fp_suptitle_color: str = "black"
+    E_fp_units: str = "keV"
     # Numerical keywords
     parametric_density: int = 500
     # Contours keywords
     levels: int = 20
+    # RZ coords for Fixed Points plots
+    fp_RZ_coords: bool = True

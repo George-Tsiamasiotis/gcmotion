@@ -1,5 +1,5 @@
-"""Base script that draws the selected quantity's contour plot in R, Z tokamak 
-(cylindrical) coordinates """
+"""Base script that draws the selected quantity's contour plot in R, Z tokamak
+(cylindrical) coordinates"""
 
 import numpy as np
 from matplotlib.lines import Line2D
@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 from pint.errors import DimensionalityError
 
 from matplotlib.figure import Figure
-from matplotlib.axes import Axes
 from matplotlib import ticker
 
 from scipy.interpolate import RectBivariateSpline
@@ -17,7 +16,7 @@ from gcmotion.entities.profile import Profile
 from gcmotion.utils.logger_setup import logger
 
 
-def R_Z_contour(profile: Profile, fig: Figure = None, ax=None, **kwargs):
+def _base_RZ_contour(profile: Profile, fig: Figure = None, ax=None, **kwargs):
     r"""Base plots the selected quantity's (:math:`\Psi`, E, B, I, g,
     :math:`\frac{\partial B}{\partial\theta}`, :math:`\frac{\partial B}{\partial\psi}`,
     :math:`\frac{\partial I}{\partial\psi}`, :math:`\frac{\partial g}{\partial\psi}`)
