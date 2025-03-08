@@ -5,17 +5,23 @@ as well.
 
 from gcmotion.scripts.fixed_points import fixed_points as get_fixed_points
 from gcmotion.entities.profile import Profile
+from gcmotion.tokamak.bfield import LAR
 
 from gcmotion.utils.fixed_points_bif.XO_points_classification import XO_points_classification as xoc
 from gcmotion.plot._base._config import _FixedPointsPlotConfig
 
+from scipy.interpolate import RectBivariateSpline
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 import numpy as np
 
 from time import time
+import pint
 
 from gcmotion.utils.logger_setup import logger
+
+# Quantity alias for type annotations
+type Quantity = pint.UnitRegistry.Quantity
 
 
 def _base_fixed_points_plot(
@@ -140,12 +146,26 @@ def _base_fixed_points_plot(
 
     logger.info(f"Converted fixed points from 'NUMagnetic_flux' to {output_units} ")
 
-    ax.set_xticks([-np.pi, 0, np.pi])
-    ax.set_xticklabels([r"$-\pi$", "0", r"$\pi$"])
-    ax.set_xlim([-np.pi, np.pi])
+    xX, yX = X_thetas, X_psis.m
+    xO, yO = O_thetas, O_psis.m
 
-    ax.scatter(X_thetas, X_psis.m, marker="x", color="#80FF80", s=100)
-    ax.scatter(O_thetas, O_psis.m, marker="o", edgecolor="yellow", facecolors="none", s=100)
+    if config.RZ_coords and not isinstance(profile.bfield, LAR):
+        print("\nX POINTS")
+        xX, yX = _get_RZ_coords(profile, X_thetas, X_psis)
+        print("\nO POINTS")
+        xO, yO = _get_RZ_coords(profile, O_thetas, O_psis)
+
+        logger.info(f"Converted fixed points from theta, psi to RZ coords")
+
+    # In RZ coords the x axis is not theta so only if not RZ_coords we set these values
+    # for the x axis.
+    if not config.RZ_coords:
+        ax.set_xticks([-np.pi, 0, np.pi])
+        ax.set_xticklabels([r"$-\pi$", "0", r"$\pi$"])
+        ax.set_xlim([-np.pi, np.pi])
+
+    ax.scatter(xX, yX, marker="x", color=config.X_color, s=config.X_size)
+    ax.scatter(xO, yO, marker="o", edgecolor=config.O_color, facecolors="none", s=config.O_size)
 
     logger.info(
         f"Plotted fixed points for fixed_points_plot with Pz={profile.PzetaNU} and mu={profile.muNU}"
@@ -154,11 +174,18 @@ def _base_fixed_points_plot(
     if config.fp_plot_init_cond:
 
         thetas_init, psis_initNU = zip(*initial_conditions) if initial_conditions else ([], [])
-
         psis_init = profile.Q(psis_initNU, "NUmagnetic_flux").to(output_units)
+
+        x_init, y_init = thetas_init, psis_init.m
+
+        if config.RZ_coords and not isinstance(profile.bfield, LAR):
+            print("\nINIT COND")
+            x_init, y_init = _get_RZ_coords(profile, thetas_init, psis_init)
+            logger.info(f"Converted initial conditions from theta, psi to RZ coords")
+
         ax.scatter(
-            thetas_init,
-            psis_init.m,
+            x_init,
+            y_init,
             marker=config.ic_marker,
             color=config.ic_markercolor,
             s=config.ic_markersize,
@@ -168,3 +195,63 @@ def _base_fixed_points_plot(
         ax.legend()
 
         logger.info(f"Plotted initial conditions for fixed points")
+
+
+def _get_RZ_coords(
+    profile: Profile, thetas_fixed: list | np.ndarray, psis_fixed: Quantity
+) -> list | np.ndarray:
+    r"""Simple function that takes in :math:`\theta`, :math:`\psi` and calculates their R, Z coordinates."""
+
+    psis_fixedNU = psis_fixed.to("NUmf")
+
+    try:
+        ds = profile.bfield.dataset
+    except AttributeError:
+        print(
+            """WARNING: LAR MAGNETIC FIELD IS NOT NUMERICAL AND DOES NOT HAVE A DATASET
+              ASSOCIATED WITH IT. USE RZ CONTOUR TO PLOT QUANTITIES ONLY FOR RECONSTRUCTED
+              EQUILIBRIA WITH A DATASET THAT CORRESPONDS TO THEM"""
+        )
+
+        return
+
+    # Extract some useful quantities
+    R0 = ds.raxis.data
+    Z0 = ds.zaxis.data
+
+    _psi_valuesNU = ds.psi.data
+    # We do not have measurement data at psi=0 so we add it. It is needed so
+    # that there is not a void in the middle of the contour plot because
+    # there was not data to interpolate in the middle (psi=0).
+    _psi_valuesNU = np.insert(_psi_valuesNU, 0, 0)
+
+    # Extract theta, R, Z data
+    theta_values = ds.boozer_theta.data
+    R_values = ds.R.data.T
+    Z_values = ds.Z.data.T
+
+    # Define the new column (size: (3620, 1))
+    new_R_column = np.full((R_values.shape[0], 1), R0)  # Insert R0 at first column
+    new_Z_column = np.full((Z_values.shape[0], 1), Z0)  # Insert Z0 at first column
+
+    # Insert at the first column (axis=1), because we inserted a values 0 at psi
+    # so we must insert R0 at R and Z0 at Z along a column to much shapes
+    R_values = np.hstack((new_R_column, R_values))  # (3620, 101)
+    Z_values = np.hstack((new_Z_column, Z_values))  # (3620, 101)
+
+    # Interpolate
+    R_spline = RectBivariateSpline(theta_values, _psi_valuesNU, R_values)
+    Z_spline = RectBivariateSpline(theta_values, _psi_valuesNU, Z_values)
+
+    print(f"\n{thetas_fixed=}")
+    print(f"psis_fixed={psis_fixedNU.to("NUmf").m}")
+
+    Rs_fixed = R_spline.ev(thetas_fixed, psis_fixedNU.to("NUmf").m)
+    Zs_fixed = Z_spline.ev(thetas_fixed, psis_fixedNU.to("NUmf").m)
+
+    print(f"\n{Rs_fixed=}")
+    print(f"{Zs_fixed=}")
+
+    logger.info(f"Calculated RZ values for base fp plot \n{Rs_fixed=}, {Zs_fixed=}")
+
+    return Rs_fixed, Zs_fixed

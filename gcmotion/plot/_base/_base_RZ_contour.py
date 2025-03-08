@@ -1,5 +1,5 @@
-"""Base script that draws the selected quantity's contour plot in R, Z tokamak 
-(cylindrical) coordinates """
+"""Base script that draws the selected quantity's contour plot in R, Z tokamak
+(cylindrical) coordinates"""
 
 import numpy as np
 from matplotlib.lines import Line2D
@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 from pint.errors import DimensionalityError
 
 from matplotlib.figure import Figure
-from matplotlib.axes import Axes
 from matplotlib import ticker
 
 from scipy.interpolate import RectBivariateSpline
@@ -17,7 +16,7 @@ from gcmotion.entities.profile import Profile
 from gcmotion.utils.logger_setup import logger
 
 
-def R_Z_contour(profile: Profile, fig: Figure = None, ax=None, **kwargs):
+def _base_RZ_contour(profile: Profile, fig: Figure = None, ax=None, **kwargs):
     r"""Base plots the selected quantity's (:math:`\Psi`, E, B, I, g,
     :math:`\frac{\partial B}{\partial\theta}`, :math:`\frac{\partial B}{\partial\psi}`,
     :math:`\frac{\partial I}{\partial\psi}`, :math:`\frac{\partial g}{\partial\psi}`)
@@ -195,9 +194,6 @@ def _get_grid_values(profile: Profile, which_Q: str, density: int, units: str) -
     # there was not data to interpolate in the middle (psi=0).
     _psi_valuesNU = np.insert(_psi_valuesNU, 0, 0)
 
-    # Convert to requested flux units
-    psi_valuesNU = Q(_psi_valuesNU, "NUmf")
-
     # Extract theta, R, Z data
     theta_values = ds.boozer_theta.data
     R_values = ds.R.data.T
@@ -213,11 +209,11 @@ def _get_grid_values(profile: Profile, which_Q: str, density: int, units: str) -
     Z_values = np.hstack((new_Z_column, Z_values))  # (3620, 101)
 
     # Interpolate
-    R_spline = RectBivariateSpline(theta_values, psi_valuesNU.m, R_values)
-    Z_spline = RectBivariateSpline(theta_values, psi_valuesNU.m, Z_values)
+    R_spline = RectBivariateSpline(theta_values, _psi_valuesNU, R_values)
+    Z_spline = RectBivariateSpline(theta_values, _psi_valuesNU, Z_values)
 
     # Grid for plotting
-    _psi_plotNU = np.linspace(psi_valuesNU.m.min(), psi_valuesNU.m.max(), density)
+    _psi_plotNU = np.linspace(_psi_valuesNU.min(), _psi_valuesNU.max(), density)
     _theta_plot = np.linspace(theta_values.min(), theta_values.max(), density)
 
     # Compute meshgrid
@@ -235,7 +231,7 @@ def _get_grid_values(profile: Profile, which_Q: str, density: int, units: str) -
                 Y_grid = Psi_grid
             # WHEN PULL FROM GEORGE DO NOT PUT INPUT QUANTITY NECESSARILY
             case "Energy":
-                psi_gridNU = Q(_psi_gridNU, "NUMagnetic_flux")
+                psi_gridNU = Q(_psi_gridNU, "NUmf")
                 Y_grid = profile.findEnergy(psi=psi_gridNU, theta=_theta_grid, units=units).m
 
             case "B":

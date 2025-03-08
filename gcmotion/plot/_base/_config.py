@@ -103,10 +103,16 @@ class _FixedPointsPlotConfig:
     # Fixed points keywords
     fp_plot_init_cond: bool = False
     flux_units: str = "Tesla * meter^2"
+    X_color: str = "#80FF80"
+    O_color: str = "yellow"
+    X_size: float = 100
+    O_size: float = 100
     # IC Keywords
     ic_marker: str = ">"
     ic_markercolor: str = "red"
     ic_markersize: float = 100
+    # RZ coords
+    RZ_coords: bool = False
 
 
 @dataclass
@@ -117,7 +123,7 @@ class _RZContourConfig:
     layout: str = "constrained"
     facecolor: str = "white"
     # Contour keywords
-    cmap: str = "BrBG"
+    cmap: str = "BrBG"  # "managua, viridis"
     levels: int = 25
     mode: str = None
     units: str = "NUmf"
