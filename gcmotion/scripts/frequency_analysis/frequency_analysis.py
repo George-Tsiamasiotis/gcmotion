@@ -1,10 +1,12 @@
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
 from tqdm import tqdm
 from copy import deepcopy
+from collections import Counter, deque
 from dataclasses import asdict
-from collections import deque
+from pint.registry import Quantity
 
 from numpy.typing import ArrayLike
 from matplotlib.patches import Patch
@@ -44,22 +46,64 @@ class FrequencyAnalysis:
             profile.Q(psilim, "psi_wall").to("NUMagnetic_flux").magnitude
         )
 
-        # If an ArrayLike is passed, convert it to NU Quantity, else use
-        # profile's value
-        if muspan is not None:
-            self.muspan = profile.Q(muspan, "NUMagnetic_moment")
-        else:
-            self.muspan = [profile.muNU]
-        if Pzetaspan is not None:
-            self.Pzetaspan = profile.Q(Pzetaspan, "NUCanonical_momentum")
-        else:
-            self.Pzetaspan = [profile.PzetaNU]
-        if Espan is not None:
-            self.Espan = profile.Q(Espan, "NUJoule")
-        else:
-            self.Espan = [profile.ENU]
+        self._process_arguements(muspan, Pzetaspan, Espan)
+
+    def _process_arguements(
+        self,
+        muspan: ArrayLike,
+        Pzetaspan: ArrayLike,
+        Espan: ArrayLike,
+    ):
+        r"""
+        Matrix mode
+        -----------
+        If all 3 spans are 2d arrays with the same shape, create a grid and
+        iterate through every (i,j,k).
+            If one and only one is not passed, create a 2d tile grid with the
+            shape of the other 2 with the profile's property.
+
+        Cartesian Mode
+        --------------
+        If all 3 spans are 1d arrays, iterate through their cartesian product.
+            If 2 (at most) are not passed, use the profile's property.
+        """
+        self.muspan = muspan
+        self.Pzetaspan = Pzetaspan
+        self.Espan = Espan
+
+        # Make sure all spans are numpy arrays
+        for span in ("muspan", "Pzetaspan", "Espan"):
+            if isinstance(getattr(self, span), np.ndarray):
+                pass
+            if getattr(self, span) is None:
+                profile_property = getattr(
+                    self.profile, span[:-4] + "NU"
+                ).magnitude
+                setattr(self, span, np.array([profile_property]))
+
+        # Select Mode
+        match (self.muspan, self.Pzetaspan, self.Espan):
+            case np.ndarray(), np.ndarray(), np.ndarray() if (
+                self.muspan.ndim == self.Pzetaspan.ndim == self.Espan.ndim == 1
+            ):
+                self.mode = "cartesian"
+            case np.ndarray(), np.ndarray(), np.ndarray() if (
+                self.muspan.shape == self.Pzetaspan.shape == self.Espan.shape
+            ):
+                self.mode = "matrix"
+            case _:
+                raise ValueError("Illegal Input")
+
+        # Quantify
+        self.muspan = self.profile.Q(self.muspan, "NUMagnetic_moment")
+        self.Pzetaspan = self.profile.Q(self.Pzetaspan, "NUCanonical_momentum")
+        self.Espan = self.profile.Q(self.Espan, "NUJoule")
 
     def start(self, pbar: bool = True):
+        if self.mode == "cartesian":
+            self._start_cartesian(pbar=pbar)
+
+    def _start_cartesian(self, pbar: bool):
         # Progress bars
         # qkin and omegas calculations
         self.config.tqdm_enable = pbar
@@ -170,24 +214,18 @@ class FrequencyAnalysis:
         }
         ax.scatter(xs, ys, c=colors, **scatter_kw)
         ax.axhline(y=0, ls="--", lw=1.5, c="k")
-        ax.set_xlabel(scatter_labels(x))
-        ax.set_ylabel(scatter_labels(y))
+        ax.set_xlabel(_scatter_labels(x))
+        ax.set_ylabel(_scatter_labels(y))
         ax.set_title(ax.get_xlabel() + " - " + ax.get_ylabel())
         ax.legend(handles=[trapped, copassing, cupassing, undefined])
         ax.grid(True)
-        # giannhsdf = pd.read_csv("~/Dev/python/gcmotion/usr/Ratios.csv").astype(
-        #     float
-        # )
-        # giannhsdf["-0.698"] *= 0.023
-        # giannhsdf.plot(x="-0.698", y="3.236353", kind="scatter", ax=ax)
-        #
         plt.show()
 
     def dump(self):
         pass
 
 
-def scatter_labels(index: str):
+def _scatter_labels(index: str):
     titles = {
         "Energy": r"$Energy [NU]$",
         "Pzeta": r"$P_\zeta [NU]$",
@@ -197,3 +235,18 @@ def scatter_labels(index: str):
         "omega_zeta": r"$\omega_\zeta [\omega_0]$",
     }
     return titles[index]
+
+
+def _create_init_array(value: ArrayLike | Quantity):
+
+    try:
+        value.shape
+    except AttributeError:  # default to profile's property
+        array = np.array(value.magnitude)
+        print("foo1")
+    else:
+        array = value
+        print("foo2")
+
+    assert array.shape == ()
+    return array

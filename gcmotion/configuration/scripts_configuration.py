@@ -54,8 +54,8 @@ class ProfileAnalysisConfig:
 
 @dataclass
 class ContourGeneratorConfig:
-    main_grid_density: int = 500
-    local_grid_density: int = 150
+    main_grid_density: int = 400
+    local_grid_density: int = 100
     theta_expansion: float = 1.2
     psi_expansion: float = 1.2
 
