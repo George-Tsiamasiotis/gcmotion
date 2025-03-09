@@ -37,17 +37,20 @@ class FrequencyAnalysisConfig:
     tqdm_ascii: str = "-#"
     tqdm_colour: str = "green"
     tqdm_dynamic_ncols: bool = False
+    # Cartesian Mode
     tqdm_mu_desc: str = f"{'Iterating through mus':^28}"
     tqdm_pzeta_desc: str = f"{'Iterating through pzetas':^28}"
     tqdm_energy_desc: str = f"{'Iterating through energies':^28}"
     tqdm_mu_unit: str = f"{'mus':^10}"
     tqdm_pzeta_unit: str = f"{'Pzetas':^10}"
     tqdm_energy_unit: str = f"{'Energies':^10}"
+    # Matrix Mode
+    tqdm_mu_Pzeta_desc: str = f"{'Iterating through mus/Pzetas':^28}"
 
 
 @dataclass
 class ProfileAnalysisConfig:
-    pzeta_rtol: float = 1e-3
+    pzeta_rtol: float = 1e-2
     energy_rtol: float = 1e-3
     cocu_classification: bool = True
 
