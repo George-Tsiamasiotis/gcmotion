@@ -452,7 +452,7 @@ class DTTPositive(NumericalQFactor):
 
     def __repr__(self):
         return (
-            colored("DTT - Negative", "light_blue")
+            colored("DTT - Positive", "light_blue")
             + f": q0={self.q0:.4g}, q_wall={self.q_wall:.4g}."
         )
 

@@ -251,7 +251,7 @@ def calculate_orbit_qkin(
     # print(f"{main_orbit.E=}")
 
     qkinetic = -dJtheta / dPzeta
-    if abs(qkinetic) < 8:
+    if abs(qkinetic) < 4:
         return qkinetic
 
 

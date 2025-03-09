@@ -23,6 +23,11 @@ class SolverConfig:
 
 
 @dataclass
+class NumericalDatasetsConfig:
+    boozer_theta_downsampling_factor: int = 10
+
+
+@dataclass
 class PrecomputedConfig:
     psi_max: int = 2  # Max spline extend relative to psi_wall
     hyp2f1_density: int = 1000
@@ -37,12 +42,15 @@ class FrequencyAnalysisConfig:
     tqdm_ascii: str = "-#"
     tqdm_colour: str = "green"
     tqdm_dynamic_ncols: bool = False
+    # Cartesian Mode
     tqdm_mu_desc: str = f"{'Iterating through mus':^28}"
     tqdm_pzeta_desc: str = f"{'Iterating through pzetas':^28}"
     tqdm_energy_desc: str = f"{'Iterating through energies':^28}"
     tqdm_mu_unit: str = f"{'mus':^10}"
     tqdm_pzeta_unit: str = f"{'Pzetas':^10}"
     tqdm_energy_unit: str = f"{'Energies':^10}"
+    # Matrix Mode
+    tqdm_mu_Pzeta_desc: str = f"{'Iterating through mus/Pzetas':^28}"
 
 
 @dataclass

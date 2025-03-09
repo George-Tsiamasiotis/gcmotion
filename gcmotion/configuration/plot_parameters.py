@@ -5,6 +5,7 @@ from numpy import pi
 
 figsize = 13, 7  # Global window size
 dpi = 100  # Global dpi
+facecolor = "white"  # Global figure background color
 
 
 @dataclass()
@@ -13,7 +14,7 @@ class ProfileEnergyContourConfig:
     figsize: tuple = figsize
     dpi: int = dpi
     layout: str = "constrained"
-    facecolor: str = "lightskyblue"
+    facecolor: str = facecolor
     projection: str | None = None  # None = default
     # Default parameter values
     thetalim: tuple = (-pi, pi)
@@ -37,7 +38,7 @@ class ProfilePzetaContourConfig:
     figsize: tuple = figsize
     dpi: int = dpi
     layout: str = "constrained"
-    facecolor: str = "lightskyblue"
+    facecolor: str = facecolor
     # Default parameter values
     zetalim: tuple = (-pi, pi)
     psilim: tuple = (0, 1.2)  # times psi_wall
@@ -59,7 +60,7 @@ class QfactorProfileConfig:
     figsize: tuple = (13, 5)
     dpi: int = dpi
     layout: str = "constrained"
-    facecolor: str = "lightskyblue"
+    facecolor: str = facecolor
     titlesize: float = 20
     titlecolor: str = "blue"
     # Default parameter values
@@ -82,7 +83,7 @@ class MagneticProfileConfig:
     figsize: tuple = (13, 7)
     dpi: int = dpi
     layout: str = "constrained"
-    facecolor: str = "lightskyblue"
+    facecolor: str = facecolor
     titlesize: float = 20
     titlecolor: str = "blue"
     # Default parameter values
@@ -94,9 +95,9 @@ class MagneticProfileConfig:
     # Contour options
     grid_density: int = 200
     levels: int = 20
-    bcmap: str = "inferno"
-    icmap: str = "viridis"
-    gcmap: str = "viridis"
+    bcmap: str = "managua"
+    icmap: str = "managua"
+    gcmap: str = "managua"
     locator: str = ""
     log_base: float = 1.00001
     # 2d plot options
@@ -115,7 +116,7 @@ class ParticleEvolutionConfig:
     figsize: tuple = figsize
     dpi: int = dpi
     layout: str = "constrained"
-    facecolor: str = "lightskyblue"
+    facecolor: str = facecolor
     titlesize: float = 20
     titlecolor: str = "blue"
     # Default parameter values
@@ -137,7 +138,7 @@ class ParticlePoloidalDrift:
     figsize: tuple = figsize
     dpi: int = dpi
     layout: str = "constrained"
-    facecolor: str = "lightskyblue"
+    facecolor: str = facecolor
     # Default parameter values
     projection: str | None = None  # None = default
     thetalim: tuple = (-pi, pi)
