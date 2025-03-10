@@ -8,17 +8,17 @@ gcmotion.qfactor
 
 Here is a list of the availiable q-factor configurations:
 
-=============================  ==========================
-Unity q-factor                 :py:class:`Unity`
-Chris's q-factor               :py:class:`Chris`
-Parabolic q-factor             :py:class:`Parabolic`
-Hypergeometric q-factor        :py:class:`Hypergeometric`
-(Numerical) SmartPositive      :py:class:`SmartPositive`
-(Numerical) SmartNegative      :py:class:`SmartNegative`
-(Numerical) SmartNegative2     :py:class:`SmartNegative2`
-(Numerical) DTTPositive        :py:class:`DTTPositive`
-(Numerical) DTTNegative        :py:class:`DTTNegative`
-=============================  ==========================
+===================================       ==========================
+Unity q-factor                            :py:class:`Unity`
+Parabolic q-factor                        :py:class:`Parabolic`
+Hypergeometric q-factor                   :py:class:`Hypergeometric`
+PrecomputedHypergeometric q-factor        :py:class:`PrecomputedHypergeometric`
+(Numerical) SmartPositive                 :py:class:`SmartPositive`
+(Numerical) SmartNegative                 :py:class:`SmartNegative`
+(Numerical) SmartNegative2                :py:class:`SmartNegative2`
+(Numerical) DTTPositive                   :py:class:`DTTPositive`
+(Numerical) DTTNegative                   :py:class:`DTTNegative`
+===================================       ==========================
 
 Their parameters are documented below.
 
@@ -96,6 +96,11 @@ Available q-factors
 .. autoclass:: Hypergeometric
    :class-doc-from: class
 
+.. rubric:: PrecomputedHypergeometric
+
+.. autoclass:: PrecomputedHypergeometric
+   :class-doc-from: class
+
 .. rubric:: SmartPositive
 
 .. autoclass:: SmartPositive
@@ -119,9 +124,4 @@ Available q-factors
 .. rubric:: DTTNegative
 
 .. autoclass:: DTTNegative
-   :class-doc-from: class
-
-.. rubric:: Chris's q-factor
-
-.. autoclass:: Chris
    :class-doc-from: class
