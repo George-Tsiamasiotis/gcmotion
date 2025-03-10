@@ -23,6 +23,11 @@ class SolverConfig:
 
 
 @dataclass
+class NumericalDatasetsConfig:
+    boozer_theta_downsampling_factor: int = 10
+
+
+@dataclass
 class PrecomputedConfig:
     psi_max: int = 2  # Max spline extend relative to psi_wall
     hyp2f1_density: int = 1000
@@ -50,7 +55,7 @@ class FrequencyAnalysisConfig:
 
 @dataclass
 class ProfileAnalysisConfig:
-    pzeta_rtol: float = 1e-2
+    pzeta_rtol: float = 1e-3
     energy_rtol: float = 1e-3
     cocu_classification: bool = True
 

@@ -9,10 +9,12 @@ import numpy as np
 import xarray as xr
 from termcolor import colored
 from scipy.interpolate import UnivariateSpline, RectBivariateSpline
-from pint import UndefinedUnitError
 from time import time
 
 from gcmotion.utils.logger_setup import logger
+from gcmotion.configuration.scripts_configuration import (
+    NumericalDatasetsConfig,
+)
 
 from math import cos, sin, sqrt
 from abc import ABC, abstractmethod
@@ -133,9 +135,10 @@ class NumericalMagneticField(MagneticField):
             raise FileNotFoundError(f"No file found at '{path}'")
 
         # Extract the arrays
+        interval = NumericalDatasetsConfig.boozer_theta_downsampling_factor
         psi_values = dataset.psi.data
-        theta_values = dataset.boozer_theta.data
-        b_values = dataset.b_field_norm.data.T
+        theta_values = dataset.boozer_theta.data[::interval]
+        b_values = dataset.b_field_norm.data.T[::interval]
         i_values = dataset.I_norm.data
         g_values = dataset.g_norm.data
 
