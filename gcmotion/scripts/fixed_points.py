@@ -64,9 +64,6 @@ def fixed_points(profile: Profile, **kwargs) -> tuple[list, list, list]:
         ic_info : bool, optional
             Boolean determing weather information on the initial condition is to be is to be printed in the log.
             Defaults to ``False``.
-        LAR_thetas : bool, optional
-            Boolean determining weather the theta values for which fixed points occur are to be
-            considered known (LAR thetas are 0 and :math:`\pi`). Defaults to ``False``.
         only_confined : bool, optional
             Boolean determining if the search for :math:`\psi_{fixed}` will be conducted only for
             :math:`\psi` < :math:`\psi_{wall}` (confined particles). Defaults to ``False``.
@@ -99,7 +96,7 @@ def fixed_points(profile: Profile, **kwargs) -> tuple[list, list, list]:
         psi_lim[1] = profile.psi_wall.to("NUMagnetic_flux").m
         logger.info(f"Set psi_max={psi_lim[1]} for only confined search")
 
-    bounds, initial_conditions, fixed_points, known_theta_values = _set_up_fixed_points(
+    bounds, initial_conditions, fixed_points = _set_up_fixed_points(
         profile=profile,
         method=config.fp_method,
         thetalim=config.thetalim,
@@ -108,7 +105,6 @@ def fixed_points(profile: Profile, **kwargs) -> tuple[list, list, list]:
         ic_theta_grid_density=config.ic_fp_theta_grid_density,
         ic_psi_grid_density=config.ic_fp_psi_grid_density,
         random_init_cond=config.fp_random_init_cond,
-        LAR_thetas=config.fp_LAR_thetas,
         ic_scaling_factor=config.fp_ic_scaling_factor,
     )
 
@@ -117,34 +113,17 @@ def fixed_points(profile: Profile, **kwargs) -> tuple[list, list, list]:
     idx = 0
 
     # Run fixed_point() for multiple initial conditions in order to locate
-    # multiple fixed points. If thetas=LAR thetas run for the multiple LAR thetas.
-    if len(known_theta_values) == 0:
-        for initial_condition in initial_conditions:
+    # multiple fixed points.
+    for initial_condition in initial_conditions:
 
-            theta_fix, psi_fix = fixed_point(
-                method=config.fp_method,
-                initial_condition=initial_condition,
-                bounds=bounds,
-                profile=profile,
-                known_thetas=config.fp_LAR_thetas,
-            )
-            fixed_points[idx] = (float(theta_fix), float(psi_fix))
-            idx += 1
-
-    else:
-        for known_theta_value in known_theta_values:
-            for initial_condition in initial_conditions:
-                theta_fix, psi_fix = fixed_point(
-                    method=config.fp_method,
-                    initial_condition=initial_condition,
-                    bounds=bounds,
-                    profile=profile,
-                    known_thetas=config.fp_LAR_thetas,
-                    known_theta_value=known_theta_value,
-                )
-
-                fixed_points[idx] = (float(theta_fix), float(psi_fix))
-                idx += 1
+        theta_fix, psi_fix = fixed_point(
+            method=config.fp_method,
+            initial_condition=initial_condition,
+            bounds=bounds,
+            profile=profile,
+        )
+        fixed_points[idx] = (float(theta_fix), float(psi_fix))
+        idx += 1
 
     logger.info(
         f"Calculated fixed points {fixed_points} ['NUMagnetic_flux'] in fixed_points script"
@@ -158,7 +137,7 @@ def fixed_points(profile: Profile, **kwargs) -> tuple[list, list, list]:
         f"Calculated {num_of_dfp} distinct fixed points {distinct_fixed_points} ['NUMagnetic_flux'] in fixed_points script"
     )
 
-    if config.fp_ic_info and not config.fp_LAR_thetas:
+    if config.fp_ic_info:
         initial_conditions_print = [[float(x), float(y)] for x, y in initial_conditions]
         logger.info(f"\nInitial Conditions:{initial_conditions_print}\n")
         logger.info(f"\nNumber of Initial Conditions: {len(initial_conditions_print)}\n")
@@ -234,7 +213,6 @@ def _set_up_fixed_points(
     ic_psi_grid_density: int,
     ic_scaling_factor: int,
     random_init_cond: bool = False,
-    LAR_thetas: bool = False,
 ) -> tuple:
     """
     Function that sets up some parameters of the fixed points' system, numerical solvers,
@@ -249,19 +227,7 @@ def _set_up_fixed_points(
     theta_min = thetalim[0]
     theta_max = thetalim[1]
 
-    known_theta_values = []
-
-    if LAR_thetas and not random_init_cond:
-
-        bounds = [(0.99 * psi_min, 1.01 * psi_max)]
-
-        initial_conditions = np.linspace(psi_min, psi_max, ic_psi_grid_density)
-        known_theta_values = np.linspace(0, np.pi, 2)
-
-        empty_fixed_points = np.empty((len(known_theta_values) * len(initial_conditions), 2))
-        empty_fixed_points[:] = np.nan
-
-    elif random_init_cond and not LAR_thetas:
+    if random_init_cond:
 
         bounds = [(theta_min, theta_max), (0.99 * psi_min, 1.01 * psi_max)]
 
@@ -275,7 +241,7 @@ def _set_up_fixed_points(
         empty_fixed_points = np.empty((len(initial_conditions), len(initial_conditions[0])))
         empty_fixed_points[:] = np.nan
 
-    elif not LAR_thetas and not random_init_cond:
+    else:
 
         bounds = [(theta_min, theta_max), (0.99 * psi_min, 1.01 * psi_max)]
 
@@ -306,8 +272,4 @@ def _set_up_fixed_points(
         empty_fixed_points = np.empty((len(initial_conditions), len(initial_conditions[0])))
         empty_fixed_points[:] = np.nan
 
-    elif LAR_thetas and random_init_cond:
-        print("LAR_thetas and random_init_cond can not be true at the same time.")
-        return
-
-    return bounds, initial_conditions, empty_fixed_points, known_theta_values
+    return bounds, initial_conditions, empty_fixed_points

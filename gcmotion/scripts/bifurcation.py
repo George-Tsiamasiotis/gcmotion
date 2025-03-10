@@ -71,9 +71,6 @@ def bifurcation(profiles: list | deque, **kwargs) -> dict:
             is to be calculated, stored and returned. Defaults to ``False``.
         energy_units : str, optional
             String specifying the unit of the calculated fixed points' energies. Defaults to "NUJoule".
-        LAR_thetas : bool, optional
-            Boolean determining weather the theta values for which fixed points occur are to be
-            considered known (LAR thetas are 0 and :math:`\pi`). Defaults to ``False``.
         energies_info : bool, optional
             Boolean determining weather information on the fixed points' energies is to be is to be printed in the log.
             Defaults to ``True``.

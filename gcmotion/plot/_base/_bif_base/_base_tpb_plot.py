@@ -6,49 +6,6 @@ from gcmotion.utils.fixed_points_bif.bif_values_setup import set_up_bif_plot_val
 from gcmotion.plot._base._bif_base._bif_config import _TPBPlotConfig
 
 
-def _set_up_tpb_base_plot(
-    profiles: list,
-    COM_plotO: list,
-    O_energies_plot: list,
-    COM_plotX: list,
-    X_energies_plot: list,
-    which_COM: str,
-    label_energy_units: str,
-):
-    r"""
-    Simple script that sets up the base trapped passing boundary plot
-    by checking some parameters.
-    """
-
-    if which_COM == "mu":
-        x_label_loc = r"$E-{\mu}B_0$" + f"[{label_energy_units}]"
-        y_label_loc = r"$\mu$" + f"[{profiles[0].muNU.units}]"
-        xO_values = O_energies_plot
-        yO_values = COM_plotO
-        xX_values = X_energies_plot
-        yX_values = COM_plotX
-
-    elif which_COM == "Pzeta":
-        x_label_loc = r"$P_{\zeta}$" + f"[{profiles[0].PzetaNU.units}]"
-        y_label_loc = f"Energies [{label_energy_units}]"
-        xO_values = COM_plotO
-        yO_values = O_energies_plot
-        xX_values = COM_plotX
-        yX_values = X_energies_plot
-
-    else:
-        print(
-            """\n'which_COM' arguments must be either 'mu' or 'Pzeta'.
-            \nABORTING trapped passing boundary plot...\n"""
-        )
-
-    return x_label_loc, y_label_loc, xX_values, yX_values, xO_values, yO_values
-
-
-def _setup_which_COM_title(which_COM: str):
-    return r"$\mu$" if which_COM == "mu" else r"$P_{\zeta}$"
-
-
 def _plot_trapped_passing_boundary(
     profiles: list,
     X_energies: list | deque,
@@ -165,3 +122,46 @@ def _plot_trapped_passing_boundary(
 
     if config.tpb_legend:
         ax.legend()
+
+
+def _set_up_tpb_base_plot(
+    profiles: list,
+    COM_plotO: list,
+    O_energies_plot: list,
+    COM_plotX: list,
+    X_energies_plot: list,
+    which_COM: str,
+    label_energy_units: str,
+):
+    r"""
+    Simple script that sets up the base trapped passing boundary plot
+    by checking some parameters.
+    """
+
+    if which_COM == "mu":
+        x_label_loc = r"$E-{\mu}B_0$" + f"[{label_energy_units}]"
+        y_label_loc = r"$\mu$" + f"[{profiles[0].muNU.units}]"
+        xO_values = O_energies_plot
+        yO_values = COM_plotO
+        xX_values = X_energies_plot
+        yX_values = COM_plotX
+
+    elif which_COM == "Pzeta":
+        x_label_loc = r"$P_{\zeta}$" + f"[{profiles[0].PzetaNU.units}]"
+        y_label_loc = f"Energies [{label_energy_units}]"
+        xO_values = COM_plotO
+        yO_values = O_energies_plot
+        xX_values = COM_plotX
+        yX_values = X_energies_plot
+
+    else:
+        print(
+            """\n'which_COM' arguments must be either 'mu' or 'Pzeta'.
+            \nABORTING trapped passing boundary plot...\n"""
+        )
+
+    return x_label_loc, y_label_loc, xX_values, yX_values, xO_values, yO_values
+
+
+def _setup_which_COM_title(which_COM: str):
+    return r"$\mu$" if which_COM == "mu" else r"$P_{\zeta}$"

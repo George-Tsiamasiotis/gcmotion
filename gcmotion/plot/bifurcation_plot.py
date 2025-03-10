@@ -81,9 +81,6 @@ def bifurcation_plot(profiles: list | deque, **kwargs):
         energies_info : bool, optional
             Boolean determining weather information on the fixed points' energies is to be is to be printed in the log.
             Defaults to ``True``.
-        fp_LAR_thetas : bool, optional
-            Boolean determining weather the theta values for which fixed points occur are to be
-            considered known (LAR thetas are 0 and :math:`\pi`). Defaults to ``False``.
         fp_only_confined : bool, optional
             Boolean determining if the search for :math:`\psi_{fixed}` will be conducted only for
             :math:`\psi` < :math:`\psi_{wall}` (confined particles). Defaults to ``False``.

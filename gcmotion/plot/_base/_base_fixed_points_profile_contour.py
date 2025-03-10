@@ -88,9 +88,6 @@ def _base_fixed_points_plot(
             plot_init_cond : bool, optional
                 Boolean that determines weather the initial conditions passed into :py:func:`fixed_points`
                 will be plotted. Defaults to ``False``.
-            LAR_thetas : bool, optional
-                Boolean determining weather the theta values for which fixed points occur are to be
-                considered known (LAR thetas are 0 and :math:`\pi`). Defaults to ``False``.
             only_confined : bool, optional
                 Boolean determining if the search for :math:`\psi_{fixed}` will be conducted only for
                 :math:`\psi` < :math:`\psi_{wall}` (confined particles). Defaults to ``False``.
