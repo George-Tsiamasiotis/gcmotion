@@ -9,10 +9,12 @@ import numpy as np
 import xarray as xr
 from termcolor import colored
 from scipy.interpolate import UnivariateSpline, RectBivariateSpline
-from pint import UndefinedUnitError
 from time import time
 
 from gcmotion.utils.logger_setup import logger
+from gcmotion.configuration.scripts_configuration import (
+    NumericalDatasetsConfig,
+)
 
 from math import cos, sin, sqrt
 from abc import ABC, abstractmethod
@@ -56,9 +58,7 @@ class MagneticField(ABC):
         """
 
     @abstractmethod
-    def solverbNU(
-        self, psi: float, theta: float
-    ) -> tuple[float, float, float]:
+    def solverbNU(self, psi: float, theta: float) -> tuple[float]:
         r"""Calculates all the values needed by the solver:
         :math:`B,I,g` (by calling ``self.bigNU()``) and the derivatives
         :math:`\dfrac{\partial B}{\partial \psi}, \dfrac{\partial B}{\partial\
@@ -118,6 +118,9 @@ class NumericalMagneticField(MagneticField):
 
     """
 
+    is_analytical = False
+    is_numerical = True
+
     def __init__(self, filename: str):
 
         # Open the dataset
@@ -132,9 +135,10 @@ class NumericalMagneticField(MagneticField):
             raise FileNotFoundError(f"No file found at '{path}'")
 
         # Extract the arrays
+        interval = NumericalDatasetsConfig.boozer_theta_downsampling_factor
         psi_values = dataset.psi.data
-        theta_values = dataset.boozer_theta.data
-        b_values = dataset.b_field_norm.data.T
+        theta_values = dataset.boozer_theta.data[::interval]
+        b_values = dataset.b_field_norm.data.T[::interval]
         i_values = dataset.I_norm.data
         g_values = dataset.g_norm.data
 
@@ -169,7 +173,7 @@ class NumericalMagneticField(MagneticField):
         self.gder_spline = self.g_spline.derivative(n=1)
 
         # Useful attributes
-        Q = pint.UnitRegistry.Quantity
+        Q = pint.get_application_registry().Quantity
         _B0 = float(dataset.Baxis.data)  # Tesla
         self.B0 = Q(_B0, "Tesla")
 
@@ -178,43 +182,32 @@ class NumericalMagneticField(MagneticField):
         da = dataset.b_field_norm
         mins = da.where(da == da.min(), drop=True).squeeze()
         maxs = da.where(da == da.max(), drop=True).squeeze()
-        self.Bmin = Q(mins.values, "NUTesla").to("Tesla")
-        self.Bmax = Q(maxs.values, "NUTesla").to("Tesla")
+        # Flatten()[0] is needed since it sometimes finds 2 extremums with
+        # effectively the same value
+        self.Bmin = Q(mins.values.flatten()[0], "NUTesla").to("Tesla")
+        self.Bmax = Q(maxs.values.flatten()[0], "NUTesla").to("Tesla")
         self.theta_min = float(mins.boozer_theta.values.flatten()[0])
         self.theta_max = float(maxs.boozer_theta.values.flatten()[0])
-
-        # WARN: NU units must have been defined in the unit registry already.
-        # The quantity_constructor module sets the global "application
-        # registry" when imported, and *then* defines NU units. This means
-        # quantifying psi raises an exception if the object is created without
-        # having the Quantity constructor instantiated first. There is no way
-        # around that, but there is really no reason to do that.
-        # WARN: "type(self.Bmax) is Q" returns False which might cause
-        # problems.
-        try:
-            self.psi_min = Q(mins.psi.values, "NUMagnetic_flux")
-            self.psi_max = Q(maxs.psi.values, "NUMagnetic_flux")
-        except UndefinedUnitError:
-            logger.warning(
-                "psi coordinates of Bmin and Bmax cannot be defined. "
-                "Ensure that the Quantity Constructor has been instantiated "
-                "correctly first."
-            )
+        self.psi_min = Q(mins.psi.values, "NUMagnetic_flux")
+        self.psi_max = Q(maxs.psi.values, "NUMagnetic_flux")
         end = time()
         duration = Q(end - start, "seconds")
         logger.info(f"Numerical bfield extremum search took {duration:.4g~#P}")
 
-        self.is_numerical = True
-
-    def bigNU(self, psi: float | np.ndarray, theta: float | np.ndarray):
+    def bigNU(
+        self, psi: float | np.ndarray, theta: float | np.ndarray
+    ) -> tuple:
         theta = theta % (2 * np.pi)
         b = self.b_spline(x=theta, y=psi, grid=False)
         i = self.i_spline(x=psi)
         g = self.g_spline(x=psi)
 
-        return (b, i, g)
+        if isinstance(psi, (float, int)):
+            return (float(b), float(i), float(g))
+        else:
+            return (b, i, g)
 
-    def solverbNU(self, psi: float, theta: float):
+    def solverbNU(self, psi: float, theta: float) -> tuple:
 
         theta = theta % (2 * np.pi)
         # Field and currents
@@ -229,9 +222,10 @@ class NumericalMagneticField(MagneticField):
         g_der = self.gder_spline(psi)
 
         # Pack them up
-        currents = (i, g)
-        b_der = (db_dpsi, db_dtheta)
-        currents_der = (i_der, g_der)
+        b = float(b)
+        currents = (float(i), float(g))
+        b_der = (float(db_dpsi), float(db_dtheta))
+        currents_der = (float(i_der), float(g_der))
 
         return b, b_der, currents, currents_der
 
@@ -254,6 +248,9 @@ class LAR(MagneticField):
 
     """
 
+    is_analytical = True
+    is_numerical = False
+
     def __init__(self, B0: Quantity, i: Quantity, g: Quantity):
 
         # SI Quantities
@@ -273,30 +270,23 @@ class LAR(MagneticField):
         # Flags
         self.has_i = bool(i.m)
         self.plain_name = "LAR"
-        self.is_analytic = True
 
         # Minimum/Maximum values and locations
-        Q = pint.UnitRegistry.Quantity
-        try:
-            self.psi_wall = Q(1, "psi_wall")
-            self.theta_min, self.theta_max = 0, np.pi
-            self.psi_min = self.psi_max = self.psi_wall.to("NUMagnetic_flux").m
+        Q = pint.get_application_registry().Quantity
+        self.psi_wall = Q(1, "psi_wall")
+        self.theta_min, self.theta_max = 0, np.pi
+        self.psi_min = self.psi_max = self.psi_wall.to("NUMagnetic_flux").m
 
-            _BminNU = self.bigNU(psi=self.psi_min, theta=self.theta_min)[0]
-            _BmaxNU = self.bigNU(psi=self.psi_max, theta=self.theta_max)[0]
-            self.Bmin = Q(_BminNU, "NUTesla").to("Tesla")
-            self.Bmax = Q(_BmaxNU, "NUTesla").to("Tesla")
+        _BminNU = self.bigNU(psi=self.psi_min, theta=self.theta_min)[0]
+        _BmaxNU = self.bigNU(psi=self.psi_max, theta=self.theta_max)[0]
+        self.Bmin = Q(_BminNU, "NUTesla").to("Tesla")
+        self.Bmax = Q(_BmaxNU, "NUTesla").to("Tesla")
 
-        except UndefinedUnitError:
-            logger.warning(
-                "psi coordinates of Bmin and Bmax cannot be defined. "
-                "Ensure that the Quantity Constructor has been instantiated "
-                "correctly first."
-            )
+    def bigNU(
+        self, psi: float | np.ndarray, theta: float | np.ndarray
+    ) -> tuple[float]:
 
-    def bigNU(self, psi: float | np.ndarray, theta: float | np.ndarray):
-
-        if isinstance(psi, (int, float)):
+        if isinstance(psi, float):
             b = 1 - sqrt(2 * psi) * cos(theta)
             g = self._gNU
             i = self._iNU
@@ -307,7 +297,7 @@ class LAR(MagneticField):
 
         return (b, i, g)
 
-    def solverbNU(self, psi: float, theta: float):
+    def solverbNU(self, psi: float, theta: float) -> tuple:
 
         # Field and currents
         b, i, g = self.bigNU(psi, theta)
