@@ -62,12 +62,12 @@ def bifurcation_plot(profiles: list | deque, **kwargs):
             Boolean determining weather random initial conditions are to be used instead of those
             provided by :py:func:`fp_ic_scan`. Defaults to ``False``.
         fp_info : bool, optional
-            Boolean determining weather fixed points' information is to be printed. Defaults to ``False``.
+            Boolean determining weather fixed points' information is to be is to be printed in the log. Defaults to ``False``.
         bif_info: bool, optional
             Boolean that determines weather information regarding the bifurcation process is to
-            be printed. Defaults to ``False``.
+            be is to be printed in the log. Defaults to ``False``.
         fp_ic_info : bool, optional
-            Boolean determing weather information on the initial condition is to be printed.
+            Boolean determing weather information on the initial condition is to be is to be printed in the log.
             Defaults to ``False``.
         plot_energy_bif : bool, optional
             Boolean determining weather the energy of each fixed point of each profile (each :math:`\P_{\zeta}`)
@@ -79,7 +79,7 @@ def bifurcation_plot(profiles: list | deque, **kwargs):
         energy_units : str, optional
             String specifying the unit of the calculated fixed points' energies. Defaults to ``"NUJoule"``.
         energies_info : bool, optional
-            Boolean determining weather information on the fixed points' energies is to be printed.
+            Boolean determining weather information on the fixed points' energies is to be is to be printed in the log.
             Defaults to ``True``.
         fp_LAR_thetas : bool, optional
             Boolean determining weather the theta values for which fixed points occur are to be

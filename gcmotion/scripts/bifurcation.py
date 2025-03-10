@@ -1,4 +1,4 @@
-r""" Function that calculates the fixed points, the number of fixed points, and their energies
+r"""Function that calculates the fixed points, the number of fixed points, and their energies
 for multiple profiles , where each profile has a different Pzeta or mu.
 """
 
@@ -56,12 +56,12 @@ def bifurcation(profiles: list | deque, **kwargs) -> dict:
             Boolean determining weather random initial conditions are to be used instead of those
             provided by :py:func:`fp_ic_scan`. Defaults to ``False``.
         fp_info : bool, optional
-            Boolean determining weather fixed points' information is to be printed. Defaults to ``False``.
+            Boolean determining weather fixed points' information is to be is to be printed in the log. Defaults to ``False``.
         bif_info: bool, optional
             Boolean that determines weather information regarding the bifurcation process is to
-            be printed. Defaults to ``False``.
+            be is to be printed in the log. Defaults to ``False``.
         fp_ic_info : bool, optional
-            Boolean determing weather information on the initial condition is to be printed.
+            Boolean determing weather information on the initial condition is to be is to be printed in the log.
             Defaults to ``False``.
         fp_only_confined : bool, optional
             Boolean determining if the search for :math:`\psi_{fixed}` will be conducted only for
@@ -75,7 +75,7 @@ def bifurcation(profiles: list | deque, **kwargs) -> dict:
             Boolean determining weather the theta values for which fixed points occur are to be
             considered known (LAR thetas are 0 and :math:`\pi`). Defaults to ``False``.
         energies_info : bool, optional
-            Boolean determining weather information on the fixed points' energies is to be printed.
+            Boolean determining weather information on the fixed points' energies is to be is to be printed in the log.
             Defaults to ``True``.
         which_COM : str, optional
             Determines with regard to which COM (:math:`\mu` or :math:`P_{zeta}`) will the bifurcation
