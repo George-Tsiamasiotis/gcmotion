@@ -79,9 +79,9 @@ def fixed_points_energy_contour(profile: Profile, **kwargs):
         Boolean determining weather random initial conditions are to be used instead of those
         provided by :py:func:`fp_ic_scan`. Defaults to ``False``.
     info : bool, optional
-        Boolean determining weather fixed points' information is to be printed. Defaults to ``False``.
+        Boolean determining weather fixed points' information is to be is to be printed in the log. Defaults to ``False``.
     ic_info : bool, optional
-        Boolean determing weather information on the initial condition is to be printed.
+        Boolean determing weather information on the initial condition is to be is to be printed in the log.
         Defaults to ``False``.
     plot_init_cond : bool, optional
         Boolean that determines weather the initial conditions passed into :py:func:`fixed_points`

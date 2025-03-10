@@ -353,6 +353,4 @@ def R_Z_contours(profile: Profile, **kwargs):
 
         logger.info("Plotted Fixed Points in RZ_contours")
 
-    fixed_points_energy_contour(profile, **kwargs)
-
     plt.show()

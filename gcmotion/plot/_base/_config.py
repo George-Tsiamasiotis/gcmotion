@@ -123,7 +123,7 @@ class _RZContourConfig:
     layout: str = "constrained"
     facecolor: str = "white"
     # Contour keywords
-    cmap: str = "BrBG"  # "managua, viridis"
+    cmap: str = "managua"  # "BrBG, viridis, managua"
     levels: int = 25
     mode: str = None
     units: str = "NUmf"

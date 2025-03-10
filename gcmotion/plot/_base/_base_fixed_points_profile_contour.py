@@ -81,9 +81,9 @@ def _base_fixed_points_plot(
                 Boolean determining weather random initial conditions are to be used instead of those
                 provided by :py:func:`fp_ic_scan`. Defaults to ``False``.
             info : bool, optional
-                Boolean determining weather fixed points' information is to be printed. Defaults to ``False``.
+                Boolean determining weather fixed points' information is to be is to be printed in the log. Defaults to ``False``.
             ic_info : bool, optional
-                Boolean determing weather information on the initial condition is to be printed.
+                Boolean determing weather information on the initial condition is to be is to be printed in the log.
                 Defaults to ``False``.
             plot_init_cond : bool, optional
                 Boolean that determines weather the initial conditions passed into :py:func:`fixed_points`
@@ -150,9 +150,7 @@ def _base_fixed_points_plot(
     xO, yO = O_thetas, O_psis.m
 
     if config.RZ_coords and not isinstance(profile.bfield, LAR):
-        print("\nX POINTS")
         xX, yX = _get_RZ_coords(profile, X_thetas, X_psis)
-        print("\nO POINTS")
         xO, yO = _get_RZ_coords(profile, O_thetas, O_psis)
 
         logger.info(f"Converted fixed points from theta, psi to RZ coords")
@@ -179,7 +177,6 @@ def _base_fixed_points_plot(
         x_init, y_init = thetas_init, psis_init.m
 
         if config.RZ_coords and not isinstance(profile.bfield, LAR):
-            print("\nINIT COND")
             x_init, y_init = _get_RZ_coords(profile, thetas_init, psis_init)
             logger.info(f"Converted initial conditions from theta, psi to RZ coords")
 
@@ -198,7 +195,7 @@ def _base_fixed_points_plot(
 
 
 def _get_RZ_coords(
-    profile: Profile, thetas_fixed: list | np.ndarray, psis_fixed: Quantity
+    profile: Profile, thetas_fixed: float | list | np.ndarray | tuple, psis_fixed: Quantity
 ) -> list | np.ndarray:
     r"""Simple function that takes in :math:`\theta`, :math:`\psi` and calculates their R, Z coordinates."""
 
@@ -243,14 +240,11 @@ def _get_RZ_coords(
     R_spline = RectBivariateSpline(theta_values, _psi_valuesNU, R_values)
     Z_spline = RectBivariateSpline(theta_values, _psi_valuesNU, Z_values)
 
-    print(f"\n{thetas_fixed=}")
-    print(f"psis_fixed={psis_fixedNU.to("NUmf").m}")
+    # Splines used theta in [0, 2π]. Thetas fixed are in [-π,π]. Use mod.
+    thetas_fixed = np.array(thetas_fixed) % (2 * np.pi)
 
     Rs_fixed = R_spline.ev(thetas_fixed, psis_fixedNU.to("NUmf").m)
     Zs_fixed = Z_spline.ev(thetas_fixed, psis_fixedNU.to("NUmf").m)
-
-    print(f"\n{Rs_fixed=}")
-    print(f"{Zs_fixed=}")
 
     logger.info(f"Calculated RZ values for base fp plot \n{Rs_fixed=}, {Zs_fixed=}")
 
