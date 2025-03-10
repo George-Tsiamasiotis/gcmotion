@@ -4,7 +4,7 @@ from gcmotion.utils.logger_setup import logger
 
 from gcmotion.entities.tokamak import Tokamak
 from gcmotion.entities.profile import Profile
-from gcmotion.utils.fixed_points_bif.bif_values_setup import set_up_bif_plot_values
+from gcmotion.scripts.fixed_points_bif.bif_values_setup import set_up_bif_plot_values
 
 from gcmotion.configuration.plot_parameters import ParabolasPlotConfig
 
@@ -49,20 +49,27 @@ def _plot_parabolas_tpb(
         input_energy_units = "NUJoule"
         tilt_energies = False
 
-        profiles = _create_profiles_list(
-            profile=profile, x_TPB=x_TPB, TPB_density=config.TPB_density
-        )
+        psip_wallNU = profile.psip_wallNU.m
+
+        # Pzetalim is given in PzetaNU/psip_walNU so we need to multiply bu psip_wallNU
+        Pzetamin, Pzetamax = min(x_TPB), max(x_TPB)  # PzetaNU/psip_wallNU
+        Pzetamin *= psip_wallNU  # Pzeta in NUcanmom
+        Pzetamax *= psip_wallNU  # Pzeta in NUcanmom
+
+        PzetasNU = np.linspace(Pzetamin, Pzetamax, config.TPB_density)
 
         # X O Energies bifurcation plot
         Pzeta_plotX, X_energies_plot = set_up_bif_plot_values(
-            profiles=profiles,
+            profile=profile,
+            COM_values=PzetasNU,
             y_values=X_energies,
             which_COM=which_COM,
             tilt_energies=tilt_energies,
             input_energy_units=input_energy_units,
         )
         Pzeta_plotO, O_energies_plot = set_up_bif_plot_values(
-            profiles=profiles,
+            profile=profile,
+            COM_values=PzetasNU,
             y_values=O_energies,
             which_COM=which_COM,
             tilt_energies=tilt_energies,
@@ -76,11 +83,11 @@ def _plot_parabolas_tpb(
         B0NU = profile.bfield.B0.to("NUTesla").m
         muB0NU = muNU * B0NU
 
-        Pzeta_plotO = [O.m / psip_wallNU for O in Pzeta_plotO]  # NUCanmom/ψpw
-        Pzeta_plotX = [X.m / psip_wallNU for X in Pzeta_plotX]  # NUCanmom/ψpw
+        Pzeta_plotO = [O / psip_wallNU for O in Pzeta_plotO]  # NUCanmom/ψpw
+        Pzeta_plotX = [X / psip_wallNU for X in Pzeta_plotX]  # NUCanmom/ψpw
 
-        O_energies_plot = [O.m / muB0NU for O in O_energies_plot]  # NUJoule/(μΒ0)
-        X_energies_plot = [X.m / muB0NU for X in X_energies_plot]  # NUJoule/(μΒ0)
+        O_energies_plot = [O / muB0NU for O in O_energies_plot]  # NUJoule/(μΒ0)
+        X_energies_plot = [X / muB0NU for X in X_energies_plot]  # NUJoule/(μΒ0)
 
         ax.scatter(
             Pzeta_plotX,

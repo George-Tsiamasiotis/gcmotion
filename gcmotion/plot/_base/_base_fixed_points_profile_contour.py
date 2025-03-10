@@ -3,11 +3,13 @@ Draws fixed points plot. This method is called internally by ``profile_contour()
 as well.
 """
 
-from gcmotion.scripts.fixed_points import fixed_points as get_fixed_points
+from gcmotion.scripts.fixed_points_bif.fixed_points import fixed_points as get_fixed_points
 from gcmotion.entities.profile import Profile
 from gcmotion.tokamak.bfield import LAR
 
-from gcmotion.utils.fixed_points_bif.XO_points_classification import XO_points_classification as xoc
+from gcmotion.scripts.fixed_points_bif.XO_points_classification import (
+    XO_points_classification as xoc,
+)
 from gcmotion.plot._base._config import _FixedPointsPlotConfig
 
 from scipy.interpolate import RectBivariateSpline
@@ -88,9 +90,6 @@ def _base_fixed_points_plot(
             plot_init_cond : bool, optional
                 Boolean that determines weather the initial conditions passed into :py:func:`fixed_points`
                 will be plotted. Defaults to ``False``.
-            LAR_thetas : bool, optional
-                Boolean determining weather the theta values for which fixed points occur are to be
-                considered known (LAR thetas are 0 and :math:`\pi`). Defaults to ``False``.
             only_confined : bool, optional
                 Boolean determining if the search for :math:`\psi_{fixed}` will be conducted only for
                 :math:`\psi` < :math:`\psi_{wall}` (confined particles). Defaults to ``False``.
