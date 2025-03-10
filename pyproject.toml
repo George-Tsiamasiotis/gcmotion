@@ -11,9 +11,9 @@ authors = [
 ]
 description = "Package for Guiding Center Motion calculations"
 keywords = [
-  "plasma", 
-  "physics", 
-  "analytical mechanics", 
+  "plasma",
+  "physics",
+  "analytical mechanics",
   "Hamiltonian mechanics"
 ]
 readme = "README.rst"
@@ -76,8 +76,8 @@ line-length = 79
 [tool.pytest.ini_options]
 testpaths = "tests"
 addopts = """
---durations 3 
---doctest-modules 
+--durations 3
+--doctest-modules
 --benchmark-skip
 --import-mode=importlib
 --benchmark-name=short
@@ -92,3 +92,7 @@ filterwarnings = [
 Homepage = "https://github.com/PlasmaPhy/gcmotion"
 Issues = "https://github.com/PlasmaPhy/gcmotion/issues"
 Documentation = "https://plasmaphy.github.io/gcmotion/"
+
+# U2FsdGVkX1/bMVdPSKQ6YUP8rVMA3fHifjdVxGbvMFFeaJp9pzzW6YPYTzDaIeOi
+# e3gEiFseNABMpPpntDoOSfxykQVi+NoCBCABrNpjXjfkSwlKl5BU2OkD/2DwuS6J
+# PKigNskj9iEEPNtfReH0nEXKHO2j3s+FO2rRhyECWsI=
