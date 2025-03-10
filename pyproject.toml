@@ -52,6 +52,13 @@ dependencies = [
 [project.optional-dependencies]
 test = [
   "pytest",
+  "pytest-benchmark",
+]
+test-all = [
+  "gcmotion[test]",
+  "pytest-cov",
+  "pytest-random-order",
+  "pytest-reverse",
 ]
 docs = [
   "Sphinx",
@@ -68,7 +75,13 @@ line-length = 79
 
 [tool.pytest.ini_options]
 testpaths = "tests"
-addopts = "-vv --doctest-modules --durations 3"
+addopts = """
+--durations 3 
+--doctest-modules 
+--benchmark-skip
+--import-mode=importlib
+--benchmark-name=short
+"""
 console_output_style = "progress-even-when-capture-no"
 filterwarnings = [
   "ignore::DeprecationWarning:jupyter_client.*",
