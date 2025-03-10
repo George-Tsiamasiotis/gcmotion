@@ -252,7 +252,7 @@ class RZBigContoursConfig:
     layout: str = "constrained"
     facecolor: str = "white"
     # Plots kwywords
-    which: str = "E b i g"
+    which: str = "fp E b i g"
     # E, flux figure keywords
     E_flux_suptitle_fontsize: float = 15
     E_flux_suptitle_color: str = "black"
@@ -278,5 +278,3 @@ class RZBigContoursConfig:
     parametric_density: int = 500
     # Contours keywords
     levels: int = 20
-    # RZ coords for Fixed Points plots
-    fp_RZ_coords: bool = True

@@ -194,9 +194,6 @@ def _get_grid_values(profile: Profile, which_Q: str, density: int, units: str) -
     # there was not data to interpolate in the middle (psi=0).
     _psi_valuesNU = np.insert(_psi_valuesNU, 0, 0)
 
-    # Convert to requested flux units
-    psi_valuesNU = Q(_psi_valuesNU, "NUmf")
-
     # Extract theta, R, Z data
     theta_values = ds.boozer_theta.data
     R_values = ds.R.data.T
@@ -212,11 +209,11 @@ def _get_grid_values(profile: Profile, which_Q: str, density: int, units: str) -
     Z_values = np.hstack((new_Z_column, Z_values))  # (3620, 101)
 
     # Interpolate
-    R_spline = RectBivariateSpline(theta_values, psi_valuesNU.m, R_values)
-    Z_spline = RectBivariateSpline(theta_values, psi_valuesNU.m, Z_values)
+    R_spline = RectBivariateSpline(theta_values, _psi_valuesNU, R_values)
+    Z_spline = RectBivariateSpline(theta_values, _psi_valuesNU, Z_values)
 
     # Grid for plotting
-    _psi_plotNU = np.linspace(psi_valuesNU.m.min(), psi_valuesNU.m.max(), density)
+    _psi_plotNU = np.linspace(_psi_valuesNU.min(), _psi_valuesNU.max(), density)
     _theta_plot = np.linspace(theta_values.min(), theta_values.max(), density)
 
     # Compute meshgrid
@@ -234,7 +231,7 @@ def _get_grid_values(profile: Profile, which_Q: str, density: int, units: str) -
                 Y_grid = Psi_grid
             # WHEN PULL FROM GEORGE DO NOT PUT INPUT QUANTITY NECESSARILY
             case "Energy":
-                psi_gridNU = Q(_psi_gridNU, "NUMagnetic_flux")
+                psi_gridNU = Q(_psi_gridNU, "NUmf")
                 Y_grid = profile.findEnergy(psi=psi_gridNU, theta=_theta_grid, units=units).m
 
             case "B":

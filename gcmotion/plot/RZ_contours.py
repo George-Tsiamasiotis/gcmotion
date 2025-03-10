@@ -1,6 +1,7 @@
 """Function that draws figures depicting the B, i, g, E, Ψ quantities' contours in RZ
 coordinates. It can also plot fixed points on certain plots."""
 
+from gcmotion.plot.fixed_points_profile_contour import fixed_points_energy_contour
 import matplotlib.pyplot as plt
 
 from gcmotion.configuration.plot_parameters import RZBigContoursConfig
@@ -324,7 +325,7 @@ def R_Z_contours(profile: Profile, **kwargs):
         _base_fixed_points_plot(
             profile=profile,
             ax=ax_fp_E,
-            RZ_coords=config.fp_RZ_coords,
+            RZ_coords=True,
             **kwargs,
         )
 
@@ -344,12 +345,14 @@ def R_Z_contours(profile: Profile, **kwargs):
         _base_fixed_points_plot(
             profile=profile,
             ax=ax_fp_dB,
-            RZ_coords=config.fp_RZ_coords,
+            RZ_coords=True,
             **kwargs,
         )
 
         ax_fp_dB.set_title("Fixed Points on Stationary Curves", fontsize=11)
 
         logger.info("Plotted Fixed Points in RZ_contours")
+
+    fixed_points_energy_contour(profile, **kwargs)
 
     plt.show()
