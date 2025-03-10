@@ -93,6 +93,7 @@ def _base_profile_energy_contour(profile: Profile, ax: Axes, **kwargs):
         "cmap": config.cmap,
         "locator": locator,
         "zorder": config.zorder,
+        "linewidths": config.linewidths,
     }
 
     # Contour plot
@@ -107,6 +108,7 @@ def _base_profile_energy_contour(profile: Profile, ax: Axes, **kwargs):
         )
         logger.debug("\t\tContour mode: lines")
     else:
+        del kw["linewidths"]
         C = ax.contourf(
             "theta",
             "ycoord",
@@ -115,10 +117,6 @@ def _base_profile_energy_contour(profile: Profile, ax: Axes, **kwargs):
             **kw,
         )
         logger.debug("\t\tContour mode: filled")
-
-    # Store grid inside C to use in contour freq
-    C.data = data
-    C.ylim = (ycoordgrid.m[0][0], ycoordgrid.m[0][-1])
 
     # Setup labels.
     # Also add a second axis for Ptheta
