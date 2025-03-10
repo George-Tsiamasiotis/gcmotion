@@ -60,7 +60,8 @@ def fixed_points(profile: Profile, **kwargs) -> tuple[list, list, list]:
             Boolean determining weather random initial conditions are to be used instead of those
             provided by :py:func:`fp_ic_scan`. Defaults to ``False``.
         info : bool, optional
-            Boolean determining weather fixed points' information is to be is to be printed in the log. Defaults to ``False``.
+            Boolean determining weather fixed points' information is to be is to be printed in the log.
+            Defaults to ``False``.
         ic_info : bool, optional
             Boolean determing weather information on the initial condition is to be is to be printed in the log.
             Defaults to ``False``.
