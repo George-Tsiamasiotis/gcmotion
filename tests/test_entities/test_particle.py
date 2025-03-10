@@ -2,7 +2,7 @@ import pytest
 
 
 def test_particle_run(simple_particle):
-    simple_particle.run()
+    simple_particle.run(info=True)
     pass
 
 
