@@ -16,7 +16,7 @@ class _ProfileEnergyContourConfig:
     psilim: tuple = (0, 1.2)
     levels: int = 30
     ycoord: str = "psi"  # "psi" or "Ptheta"
-    flux_units: str = "Tesla * meters^2"
+    flux_units: str = "NUMagnetic_flux"
     canmon_units: str = "NUCanonical_momentum"
     E_units: str = "keV"
     potential: bool = True
@@ -29,6 +29,7 @@ class _ProfileEnergyContourConfig:
     locator: str = "log"
     log_base: float = 1.0001
     zorder: int = 0
+    linewidths: float = 1
     Pthetaax: bool = True
     cursor: bool = True
     # Labels
