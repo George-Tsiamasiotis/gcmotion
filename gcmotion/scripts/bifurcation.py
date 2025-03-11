@@ -10,7 +10,7 @@ from gcmotion.utils.logger_setup import logger
 from gcmotion.utils.fixed_points_bif.XO_points_classification import XO_points_classification as xoc
 from gcmotion.scripts.fixed_points import fixed_points
 from gcmotion.utils.points_psi_to_P_theta import points_psi_to_P_theta
-from gcmotion.configuration.fixed_points_bifurcation_parameters import BifurcationConfig
+from gcmotion.configuration.scripts_configuration import BifurcationConfig
 
 
 def bifurcation(profiles: list | deque, **kwargs) -> dict:

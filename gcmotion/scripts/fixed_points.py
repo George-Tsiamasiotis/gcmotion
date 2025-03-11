@@ -12,7 +12,7 @@ from collections import deque
 from gcmotion.entities.profile import Profile
 from gcmotion.utils.fixed_points_bif.fp_ic_scan import fp_ic_scan as ic_scanner
 from gcmotion.utils.fixed_points_bif.single_fixed_point import fixed_point
-from gcmotion.configuration.fixed_points_bifurcation_parameters import FixedPointsConfig
+from gcmotion.configuration.scripts_configuration import FixedPointsConfig
 
 # Quantity alias for type annotations
 type Quantity = pint.UnitRegistry.Quantity
