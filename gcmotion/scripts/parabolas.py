@@ -137,7 +137,7 @@ def calc_parabolas_tpb(
         Pzetamin *= psip_wallNU  # Pzeta in NUcanmom
         Pzetamax *= psip_wallNU  # Pzeta in NUcanmom
 
-        PzetasNU = np.linspace(Pzetamin, Pzetamax, config.Pzeta_density)
+        PzetasNU = np.linspace(Pzetamin, Pzetamax, config.TPB_density)
 
         start = time()
         # Energies are returned in NUJoule
