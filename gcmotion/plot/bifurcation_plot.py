@@ -95,7 +95,7 @@ def bifurcation_plot(profile: Profile, COM_values: list | deque, **kwargs):
         setattr(config, key, value)
 
     start = time()
-    # CAUTION: The bifurcation function takes in psis_fixed but returns P_thetas_fixed
+
     bifurcation_output = bifurcation(
         profile=profile,
         COM_values=COM_values,
@@ -150,7 +150,7 @@ def bifurcation_plot(profile: Profile, COM_values: list | deque, **kwargs):
     )
 
     ax_theta = ax[0]
-    ax_P_theta = ax[1]
+    ax_psi = ax[1]
     if config.plot_ndfp:
         ax_ndfp = ax[2]
 
@@ -168,18 +168,18 @@ def bifurcation_plot(profile: Profile, COM_values: list | deque, **kwargs):
         f"Made Xthetas, Othetas fixed bifurcation plot for COM = {config.which_COM} for {other_COM[0]} = {other_COM[1]}"
     )
 
-    # P_theta Fixed Bifurcation
+    # psi Fixed Bifurcation
     _psis_bif_plot(
         profile=profile,
         COM_values=COM_values,
         X_psis=X_psis,
         O_psis=O_psis,
-        ax=ax_P_theta,
+        ax=ax_psi,
         **kwargs,
     )
 
     logger.info(
-        f"Made P_thetas fixed bifurcation plot for COM = {config.which_COM} for {other_COM[0]} = {other_COM[1]}"
+        f"Made psis fixed bifurcation plot for COM = {config.which_COM} for {other_COM[0]} = {other_COM[1]}"
     )
 
     if config.plot_ndfp:

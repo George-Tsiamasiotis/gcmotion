@@ -12,7 +12,6 @@ from gcmotion.scripts.fixed_points_bif.XO_points_classification import (
     XO_points_classification as xoc,
 )
 from gcmotion.scripts.fixed_points_bif.fixed_points import fixed_points
-from gcmotion.utils.points_psi_to_P_theta import points_psi_to_P_theta
 from gcmotion.configuration.scripts_configuration import BifurcationConfig
 
 
@@ -196,10 +195,10 @@ def bifurcation(profile: Profile, COM_values: list | deque, **kwargs) -> dict:
             )
             logger.info(f"Current Fixed Points: {current_fp}\n")
             logger.info(
-                f"Current X Points: {[[float(thetaX),float(P_thetaX)] for thetaX,P_thetaX in current_X_points]}\n"
+                f"Current X Points: {[[float(thetaX),float(psiX)] for thetaX,psiX in current_X_points]}\n"
             )
             logger.info(
-                f"Current O Points: {[[float(thetaO),float(P_thetaO)] for thetaO,P_thetaO in current_O_points]}\n"
+                f"Current O Points: {[[float(thetaO),float(psiO)] for thetaO,psiO in current_O_points]}\n"
             )
 
         # Convert psis to requested units
