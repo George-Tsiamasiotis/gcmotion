@@ -238,6 +238,7 @@ class BifurcationPlotConfig:
     thetalim: tuple = (-np.pi, np.pi)
     psilim: tuple = (0, 1.8)
     plot_energy_bif: bool = True
+    plot_ndfp: bool = False
     which_COM: str = "Pzeta"
 
 

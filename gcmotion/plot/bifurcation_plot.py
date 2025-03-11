@@ -133,7 +133,12 @@ def bifurcation_plot(profile: Profile, COM_values: list | deque, **kwargs):
     selected_COM_units = selected_COM_Q.units
     other_COM = _other_COM(profile=profile, COM=config.which_COM)
 
-    fig, ax = plt.subplots(3, 1, **fig_kw)
+    num_of_subplots = 2
+
+    if config.plot_ndfp:
+        num_of_subplots = 3
+
+    fig, ax = plt.subplots(num_of_subplots, 1, **fig_kw)
     plt.xlabel(
         _setup_x_label(config.which_COM) + f"[{selected_COM_units}]",
         fontsize=config.xlabel_fontsize,
@@ -146,7 +151,8 @@ def bifurcation_plot(profile: Profile, COM_values: list | deque, **kwargs):
 
     ax_theta = ax[0]
     ax_P_theta = ax[1]
-    ax_ndfp = ax[2]
+    if config.plot_ndfp:
+        ax_ndfp = ax[2]
 
     # Fixed thetas bifurcation diagram
     _thetas_bif_plot(
@@ -176,19 +182,20 @@ def bifurcation_plot(profile: Profile, COM_values: list | deque, **kwargs):
         f"Made P_thetas fixed bifurcation plot for COM = {config.which_COM} for {other_COM[0]} = {other_COM[1]}"
     )
 
-    # Number of distinct fixed points Diagram
-    _ndfp_bif_plot(
-        profile=profile,
-        COM_values=COM_values,
-        num_of_XP=num_of_XP,
-        num_of_OP=num_of_OP,
-        ax=ax_ndfp,
-        **kwargs,
-    )
+    if config.plot_ndfp:
+        # Number of distinct fixed points Diagram
+        _ndfp_bif_plot(
+            profile=profile,
+            COM_values=COM_values,
+            num_of_XP=num_of_XP,
+            num_of_OP=num_of_OP,
+            ax=ax_ndfp,
+            **kwargs,
+        )
 
-    logger.info(
-        f"Made number of fixed points bifurcation plot for COM = {config.which_COM} for {other_COM[0]} = {other_COM[1]}"
-    )
+        logger.info(
+            f"Made number of fixed points bifurcation plot for COM = {config.which_COM} for {other_COM[0]} = {other_COM[1]}"
+        )
 
     if config.plot_energy_bif:
         _plot_trapped_passing_boundary(
