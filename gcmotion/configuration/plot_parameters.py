@@ -62,10 +62,10 @@ class QfactorProfileConfig:
     titlesize: float = 20
     titlecolor: str = "blue"
     # Default parameter values
-    span: tuple = (0, 1.1)
+    span: tuple = (0, 1.03)
     show: bool = True
     # Plot options
-    points: int = 200
+    points: int = 600
     wall_color: str = "red"
     qwall_color: str = "black"
     qwall_style: str = "--"
@@ -91,7 +91,7 @@ class MagneticProfileConfig:
     coord: str = "r"  # psi / r
     show: bool = True
     # Contour options
-    grid_density: int = 200
+    grid_density: int = 400
     levels: int = 20
     bcmap: str = "managua"
     icmap: str = "managua"
