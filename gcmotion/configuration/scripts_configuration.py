@@ -32,7 +32,7 @@ class ParabolasConfig:
 
 @dataclass
 class NumericalDatasetsConfig:
-    boozer_theta_downsampling_factor: int = 10
+    boozer_theta_downsampling_factor: int = 1  # 10
 
 
 @dataclass

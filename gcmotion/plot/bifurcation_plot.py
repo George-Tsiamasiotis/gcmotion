@@ -6,6 +6,7 @@ with different Pzetas or mus.
 import matplotlib.pyplot as plt
 from time import time
 from gcmotion.utils.logger_setup import logger
+from gcmotion.entities.profile import Profile
 
 from gcmotion.plot._base._bif_base._base_thetas_bif_plot import _thetas_bif_plot
 from gcmotion.plot._base._bif_base._base_P_thetas_bif_plot import _P_thetas_bif_plot
@@ -18,7 +19,7 @@ from collections import deque
 from gcmotion.configuration.plot_parameters import BifurcationPlotConfig
 
 
-def bifurcation_plot(profiles: list | deque, **kwargs):
+def bifurcation_plot(profile: Profile, COM_values: list | deque, **kwargs):
     r"""Draws the bifurcation diagrams for the :math:`theta`'s  fixed,
     the :math:`P_{theta}`'s fixed and the number of fixed points found for
     each :math:`\mu` or :math:`P_{\zeta}`.
@@ -27,8 +28,10 @@ def bifurcation_plot(profiles: list | deque, **kwargs):
 
         Parameters
         ----------
-        profiles : list, deque
-            List of profile objects that contain Tokamak and Particle information.
+        profile : Profile
+            Profile object containing Tokamak information.
+        COM_values : list, deque
+            List of COM values :math:`P_{\zeta}`'s or :math:`\mu`'s in [NU].
         Other Parameters
         ----------
         thetalim : list, optional
@@ -94,7 +97,8 @@ def bifurcation_plot(profiles: list | deque, **kwargs):
     start = time()
     # CAUTION: The bifurcation function takes in psis_fixed but returns P_thetas_fixed
     bifurcation_output = bifurcation(
-        profiles=profiles,
+        profile=profile,
+        COM_values=COM_values,
         calc_energies=config.plot_energy_bif,
         **kwargs,
     )
@@ -102,7 +106,7 @@ def bifurcation_plot(profiles: list | deque, **kwargs):
     print(f"BIFURCATION RUN IN {(time() - start)/60:.1f} mins")
 
     logger.info(
-        f"Ran bifurcation script for bifurcation plot with N={len(profiles)} and for COM = {config.which_COM} in {(time() - start)/60:.1f} mins"
+        f"Ran bifurcation script for bifurcation plot with N={len(COM_values)} and for COM = {config.which_COM} in {(time() - start)/60:.1f} mins"
     )
 
     # Unpack bifurcation output
@@ -125,12 +129,13 @@ def bifurcation_plot(profiles: list | deque, **kwargs):
     }
 
     selected_COMNU_str = config.which_COM + "NU"
-    selected_COM_Q = getattr(profiles[0], selected_COMNU_str, "PzetaNU")
-    other_COM = _other_COM(profile=profiles[0], COM=config.which_COM)
+    selected_COM_Q = getattr(profile, selected_COMNU_str, "PzetaNU")
+    selected_COM_units = selected_COM_Q.units
+    other_COM = _other_COM(profile=profile, COM=config.which_COM)
 
     fig, ax = plt.subplots(3, 1, **fig_kw)
     plt.xlabel(
-        _setup_x_label(config.which_COM) + f"[{selected_COM_Q.units}]",
+        _setup_x_label(config.which_COM) + f"[{selected_COM_units}]",
         fontsize=config.xlabel_fontsize,
     )
     fig.suptitle(
@@ -145,7 +150,8 @@ def bifurcation_plot(profiles: list | deque, **kwargs):
 
     # Fixed thetas bifurcation diagram
     _thetas_bif_plot(
-        profiles=profiles,
+        profile=profile,
+        COM_values=COM_values,
         X_thetas=X_thetas,
         O_thetas=O_thetas,
         ax=ax_theta,
@@ -158,7 +164,8 @@ def bifurcation_plot(profiles: list | deque, **kwargs):
 
     # P_theta Fixed Bifurcation
     _P_thetas_bif_plot(
-        profiles=profiles,
+        profile=profile,
+        COM_values=COM_values,
         X_P_thetas=X_P_thetas,
         O_P_thetas=O_P_thetas,
         ax=ax_P_theta,
@@ -171,7 +178,8 @@ def bifurcation_plot(profiles: list | deque, **kwargs):
 
     # Number of distinct fixed points Diagram
     _ndfp_bif_plot(
-        profiles=profiles,
+        profile=profile,
+        COM_values=COM_values,
         num_of_XP=num_of_XP,
         num_of_OP=num_of_OP,
         ax=ax_ndfp,
@@ -184,7 +192,8 @@ def bifurcation_plot(profiles: list | deque, **kwargs):
 
     if config.plot_energy_bif:
         _plot_trapped_passing_boundary(
-            profiles=profiles,
+            profile=profile,
+            COM_values=COM_values,
             X_energies=X_energies,
             O_energies=O_energies,
             input_energy_units=config.energy_units,

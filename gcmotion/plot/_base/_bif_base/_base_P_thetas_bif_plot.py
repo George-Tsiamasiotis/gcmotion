@@ -1,13 +1,15 @@
 import numpy as np
 from collections import deque
 from gcmotion.utils.logger_setup import logger
+from gcmotion.entities.profile import Profile
 
 from gcmotion.scripts.fixed_points_bif.bif_values_setup import set_up_bif_plot_values
 from gcmotion.plot._base._bif_base._bif_config import _PThetasFixedPlotConfig
 
 
 def _P_thetas_bif_plot(
-    profiles: list,
+    profile: Profile,
+    COM_values: list | deque,
     X_P_thetas: list | deque,
     O_P_thetas: list | deque,
     which_COM: str,
@@ -19,8 +21,10 @@ def _P_thetas_bif_plot(
 
     Parameters
     ----------
-    profiles : list, deque
-        List of profile objects.
+    profile : Profile
+        Profile object containing Tokamak information.
+    COM_values : list, deque
+        List of COM values :math:`P_{\zeta}`'s or :math:`\mu`'s in [NU].
     X_P_thetas : deque, list
         The values of the :math:`P_{\theta}`s of the X points for each COM value.
     O_P_thetas : deque, list
@@ -47,16 +51,16 @@ def _P_thetas_bif_plot(
 
     # P_theta Fixed Bifurcation
     COM_plotX, X_P_theta_plot = set_up_bif_plot_values(
-        profiles=profiles, y_values=X_P_thetas, which_COM=which_COM
+        profile=profile, COM_values=COM_values, y_values=X_P_thetas, which_COM=which_COM
     )
     COM_plotO, O_P_theta_plot = set_up_bif_plot_values(
-        profiles=profiles, y_values=O_P_thetas, which_COM=which_COM
+        profile=profile, COM_values=COM_values, y_values=O_P_thetas, which_COM=which_COM
     )
 
     # Set the upper limit of the y axis properly
     # Combine the two lists for comparison
-    psi_wallNU = profiles[0].psi_wall.to("NUMagnetic_flux")
-    P_theta_wallNU = profiles[0].findPtheta(psi=psi_wallNU, units="NUCanonical_momentum").m
+    psi_wallNU = profile.psi_wall.to("NUMagnetic_flux")
+    P_theta_wallNU = profile.findPtheta(psi=psi_wallNU, units="NUCanonical_momentum").m
 
     combined_P_theta_plot = X_P_theta_plot + O_P_theta_plot
     ul = max(combined_P_theta_plot) * 1.05

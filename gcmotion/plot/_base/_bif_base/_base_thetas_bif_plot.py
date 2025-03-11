@@ -1,13 +1,15 @@
 import numpy as np
 from collections import deque
 from gcmotion.utils.logger_setup import logger
+from gcmotion.entities.profile import Profile
 
 from gcmotion.plot._base._bif_base._bif_config import _ThetasFixedPlotConfig
 from gcmotion.scripts.fixed_points_bif.bif_values_setup import set_up_bif_plot_values
 
 
 def _thetas_bif_plot(
-    profiles: list,
+    profile: Profile,
+    COM_values: list | deque,
     X_thetas: list | deque,
     O_thetas: list | deque,
     which_COM: str,
@@ -19,8 +21,10 @@ def _thetas_bif_plot(
 
     Parameters
     ----------
-    profiles : list, deque
-        List of profile objects.
+    profile : Profile
+        Profile object containing Tokamak information.
+    COM_values : list, deque
+        List of COM values :math:`P_{\zeta}`'s or :math:`\mu`'s in [NU].
     X_thetas : deque, list
         The values of the :math:`\theta`s of the X points for each COM value.
     O_thetas : deque, list
@@ -47,10 +51,10 @@ def _thetas_bif_plot(
 
     # Theta Fixed Bifurcation
     COM_plotX, X_theta_plot = set_up_bif_plot_values(
-        profiles=profiles, y_values=X_thetas, which_COM=which_COM
+        profile=profile, COM_values=COM_values, y_values=X_thetas, which_COM=which_COM
     )
     COM_plotO, O_theta_plot = set_up_bif_plot_values(
-        profiles=profiles, y_values=O_thetas, which_COM=which_COM
+        profile=profile, COM_values=COM_values, y_values=O_thetas, which_COM=which_COM
     )
 
     ax.ticklabel_format(style="sci", axis="x", scilimits=(0, 0))

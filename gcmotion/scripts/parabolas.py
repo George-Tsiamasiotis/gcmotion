@@ -14,7 +14,7 @@ from gcmotion.tokamak.efield import Nofield
 
 from gcmotion.configuration.scripts_configuration import ParabolasConfig
 
-from gcmotion.scripts.bifurcation import bifurcation
+from gcmotion.scripts.fixed_points_bif.bifurcation import bifurcation
 
 
 def calc_parabolas_tpb(
@@ -132,15 +132,18 @@ def calc_parabolas_tpb(
         # diagram with respect to Pzeta, which is the trapped passing boundary.
 
         # Create profiles that will be passed into bifurcation. CAUTION: the Pzetas
-        # in each profile are in NUcanmom and not divided by psip_wallNU
-        profiles = _create_profiles_list(
-            profile=profile, x_TPB=x_TPB, TPB_density=config.TPB_density
-        )
+        # are in NUcanmom and not divided by psip_wallNU
+        Pzetamin, Pzetamax = min(x_TPB), max(x_TPB)  # PzetaNU/psip_wallNU
+        Pzetamin *= psip_wallNU  # Pzeta in NUcanmom
+        Pzetamax *= psip_wallNU  # Pzeta in NUcanmom
+
+        PzetasNU = np.linspace(Pzetamin, Pzetamax, config.Pzeta_density)
 
         start = time()
         # Energies are returned in NUJoule
         bifurcation_output = bifurcation(
-            profiles=profiles,
+            profile=profile,
+            COM_values=PzetasNU,
             calc_energies=True,
             energy_units="NUJoule",
             which_COM="Pzeta",
@@ -186,43 +189,3 @@ def calc_parabolas_tpb(
         "v_L": v_L,
         "v_MA": v_MA,
     }
-
-
-def _create_profiles_list(profile: Profile, x_TPB: list | tuple, TPB_density: int) -> list:
-    r"""
-    Simple function that takes in a profile object and creates a list of profiles with
-    different Pzeta values, but all other attributes remain the same.
-    """
-
-    tokamak = Tokamak(
-        R=profile.R,
-        a=profile.a,
-        qfactor=profile.qfactor,
-        bfield=profile.bfield,
-        efield=profile.efield,
-    )
-
-    psip_wallNU = profile.psip_wallNU.m
-
-    # x_TPB is given in PzetaNU/psip_walNU so we need to multiply bu psip_wallNU
-    # and is the horizontal distance between the RW (or LW) and MA verticies
-    Pzetamin, Pzetamax = min(x_TPB), max(x_TPB)  # PzetaNU/psip_wallNU
-    Pzetamin *= psip_wallNU  # Pzeta in NUcanmom
-    Pzetamax *= psip_wallNU  # Pzeta in NUcanmom
-
-    PzetasNU = np.linspace(Pzetamin, Pzetamax, TPB_density)
-
-    profiles = deque([])
-
-    for PzetaNU in PzetasNU:
-
-        current_profile = Profile(
-            tokamak=tokamak,
-            species=profile.species,
-            mu=profile.muNU,
-            Pzeta=profile.Q(PzetaNU, "NUCanonical_momentum"),
-        )
-
-        profiles.append(current_profile)
-
-    return list(profiles)

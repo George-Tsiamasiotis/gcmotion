@@ -6,6 +6,7 @@ from tqdm import tqdm
 import numpy as np
 from collections import deque
 from gcmotion.utils.logger_setup import logger
+from gcmotion.entities.profile import Profile
 
 from gcmotion.scripts.fixed_points_bif.XO_points_classification import (
     XO_points_classification as xoc,
@@ -15,7 +16,7 @@ from gcmotion.utils.points_psi_to_P_theta import points_psi_to_P_theta
 from gcmotion.configuration.scripts_configuration import BifurcationConfig
 
 
-def bifurcation(profiles: list | deque, **kwargs) -> dict:
+def bifurcation(profile: Profile, COM_values: list | deque, **kwargs) -> dict:
     r"""
     Function that calculates all the fixed points of the GC Hamiltonian for multiple profiles
     with different :math:`P_{\zeta}`'s or :math:`\mu`'s and returns all the information in lists.
@@ -23,8 +24,10 @@ def bifurcation(profiles: list | deque, **kwargs) -> dict:
 
         Parameters
         ----------
-        profiles : list, deque
-            List of profile objects that contain Tokamak and Particle information.
+        profile : Profile
+            Profile object containing Tokamak information.
+        COM_values : list, deque
+            List of COM values :math:`P_{\zeta}`'s or :math:`\mu`'s in [NU].
         Other Parameters
         ----------
         thetalim : list, optional
@@ -93,14 +96,14 @@ def bifurcation(profiles: list | deque, **kwargs) -> dict:
     for key, value in kwargs.items():
         setattr(config, key, value)
 
-    first_profile = profiles[0]
-    last_profile = profiles[-1]
+    first_COM = COM_values[0]
+    last_COM = COM_values[-1]
 
     # Check if the partcles have different Pzeta0's
-    if first_profile.PzetaNU == last_profile.PzetaNU and config.which_COM == "Pzeta":
+    if first_COM == last_COM and config.which_COM == "Pzeta":
         print(f"\n\nEach profile in the list must have different Pzeta\n\n")
         return
-    elif first_profile.muNU == last_profile.muNU and config.which_COM == "mu":
+    elif first_COM == last_COM and config.which_COM == "mu":
         print(f"\n\nEach profile in the list must have different mu\n\n")
         return
     elif config.which_COM not in ["mu", "Pzeta"]:
@@ -122,12 +125,19 @@ def bifurcation(profiles: list | deque, **kwargs) -> dict:
     O_energies = deque()
     X_energies = deque()
 
-    N = len(profiles)
+    N = len(COM_values)
     selected_COMNU_str = config.which_COM + "NU"
 
-    for idx, profile in enumerate(tqdm(profiles, desc="Processing")):
+    if config.which_COM == "Pzeta":
+        COM_NU_units = "NUcanmom"
+    elif config.which_COM == "mu":
+        COM_NU_units = "NUmagnetic_moment"
 
-        current_COMNU = getattr(profile, selected_COMNU_str, "PzetaNU")
+    for idx, COM_valueNU in enumerate(tqdm(COM_values, desc="Processing")):
+
+        setattr(profile, selected_COMNU_str, profile.Q(COM_valueNU, COM_NU_units))
+
+        current_COMNU = COM_valueNU
 
         current_num_of_fp, current_fp, _ = fixed_points(profile=profile, **kwargs)
 

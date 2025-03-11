@@ -1,13 +1,15 @@
 from collections import deque
 from gcmotion.utils.logger_setup import logger
 import matplotlib.pyplot as plt
+from gcmotion.entities.profile import Profile
 
 from gcmotion.scripts.fixed_points_bif.bif_values_setup import set_up_bif_plot_values
 from gcmotion.plot._base._bif_base._bif_config import _TPBPlotConfig
 
 
 def _plot_trapped_passing_boundary(
-    profiles: list,
+    profile: Profile,
+    COM_values: list | deque,
     X_energies: list | deque,
     O_energies: list | deque,
     which_COM: str,
@@ -20,8 +22,10 @@ def _plot_trapped_passing_boundary(
 
     Parameters
     ----------
-    profiles : list, deque
-        List of profile objects.
+    profile : Profile
+        Profile object containing Tokamak information.
+    COM_values : list, deque
+        List of COM values :math:`P_{\zeta}`'s or :math:`\mu`'s in [NU].
     X_energies : deque, list
         The values of the Energies of the X points for each COM value.
     O_energies : deque, list
@@ -64,22 +68,24 @@ def _plot_trapped_passing_boundary(
 
     # X O Energies bifurcation plot
     COM_plotX, X_energies_plot = set_up_bif_plot_values(
-        profiles=profiles,
+        profile=profile,
+        COM_values=COM_values,
         y_values=X_energies,
         which_COM=which_COM,
         tilt_energies=tilted_energies_loc,
         input_energy_units=input_energy_units,
     )
     COM_plotO, O_energies_plot = set_up_bif_plot_values(
-        profiles=profiles,
+        profile=profile,
+        COM_values=COM_values,
         y_values=O_energies,
         which_COM=which_COM,
         tilt_energies=tilted_energies_loc,
         input_energy_units=input_energy_units,
     )
 
-    x_label_loc, y_label_loc, xX_values, yX_values, xO_values, yO_values = _set_up_tpb_base_plot(
-        profiles=profiles,
+    set_up_dict = _set_up_tpb_base_plot(
+        profile=profile,
         COM_plotO=COM_plotO,
         O_energies_plot=O_energies_plot,
         COM_plotX=COM_plotX,
@@ -87,6 +93,13 @@ def _plot_trapped_passing_boundary(
         which_COM=which_COM,
         label_energy_units=input_energy_units,
     )
+
+    x_label_loc = set_up_dict["x_label_loc"]
+    y_label_loc = set_up_dict["y_label_loc"]
+    xX_values = set_up_dict["xX_values"]
+    yX_values = set_up_dict["yX_values"]
+    xO_values = set_up_dict["xO_values"]
+    yO_values = set_up_dict["yO_values"]
 
     which_COM_title = _setup_which_COM_title(which_COM)
 
@@ -125,7 +138,7 @@ def _plot_trapped_passing_boundary(
 
 
 def _set_up_tpb_base_plot(
-    profiles: list,
+    profile: Profile,
     COM_plotO: list,
     O_energies_plot: list,
     COM_plotX: list,
@@ -140,14 +153,14 @@ def _set_up_tpb_base_plot(
 
     if which_COM == "mu":
         x_label_loc = r"$E-{\mu}B_0$" + f"[{label_energy_units}]"
-        y_label_loc = r"$\mu$" + f"[{profiles[0].muNU.units}]"
+        y_label_loc = r"$\mu$" + f"[{profile.muNU.units}]"
         xO_values = O_energies_plot
         yO_values = COM_plotO
         xX_values = X_energies_plot
         yX_values = COM_plotX
 
     elif which_COM == "Pzeta":
-        x_label_loc = r"$P_{\zeta}$" + f"[{profiles[0].PzetaNU.units}]"
+        x_label_loc = r"$P_{\zeta}$" + f"[{profile.PzetaNU.units}]"
         y_label_loc = f"Energies [{label_energy_units}]"
         xO_values = COM_plotO
         yO_values = O_energies_plot
@@ -160,7 +173,14 @@ def _set_up_tpb_base_plot(
             \nABORTING trapped passing boundary plot...\n"""
         )
 
-    return x_label_loc, y_label_loc, xX_values, yX_values, xO_values, yO_values
+    return {
+        "x_label_loc": x_label_loc,
+        "y_label_loc": y_label_loc,
+        "xX_values": xX_values,
+        "yX_values": yX_values,
+        "xO_values": xO_values,
+        "yO_values": yO_values,
+    }
 
 
 def _setup_which_COM_title(which_COM: str):
