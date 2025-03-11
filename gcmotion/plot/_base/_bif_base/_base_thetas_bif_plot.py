@@ -60,7 +60,7 @@ def _thetas_bif_plot(
     ax.ticklabel_format(style="sci", axis="x", scilimits=(0, 0))
 
     ax.set_ylabel(
-        r"$\theta_s$ Fixed",
+        r"$\theta_s$ Fixed [rad]",
         rotation=config.theta_ylabel_rotation,
         fontsize=config.theta_ylabel_fontsize,
     )

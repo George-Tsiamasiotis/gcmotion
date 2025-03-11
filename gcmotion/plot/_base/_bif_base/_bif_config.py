@@ -26,26 +26,28 @@ class _ThetasFixedPlotConfig:
 
 
 @dataclass
-class _PThetasFixedPlotConfig:
-    # Pthetas of X points keywords
-    Pthetas_X_marker: str = "."
-    Pthetas_X_markersize: float = 2
-    Pthetas_X_markercolor: str = "#E65100"
-    # Pthetas of O points keywords
-    Pthetas_O_marker: str = "."
-    Pthetas_O_markersize: float = 2
-    Pthetas_O_markercolor: str = "#1f77b4"
+class _PsisFixedPlotConfig:
+    # psis of X points keywords
+    psis_X_marker: str = "."
+    psis_X_markersize: float = 2
+    psis_X_markercolor: str = "#E65100"
+    # psis of O points keywords
+    psis_O_marker: str = "."
+    psis_O_markersize: float = 2
+    psis_O_markercolor: str = "#1f77b4"
     # Label keywords
-    Ptheta_ylabel_rotation: int = 90
-    Ptheta_ylabel_fontsize: float = 10
+    psi_ylabel_rotation: int = 90
+    psi_ylabel_fontsize: float = 10
     # Legend keywords
-    Ptheta_legend: bool = True
-    Ptheta_legend_loc: str = "lower left"
+    psi_legend: bool = True
+    psi_legend_loc: str = "lower left"
     # Wall dashed line limit keywords
     wall_line_color: str = "black"
     wall_linestyle: str = "dashed"
     wall_linewidth: int = 1
     wall_line_alpha: float = 0.5
+    flux_units: str = "NUmf"
+    canmon_units: str = "NUcanmom"
 
 
 @dataclass
@@ -89,3 +91,5 @@ class _TPBPlotConfig:
     tpb_ylabel_rotation: int = 90
     # Legend keywords
     tpb_legend: bool = True
+    # Units keywords
+    energy_units: str = "NUJoule"
