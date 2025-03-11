@@ -10,11 +10,13 @@ import xarray as xr
 
 from abc import ABC, abstractmethod
 from termcolor import colored
-from math import sqrt, atan, asinh
+from math import sqrt, atan
 from scipy.special import hyp2f1
-from scipy.interpolate import UnivariateSpline
+from scipy.interpolate import UnivariateSpline, InterpolatedUnivariateSpline
 
 from gcmotion.utils.logger_setup import logger
+from gcmotion.utils.precompute import precompute_hyp2f1
+from gcmotion.configuration.scripts_configuration import PrecomputedConfig
 
 
 # Quantity alias for type annotations
@@ -29,21 +31,21 @@ class QFactor(ABC):
         r"""Contains all the needed parameters."""
 
     @abstractmethod
-    def solverqNU(self, psi: float) -> float:
+    def solverqNU(self, psi: float | np.ndarray) -> float | np.ndarray:
         r"""Calculates :math:`q(\psi)`.
-        Input must be float, in [NU].
+        Input and output are both floats or np.ndarrays, in [NU].
 
         Used inside the solver.
 
         Parameters
         ----------
-        psi : float
-            Value of :math:`\psi` in [NU].
+        psi : float | np.ndarray
+            Value(s) of :math:`\psi` in NU.
 
         Returns
         -------
-        float
-            Calculated :math:`q(\psi)`.
+        float | np.ndarray
+            Calculated :math:`\psi_p(\psi)` in NU.
 
         """
 
@@ -80,6 +82,9 @@ class NumericalQFactor(QFactor):
 
     """
 
+    is_analytical = False
+    is_numerical = True
+
     def __init__(self, filename: str):
         # Open the dataset
         parent = os.path.dirname(__file__)
@@ -115,10 +120,11 @@ class NumericalQFactor(QFactor):
         self.q0 = q_values[0]
         self.q_wall = q_values[-1]
 
-        self.is_numerical = True
-
-    def solverqNU(self, psi: float) -> float:
-        return self.qspline(psi)
+    def solverqNU(self, psi: float | np.ndarray) -> float | np.ndarray:
+        if isinstance(psi, float):
+            return float(self.qspline(psi))
+        elif isinstance(psi, np.ndarray):
+            return self.qspline(psi)
 
     def psipNU(self, psi: float | np.ndarray) -> float | np.ndarray:
         if isinstance(psi, float):
@@ -134,15 +140,17 @@ class Unity(QFactor):
     r"""Initializes an object q with :math:`q(\psi) = 1`
     and :math:`\psi_p=\psi`."""
 
+    is_analytical = True
+    is_numerical = False
+
     def __init__(self):
-        self.is_analytic = True
         pass
 
-    def solverqNU(self, psi):
+    def solverqNU(self, psi: float | np.ndarray) -> float | np.ndarray:
         r"""Always returns 1."""
         return psi / psi
 
-    def psipNU(self, psi):
+    def psipNU(self, psi: float | np.ndarray) -> float | np.ndarray:
         """Always returns `psi`."""
         return psi
 
@@ -176,10 +184,11 @@ class Parabolic(QFactor):
         q-value at the magnetic axis.
     q_wall : float
         q_value at the wall.
-    n : int
-        Order of equillibrium (1: peaked, 2: round, 4: flat).
 
     """
+
+    is_analytical = True
+    is_numerical = False
 
     def __init__(
         self,
@@ -206,14 +215,12 @@ class Parabolic(QFactor):
         self.q0 = q0
         self.q_wall = q_wall
 
-        self.is_analytic = True
-
-    def solverqNU(self, psi):
+    def solverqNU(self, psi: float | np.ndarray) -> float | np.ndarray:
         return (
             self.q0 + (self.q_wall - self.q0) * (psi / self._psi_wallNU) ** 2
         )
 
-    def psipNU(self, psi):
+    def psipNU(self, psi: float | np.ndarray) -> float | np.ndarray:
         if isinstance(psi, float):
             return (self._psi_wallNU / (self.sra * self.srb)) * atan(
                 self.srb * psi / (self.sra * self._psi_wallNU)
@@ -264,6 +271,9 @@ class Hypergeometric(QFactor):
         Order of equillibrium (1: peaked, 2: round, 4: flat).
     """
 
+    is_analytical = True
+    is_numerical = False
+
     def __init__(
         self,
         a: Quantity,
@@ -290,32 +300,81 @@ class Hypergeometric(QFactor):
         self.q_wall = q_wall
         self.n = n
 
-        self.is_analytic = True
-
-    def solverqNU(self, psi):
+    def solverqNU(self, psi: float | np.ndarray) -> float | np.ndarray:
         return self.q0 * (
             1
             + ((self.q_wall / self.q0) ** self.n - 1)
             * (psi / self._psi_wallNU) ** self.n
         ) ** (1 / self.n)
 
-    def psipNU(self, psi):
+    def psipNU(self, psi: float | np.ndarray) -> float | np.ndarray:
 
         a = b = 1 / self.n
         c = 1 + 1 / self.n
         z = (1 - (self.q_wall / self.q0) ** self.n) * (
             psi / self._psi_wallNU
         ) ** self.n
-        if isinstance(psi, (int, float)):
-            return psi / self.q0 * float(hyp2f1(a, b, c, z))
-        else:
-            return psi / self.q0 * hyp2f1(a, b, c, z)
+        return psi / self.q0 * hyp2f1(a, b, c, z)
 
     def __repr__(self):
         return (
             colored("Hypergeometric", "light_blue")
             + f": q0={self.q0:.4g}, q_wall={self.q_wall:.4g}, n={self.n:.4g}."
         )
+
+
+class PrecomputedHypergeometric(Hypergeometric):
+    r"""Same as the Hypergeometric qfactor but with precomputed hyp2f1.
+
+    Since the calculation of hyp2f1 is by a lot slower than any other
+    calculation, it makes sense to precompute an array with all the needed
+    values and make a spline on it.
+
+    Warning
+    -------
+    The z-values span is set to the corresponding values for psi between 0 and
+    psi_wall. If more values are needed, zspan must be adjusted accordingly,
+    otherwise the spline simply extrapolates.
+    """
+
+    def __init__(
+        self,
+        a: Quantity,
+        B0: Quantity,
+        q0: float,
+        q_wall: float,
+        n: int,
+    ):
+
+        super().__init__(a=a, B0=B0, q0=q0, q_wall=q_wall, n=n)
+
+        # Make z spline
+        config = PrecomputedConfig()
+        psimax = config.psi_max * self.psi_wall.m
+        zlower = (1 - (self.q_wall / self.q0) ** self.n) * (
+            psimax / self.psi_wall.m
+        ) ** self.n
+        zspan = (zlower, 0)
+        z, values = precompute_hyp2f1(n=n, zspan=zspan)
+        self.z_spline = InterpolatedUnivariateSpline(x=z, y=values)
+        logger.info("Using Precomputed Hyp2F1 values.")
+
+    def psipNU(self, psi: float | np.ndarray) -> float | np.ndarray:
+
+        z = (1 - (self.q_wall / self.q0) ** self.n) * (
+            psi / self._psi_wallNU
+        ) ** self.n
+        hyp = self.z_spline(z)
+        return psi / self.q0 * hyp
+
+    def __repr__(self):
+        return (
+            colored("Hypergeometric(Precomputed)", "light_blue")
+            + f": q0={self.q0:.4g}, q_wall={self.q_wall:.4g}, n={self.n:.4g}."
+        )
+
+
+# ============================================================================
 
 
 class SmartPositive(NumericalQFactor):
@@ -393,7 +452,7 @@ class DTTPositive(NumericalQFactor):
 
     def __repr__(self):
         return (
-            colored("DTT - Negative", "light_blue")
+            colored("DTT - Positive", "light_blue")
             + f": q0={self.q0:.4g}, q_wall={self.q_wall:.4g}."
         )
 
@@ -418,54 +477,54 @@ class DTTNegative(NumericalQFactor):
         )
 
 
-class Chris(QFactor):
-    r"""Chris's thesis qfactor."""
-
-    def __init__(self, B0: Quantity, a: Quantity, q0: float, q_wall: float):
-
-        # SI Quantities
-        self.B0 = B0.to("Tesla")
-        self.a = a.to("meters")
-        self.psi_wall = (B0 * a**2 / 2).to("Magnetic_flux")
-
-        # [NU] Conversions
-        self.psi_wallNU = self.psi_wall.to("NUMagnetic_flux")
-
-        # Unitless quantities, makes it a bit faster if defined here
-        for key, value in self.__dict__.copy().items():
-            self.__setattr__("_" + key, value.magnitude)
-
-        # Purely Numerical Quantities
-        self.q0 = q0
-        self.q_wall = q_wall
-
-        self.is_analytic = True
-
-    def solverqNU(self, psi: float):
-
-        return self.q0 * (
-            1
-            + (-1 + (self.q_wall / self.q0) ** 2) * (psi / self._psi_wall) ** 2
-        ) ** (1 / 2)
-
-    def psipNU(self, psi: float):
-        if isinstance(psi, (int, float)):
-            sinh = asinh(
-                (psi * sqrt(-1 + (self.q_wall / self.q0) ** 2))
-                / self._psi_wall
-            )
-        else:
-            sinh = np.arcsinh(
-                (psi * sqrt(-1 + (self.q_wall / self.q0) ** 2))
-                / self._psi_wall
-            )
-        return (
-            self._psi_wall
-            / (self.q0 * sqrt(-1 + (self.q_wall / self.q0) ** 2))
-        ) * sinh
-
-    def __repr__(self):
-        return (
-            colored("Chris's q-factor", "light_blue")
-            + f": q0={self.q0:.4g}, q_wall={self.q_wall:.4g}"
-        )
+# class Chris(QFactor):
+#     r"""Chris's thesis qfactor."""
+#
+#     def __init__(self, B0: Quantity, a: Quantity, q0: float, q_wall: float):
+#
+#         # SI Quantities
+#         self.B0 = B0.to("Tesla")
+#         self.a = a.to("meters")
+#         self.psi_wall = (B0 * a**2 / 2).to("Magnetic_flux")
+#
+#         # [NU] Conversions
+#         self.psi_wallNU = self.psi_wall.to("NUMagnetic_flux")
+#
+#         # Unitless quantities, makes it a bit faster if defined here
+#         for key, value in self.__dict__.copy().items():
+#             self.__setattr__("_" + key, value.magnitude)
+#
+#         # Purely Numerical Quantities
+#         self.q0 = q0
+#         self.q_wall = q_wall
+#
+#         self.is_analytic = True
+#
+#     def solverqNU(self, psi: float):
+#
+#         return self.q0 * (
+#             1
+#             + (-1 + (self.q_wall / self.q0) ** 2) * (psi / self._psi_wall) ** 2
+#         ) ** (1 / 2)
+#
+#     def psipNU(self, psi: float):
+#         if isinstance(psi, (int, float)):
+#             sinh = asinh(
+#                 (psi * sqrt(-1 + (self.q_wall / self.q0) ** 2))
+#                 / self._psi_wall
+#             )
+#         else:
+#             sinh = np.arcsinh(
+#                 (psi * sqrt(-1 + (self.q_wall / self.q0) ** 2))
+#                 / self._psi_wall
+#             )
+#         return (
+#             self._psi_wall
+#             / (self.q0 * sqrt(-1 + (self.q_wall / self.q0) ** 2))
+#         ) * sinh
+#
+#     def __repr__(self):
+#         return (
+#             colored("Chris's q-factor", "light_blue")
+#             + f": q0={self.q0:.4g}, q_wall={self.q_wall:.4g}"
+#         )
