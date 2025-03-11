@@ -4,7 +4,7 @@ from gcmotion.utils.logger_setup import logger
 
 from gcmotion.entities.tokamak import Tokamak
 from gcmotion.entities.profile import Profile
-from gcmotion.utils.fixed_points_bif.bif_values_setup import set_up_bif_plot_values
+from gcmotion.scripts.fixed_points_bif.bif_values_setup import set_up_bif_plot_values
 
 from gcmotion.configuration.plot_parameters import ParabolasPlotConfig
 

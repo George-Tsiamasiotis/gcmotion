@@ -11,7 +11,7 @@ from gcmotion.plot._base._bif_base._base_thetas_bif_plot import _thetas_bif_plot
 from gcmotion.plot._base._bif_base._base_P_thetas_bif_plot import _P_thetas_bif_plot
 from gcmotion.plot._base._bif_base._base_ndfp_bif_plot import _ndfp_bif_plot
 from gcmotion.plot._base._bif_base._base_tpb_plot import _plot_trapped_passing_boundary
-from gcmotion.scripts.bifurcation import bifurcation
+from gcmotion.scripts.fixed_points_bif.bifurcation import bifurcation
 
 from gcmotion.entities.profile import Profile
 from collections import deque

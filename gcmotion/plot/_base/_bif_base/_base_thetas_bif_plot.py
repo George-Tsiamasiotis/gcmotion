@@ -3,7 +3,7 @@ from collections import deque
 from gcmotion.utils.logger_setup import logger
 
 from gcmotion.plot._base._bif_base._bif_config import _ThetasFixedPlotConfig
-from gcmotion.utils.fixed_points_bif.bif_values_setup import set_up_bif_plot_values
+from gcmotion.scripts.fixed_points_bif.bif_values_setup import set_up_bif_plot_values
 
 
 def _thetas_bif_plot(

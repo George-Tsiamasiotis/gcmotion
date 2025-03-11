@@ -6,7 +6,7 @@ single initial condition.
 from scipy.optimize import differential_evolution, fsolve
 from collections import deque
 from gcmotion.entities.profile import Profile
-from gcmotion.utils.fixed_points_bif.fp_system import system
+from gcmotion.scripts.fixed_points_bif.fp_system import system
 
 
 # Function to locate a single fixed point
