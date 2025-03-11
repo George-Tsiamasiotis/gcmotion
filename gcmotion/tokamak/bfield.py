@@ -8,7 +8,7 @@ import pint
 import numpy as np
 import xarray as xr
 from termcolor import colored
-from scipy.interpolate import UnivariateSpline, RectBivariateSpline
+from scipy.interpolate import RectBivariateSpline, make_interp_spline
 from time import time
 
 from gcmotion.utils.logger_setup import logger
@@ -142,6 +142,17 @@ class NumericalMagneticField(MagneticField):
         i_values = dataset.I_norm.data
         g_values = dataset.g_norm.data
 
+        # Extrapolate psi to containn psi=0
+        psi_values = np.insert(psi_values, 0, 0)
+
+        # Extrapolate all arrays so their value at the axis is the same as
+        # their value on the closest point to the axis to avoid errors when
+        # integrating.
+        i_values = np.insert(i_values, 0, i_values[0])
+        g_values = np.insert(g_values, 0, g_values[0])
+        axis_values = np.full((b_values.shape[0], 1), 1)
+        b_values = np.hstack((axis_values, b_values))
+
         # Create splines
         self.b_spline = RectBivariateSpline(
             x=theta_values,
@@ -160,17 +171,19 @@ class NumericalMagneticField(MagneticField):
             dx=1,
             dy=0,
         )
-        self.i_spline = UnivariateSpline(
+        self.i_spline = make_interp_spline(
             x=psi_values,
             y=i_values,
+            k=NumericalDatasetsConfig.currents_spline_order,
         )
-        self.g_spline = UnivariateSpline(
+        self.g_spline = make_interp_spline(
             x=psi_values,
             y=g_values,
+            k=NumericalDatasetsConfig.currents_spline_order,
         )
 
-        self.ider_spline = self.i_spline.derivative(n=1)
-        self.gder_spline = self.g_spline.derivative(n=1)
+        self.ider_spline = self.i_spline.derivative(nu=1)
+        self.gder_spline = self.g_spline.derivative(nu=1)
 
         # Useful attributes
         Q = pint.get_application_registry().Quantity
