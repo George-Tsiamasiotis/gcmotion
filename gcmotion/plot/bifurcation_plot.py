@@ -144,7 +144,7 @@ def bifurcation_plot(profile: Profile, COM_values: list | deque, **kwargs):
         fontsize=config.xlabel_fontsize,
     )
     fig.suptitle(
-        "Fixed Points Bifurcation Diagram",
+        f"Fixed Points Bifurcation Diagram ({profile.bfield.plain_name})",
         fontsize=config.suptitle_fontsize,
         color=config.suptitle_color,
     )
