@@ -94,7 +94,7 @@ def fixed_points(profile: Profile, **kwargs) -> tuple[list, list, list]:
     logger.info(f"Converted psi_lim from 'NUpsi_wall' units to {psi_lim} 'NUMagnetic_flux units'")
 
     if config.fp_only_confined:
-        psi_lim[1] = profile.psi_wall.to("NUMagnetic_flux").m
+        psi_lim[1] = profile.psi_wallNU.m
         logger.info(f"Set psi_max={psi_lim[1]} for only confined search")
 
     bounds, initial_conditions, fixed_points = _set_up_fixed_points(

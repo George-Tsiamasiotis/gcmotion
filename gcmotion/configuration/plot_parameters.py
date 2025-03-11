@@ -240,6 +240,10 @@ class BifurcationPlotConfig:
     plot_energy_bif: bool = True
     plot_ndfp: bool = False
     which_COM: str = "Pzeta"
+    # Units
+    energy_units: str = "NUJoule"
+    flux_units: str = "NUmf"
+    canmon_units: str = "NUcanmom"
 
 
 @dataclass

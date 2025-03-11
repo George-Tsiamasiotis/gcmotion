@@ -87,7 +87,7 @@ def bifurcation(profile: Profile, COM_values: list | deque, **kwargs) -> dict:
         -------
         dict
             Dict where each value is a list containing the lists of all the :math:`theta`'s
-            fixed, all the :math:`P_{theta}`'s fixed and the number of fixed points found for
+            fixed, all the :math:`\psi`'s fixed and the number of fixed points found for
             each :math:`P_{\zeta}`.
     """
 
@@ -117,10 +117,10 @@ def bifurcation(profile: Profile, COM_values: list | deque, **kwargs) -> dict:
     O_points = deque()
 
     X_thetas = deque()
-    X_P_thetas = deque()
+    X_psis = deque()
 
     O_thetas = deque()
-    O_P_thetas = deque()
+    O_psis = deque()
 
     O_energies = deque()
     X_energies = deque()
@@ -150,24 +150,20 @@ def bifurcation(profile: Profile, COM_values: list | deque, **kwargs) -> dict:
         current_X_points, current_O_points = xoc(
             unclassified_fixed_points=current_fp,
             profile=profile,
-            to_P_thetas=not config.calc_energies,
+            to_P_thetas=False,
         )
         logger.info(
             f"Classified fixed points ['NUCanonical_momentum'] for bifurcation script with {selected_COMNU_str}={current_COMNU}"
         )
 
+        # Unpack points
+        current_X_thetas, current_X_psis = zip(*current_X_points) if current_X_points else ([], [])
+        current_O_thetas, current_O_psis = zip(*current_O_points) if current_O_points else ([], [])
+
+        current_O_psis = np.array(current_O_psis)
+        current_X_psis = np.array(current_X_psis)
+
         if config.calc_energies:
-
-            # Unpack points
-            current_X_thetas, current_X_psis = (
-                zip(*current_X_points) if current_X_points else ([], [])
-            )
-            current_O_thetas, current_O_psis = (
-                zip(*current_O_points) if current_O_points else ([], [])
-            )
-
-            current_O_psis = np.array(current_O_psis)
-            current_X_psis = np.array(current_X_psis)
 
             current_O_energies = profile.findEnergy(
                 psi=profile.Q(current_O_psis, "NUMagnetic_flux"),
@@ -194,19 +190,6 @@ def bifurcation(profile: Profile, COM_values: list | deque, **kwargs) -> dict:
                 f"Calculated energies ['{config.energy_units}'] of fixed points for bifurcation script with {selected_COMNU_str}={current_COMNU}"
             )
 
-            # Turn psis to P_thetas after having calculated the energy
-            current_X_points = points_psi_to_P_theta(current_X_points, profile=profile)
-
-            current_O_points = points_psi_to_P_theta(current_O_points, profile=profile)
-
-        # Convert deque to numpy arrays for easy manipulation
-        current_X_thetas, current_X_P_thetas = (
-            zip(*current_X_points) if current_X_points else ([], [])
-        )
-        current_O_thetas, current_O_P_thetas = (
-            zip(*current_O_points) if current_O_points else ([], [])
-        )
-
         if config.bif_info:
             logger.info(
                 f"\nCurrent Step: {idx+1}/{N} ({100*(idx+1)/N:.1f}%) at {selected_COMNU_str} = {current_COMNU} with {current_num_of_fp} fixed points"
@@ -219,6 +202,11 @@ def bifurcation(profile: Profile, COM_values: list | deque, **kwargs) -> dict:
                 f"Current O Points: {[[float(thetaO),float(P_thetaO)] for thetaO,P_thetaO in current_O_points]}\n"
             )
 
+        # Convert psis to requested units
+        logger.info(f"Converting form [NUmf] to requested units {config.flux_units}")
+        current_X_psis = profile.Q(current_X_psis, "NUmf").to(config.flux_units).m
+        current_O_psis = profile.Q(current_O_psis, "NUmf").to(config.flux_units).m
+
         num_of_XP.append(len(current_X_points))
         num_of_OP.append(len(current_O_points))
 
@@ -226,16 +214,16 @@ def bifurcation(profile: Profile, COM_values: list | deque, **kwargs) -> dict:
         O_points.append(current_O_points)
 
         X_thetas.append(current_X_thetas)
-        X_P_thetas.append(current_X_P_thetas)
+        X_psis.append(current_X_psis)
 
         O_thetas.append(current_O_thetas)
-        O_P_thetas.append(current_O_P_thetas)
+        O_psis.append(current_O_psis)
 
     return {
         "X_thetas": X_thetas,
-        "X_P_thetas": X_P_thetas,
+        "X_psis": X_psis,
         "O_thetas": O_thetas,
-        "O_P_thetas": O_P_thetas,
+        "O_psis": O_psis,
         "num_of_XP": num_of_XP,
         "num_of_OP": num_of_OP,
         "X_energies": X_energies,

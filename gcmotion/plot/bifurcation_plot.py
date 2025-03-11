@@ -9,7 +9,7 @@ from gcmotion.utils.logger_setup import logger
 from gcmotion.entities.profile import Profile
 
 from gcmotion.plot._base._bif_base._base_thetas_bif_plot import _thetas_bif_plot
-from gcmotion.plot._base._bif_base._base_P_thetas_bif_plot import _P_thetas_bif_plot
+from gcmotion.plot._base._bif_base._base_psis_bif_plot import _psis_bif_plot
 from gcmotion.plot._base._bif_base._base_ndfp_bif_plot import _ndfp_bif_plot
 from gcmotion.plot._base._bif_base._base_tpb_plot import _plot_trapped_passing_boundary
 from gcmotion.scripts.fixed_points_bif.bifurcation import bifurcation
@@ -21,7 +21,7 @@ from gcmotion.configuration.plot_parameters import BifurcationPlotConfig
 
 def bifurcation_plot(profile: Profile, COM_values: list | deque, **kwargs):
     r"""Draws the bifurcation diagrams for the :math:`theta`'s  fixed,
-    the :math:`P_{theta}`'s fixed and the number of fixed points found for
+    the :math:`\psi`'s fixed and the number of fixed points found for
     each :math:`\mu` or :math:`P_{\zeta}`.
 
     :meta public:
@@ -111,9 +111,9 @@ def bifurcation_plot(profile: Profile, COM_values: list | deque, **kwargs):
 
     # Unpack bifurcation output
     X_thetas = bifurcation_output["X_thetas"]
-    X_P_thetas = bifurcation_output["X_P_thetas"]
+    X_psis = bifurcation_output["X_psis"]
     O_thetas = bifurcation_output["O_thetas"]
-    O_P_thetas = bifurcation_output["O_P_thetas"]
+    O_psis = bifurcation_output["O_psis"]
     num_of_XP = bifurcation_output["num_of_XP"]
     num_of_OP = bifurcation_output["num_of_OP"]
     X_energies = bifurcation_output["X_energies"]
@@ -169,11 +169,11 @@ def bifurcation_plot(profile: Profile, COM_values: list | deque, **kwargs):
     )
 
     # P_theta Fixed Bifurcation
-    _P_thetas_bif_plot(
+    _psis_bif_plot(
         profile=profile,
         COM_values=COM_values,
-        X_P_thetas=X_P_thetas,
-        O_P_thetas=O_P_thetas,
+        X_psis=X_psis,
+        O_psis=O_psis,
         ax=ax_P_theta,
         **kwargs,
     )

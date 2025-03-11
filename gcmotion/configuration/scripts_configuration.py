@@ -64,6 +64,7 @@ class FixedPointsConfig:
 class BifurcationConfig:
     bif_info: bool = False
     calc_energies: bool = False
-    energy_units: str = "keV"
+    energy_units: str = "NUJoule"
+    flux_units: str = "NUmf"
     energies_info: bool = False
     which_COM: str = "Pzeta"
