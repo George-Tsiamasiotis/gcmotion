@@ -154,15 +154,15 @@ class FrequencyAnalysis:
         # orbits that managed to calculate their frequencies
         for mu in self.muspan:
             pzeta_pbar.reset()
-            profile.muNU = mu
+            profile.muNU = profile.Q(mu, "NUMagnetic_moment")
 
             for Pzeta in self.Pzetaspan:
                 energy_pbar.reset()
-                profile.PzetaNU = Pzeta
+                profile.PzetaNU = profile.Q(Pzeta, "NUCanonical_momentum")
                 MainContour = main_contour(profile, self.psilim)
 
                 for E in self.Espan:
-                    profile.ENU = E
+                    profile.ENU = profile.Q(E, "NUJoule")
 
                     # Profile Analysis returs either a list with found orbits,
                     # or None
@@ -242,6 +242,9 @@ class FrequencyAnalysis:
 
     def to_dataframe(self):
 
+        for orb in self.orbits:
+            orb.calculate_Jtheta()
+
         d = {
             "Energy": pd.Series([orb.E for orb in self.orbits]),
             "Pzeta": pd.Series([orb.Pzeta for orb in self.orbits]),
@@ -250,6 +253,7 @@ class FrequencyAnalysis:
             "omega_theta": pd.Series([orb.omega_theta for orb in self.orbits]),
             "omega_zeta": pd.Series([orb.omega_zeta for orb in self.orbits]),
             "orbit_type": pd.Series([orb.string for orb in self.orbits]),
+            "Jtheta": pd.Series([orb.Jtheta for orb in self.orbits]),
             # "color": pd.Series([orb.color for orb in self.orbits]),
         }
 
