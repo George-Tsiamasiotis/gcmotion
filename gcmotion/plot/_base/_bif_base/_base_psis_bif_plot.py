@@ -76,7 +76,7 @@ def _psis_bif_plot(
         fontsize=config.psi_ylabel_fontsize,
     )
 
-    ax.set_ylim(0, ul)
+    ax.set_ylim(0.95 * min(combined_psi_plot), ul)
 
     ax.scatter(
         COM_plotX,
@@ -111,7 +111,7 @@ def _psis_bif_plot(
     logger.debug("\t\tAdding secondary Ptheta ax to bifurcation diagram.")
     ax2 = ax.twinx()
 
-    psiticks = profile.Q(ax.get_yticks(), config.flux_units)
+    psiticks = profile.Q(ax.get_ylim(), config.flux_units)
     Pthetamin = profile.findPtheta(psiticks.min(), units=config.canmon_units)
     Pthetamax = profile.findPtheta(psiticks.max(), units=config.canmon_units)
 

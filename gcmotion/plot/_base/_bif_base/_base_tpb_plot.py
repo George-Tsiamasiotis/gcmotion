@@ -104,7 +104,7 @@ def _plot_trapped_passing_boundary(
     which_COM_title = _setup_which_COM_title(which_COM)
 
     ax.set_title(
-        rf"Trapped Passing Boundary for {which_COM_title} Bifurcation",
+        rf"Trapped Passing Boundary for {which_COM_title} Bifurcation ({profile.bfield.plain_name})",
         fontsize=config.tpb_title_fontsize,
         color=config.tpb_title_color,
     )
