@@ -152,7 +152,7 @@ def bifurcation(profile: Profile, COM_values: list | deque, **kwargs) -> dict:
             to_P_thetas=False,
         )
         logger.info(
-            f"Classified fixed points ['NUCanonical_momentum'] for bifurcation script with {selected_COMNU_str}={current_COMNU}"
+            f"Classified fixed points ['NUmf'] for bifurcation script with {selected_COMNU_str}={current_COMNU}"
         )
 
         # Unpack points

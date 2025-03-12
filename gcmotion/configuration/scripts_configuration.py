@@ -68,3 +68,13 @@ class BifurcationConfig:
     flux_units: str = "NUmf"
     energies_info: bool = False
     which_COM: str = "Pzeta"
+
+
+# --------------- Reasonances Range (Omega Max) Configurations-----------------
+
+
+@dataclass
+class ResRangeConfig:
+    freq_units: str = "NUw0"
+    delta: float = 1e-5
+    which_COM: str = "Pzeta"
