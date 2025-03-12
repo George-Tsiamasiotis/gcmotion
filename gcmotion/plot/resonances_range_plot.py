@@ -113,7 +113,7 @@ def res_range_plot(profile: Profile, COM_values: list | deque, **kwargs):
     selected_COM_units = selected_COM_Q.units
 
     ax.set_title(
-        rf"Island Resonance Range - Max O Points $\omega_\theta$ ({profile.bfield.plain_name})",
+        rf"Island Resonance Range - $\omega_\theta$ at O Points ({profile.bfield.plain_name})",
         fontsize=config.titlesize,
         color=config.titlecolor,
     )
@@ -121,7 +121,7 @@ def res_range_plot(profile: Profile, COM_values: list | deque, **kwargs):
     ax.scatter(
         COM_plot,
         omegas_plot,
-        marker=config.marke_style,
+        marker=config.marker_style,
         color=config.marker_color,
         s=config.marker_size,
     )
@@ -134,7 +134,7 @@ def res_range_plot(profile: Profile, COM_values: list | deque, **kwargs):
     )
 
     ax.set_ylabel(
-        rf"$\omega_\theta$ [{config.freq_units}]",
+        r"$\omega_\theta^{max}$" + f" [{config.freq_units}]",
         fontsize=config.ylabel_fontsize,
         rotation=config.ylabel_rotation,
     )

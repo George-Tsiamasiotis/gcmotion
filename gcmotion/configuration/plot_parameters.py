@@ -304,7 +304,7 @@ class ResRangePlotConfig:
     # Scatter kw
     marker_size: float = 3
     marker_color: str = "green"
-    marke_style: str = "o"
+    marker_style: str = "o"
     # Omegas Script Keywords
     freq_units: str = "NUw0"
     which_COM: str = "Pzeta"
