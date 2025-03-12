@@ -1,17 +1,21 @@
-from collections import deque
+r"""Simple script that draws the energy of the distinct fixed points
+for each :math:`\mu` or :math:`P_{\zeta}` of the bifurcation analysis"""
+
 from gcmotion.utils.logger_setup import logger
 import matplotlib.pyplot as plt
 from gcmotion.entities.profile import Profile
 
-from gcmotion.scripts.fixed_points_bif.bif_values_setup import set_up_bif_plot_values
+from gcmotion.scripts.fixed_points_bif.bif_values_setup import (
+    set_up_bif_plot_values,
+)
 from gcmotion.plot._base._bif_base._bif_config import _TPBPlotConfig
 
 
 def _plot_trapped_passing_boundary(
     profile: Profile,
-    COM_values: list | deque,
-    X_energies: list | deque,
-    O_energies: list | deque,
+    COM_values: list,
+    X_energies: list,
+    O_energies: list,
     which_COM: str,
     input_energy_units: str,
     ax=None,
@@ -31,8 +35,9 @@ def _plot_trapped_passing_boundary(
     O_energies : deque, list
         The values of the Energies of the O points for each COM value.
     which_COM : str
-        String that indicates with respect to which constant of motion (COM) :math:`\mu`
-        or :math:`P_{\zeta}` the energies of the fixed points are plotted.
+        String that indicates with respect to which constant of motion (COM)
+        :math:`\mu` or :math:`P_{\zeta}` the energies of the fixed points are
+        plotted.
 
     Notes
     -----
@@ -59,8 +64,9 @@ def _plot_trapped_passing_boundary(
 
         fig, ax = plt.subplots(1, 1, **fig_kw)
 
-    # If the selcted COM is mu we need to tilt the energies in the plot by subtracting
-    # mu*B0 which is done in set_up_bif_plot_values if tilt_energies = True
+    # If the selcted COM is mu we need to tilt the energies in the plot by
+    # subtracting mu*B0 which is done in set_up_bif_plot_values if
+    # tilt_energies == True
     if which_COM == "mu":
         tilted_energies_loc = True
     elif which_COM == "Pzeta":
@@ -101,17 +107,17 @@ def _plot_trapped_passing_boundary(
     xO_values = set_up_dict["xO_values"]
     yO_values = set_up_dict["yO_values"]
 
-    which_COM_title = _setup_which_COM_title(which_COM)
-
     ax.set_title(
-        rf"Trapped Passing Boundary for {which_COM_title} Bifurcation ({profile.bfield.plain_name})",
+        rf"Bifurcation Diagram ({profile.bfield.plain_name})",
         fontsize=config.tpb_title_fontsize,
         color=config.tpb_title_color,
     )
 
     ax.set_xlabel(x_label_loc, fontsize=config.tpb_xlabel_fontzise)
     ax.set_ylabel(
-        y_label_loc, rotation=config.tpb_ylabel_rotation, fontsize=config.tpb_ylabel_fontzise
+        y_label_loc,
+        rotation=config.tpb_ylabel_rotation,
+        fontsize=config.tpb_ylabel_fontzise,
     )
     ax.ticklabel_format(style="sci", axis="x", scilimits=(0, 0))
     ax.ticklabel_format(style="sci", axis="y", scilimits=(0, 0))
@@ -181,7 +187,3 @@ def _set_up_tpb_base_plot(
         "xO_values": xO_values,
         "yO_values": yO_values,
     }
-
-
-def _setup_which_COM_title(which_COM: str):
-    return r"$\mu$" if which_COM == "mu" else r"$P_{\zeta}$"

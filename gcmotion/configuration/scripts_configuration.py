@@ -18,6 +18,14 @@ class LoggerConfig:
 
 
 @dataclass
+class ProgressBarStyle:
+    tqdm_ascii: str = "-#"
+    tqdm_colour: str = "green"
+    tqdm_dynamic_ncols: bool = False
+    tqdm_smoothing: float = 0.15
+
+
+@dataclass
 class SolverConfig:
     atol: float = 1e-9  # Scipy's default is 1e-6
     rtol: float = 1e-8  # Scipy's default is 1e-3
@@ -25,7 +33,10 @@ class SolverConfig:
 
 @dataclass
 class NumericalDatasetsConfig:
-    boozer_theta_downsampling_factor: int = 1  # 10
+    # Above 10-20 orbits seem to not conserve energy
+    boozer_theta_downsampling_factor: int = 10
+    currents_spline_order: int = 3
+    qfactor_spline_order: int = 3
 
 
 @dataclass
@@ -34,40 +45,59 @@ class PrecomputedConfig:
     hyp2f1_density: int = 1000
 
 
-# -------------- Fixed Points - Bifurcation Config ---------------------------
-
-
-@dataclass()
-class FixedPointsConfig:
-    thetalim: tuple = (-np.pi, np.pi)
-    psilim: tuple = (0, 1.8)
-    fp_method: str = "fsolve"
-    dist_tol: float = 1e-3
-    fp_ic_scan_tol: float = 5 * 1e-8
-    ic_fp_theta_grid_density: int = 500
-    ic_fp_psi_grid_density: int = 101
-    fp_ic_scaling_factor: float = 90
-    fp_random_init_cond: bool = False
-    fp_info: bool = False
-    fp_ic_info: bool = False
-    fp_only_confined: bool = False
-
-
-@dataclass()
-class BifurcationConfig:
-    bif_info: bool = False
-    calc_energies: bool = False
-    energy_units: str = "NUJoule"
-    flux_units: str = "NUmf"
-    energies_info: bool = False
-    which_COM: str = "Pzeta"
-
-
-# --------------- Reasonances Range (Omega Max) Configurations-----------------
+# ============================ Frequency Analysis ============================
 
 
 @dataclass
-class ResRangeConfig:
-    freq_units: str = "NUw0"
-    delta: float = 1e-5
-    which_COM: str = "Pzeta"
+class FrequencyAnalysisPbarConfig(ProgressBarStyle):
+    tqdm_enable: bool = True
+    # Cartesian Mode
+    tqdm_mu_desc: str = f"{'Iterating through mus':^28}"
+    tqdm_pzeta_desc: str = f"{'Iterating through pzetas':^28}"
+    tqdm_energy_desc: str = f"{'Iterating through energies':^28}"
+    tqdm_mu_unit: str = f"{'mus':^10}"
+    tqdm_pzeta_unit: str = f"{'Pzetas':^10}"
+    tqdm_energy_unit: str = f"{'Energies':^10}"
+    # Matrix Mode
+    tqdm_matrix_desc: str = f"{'Iterating through triplets':^28}"
+    tqdm_matrix_unit: str = f"{'triplets':^8}"
+
+
+@dataclass
+class FrequencyAnalysisConfig:
+    print_tokamak: bool = True
+    qkinetic_cutoff: float = 10
+    pzeta_min_step: float = 2e-4
+    passing_pzeta_rstep: float = 1e-3  # 1e-3 seems to work best
+    trapped_pzeta_rstep: float = 1e-3  # 1e-3 seems to work best
+    energy_rstep: float = 1e-3  # 1e-3 seems to work best
+    cocu_classification: bool = True
+    calculate_omega_theta: bool = True
+    calculate_qkinetic: bool = True
+    skip_trapped: bool = False
+    skip_passing: bool = False
+    skip_copassing: bool = False
+    skip_cupassing: bool = False
+    # Minimum number of main orbit vertices, to switch to double contour method
+    max_vertices_method_switch: int = 40
+    # Maximum abs(Pzeta value, below which to switch to double contour method
+    max_pzeta_method_switch: float = 0.000
+    # dynamic minimum energy
+    relative_upper_E_factor: float = 1.1
+    logspace_len: int = 50
+    trapped_min_num: int = 1
+    # Contour Generation
+    main_grid_density: int = 1000  # Diminishing results after 1800
+    local_grid_density: int = 100
+    theta_expansion: float = 1.2
+    psi_expansion: float = 1.2
+
+
+@dataclass
+class ContourOrbitConfig:
+    inbounds_atol: float = 1e-7  # Must not be 0
+    inbounds_rtol: float = 1e-7
+    trapped_color: str = "red"
+    copassing_color: str = "xkcd:light purple"
+    cupassing_color: str = "xkcd:navy blue"
+    undefined_color: str = "xkcd:blue"

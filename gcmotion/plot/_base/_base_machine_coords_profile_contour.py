@@ -10,22 +10,27 @@ from matplotlib.figure import Figure
 from matplotlib import ticker
 
 from scipy.interpolate import RectBivariateSpline
-from gcmotion.plot._base._config import _RZContourConfig
+from gcmotion.plot._base._config import _MachineCoordsContourConfig
 from gcmotion.entities.profile import Profile
+from gcmotion.entities.tokamak import Tokamak
 
 from gcmotion.utils.logger_setup import logger
 
 
-def _base_RZ_contour(profile: Profile, fig: Figure = None, ax=None, **kwargs):
+def _base_machine_coords_profile_contour(
+    entity: Tokamak | Profile, fig: Figure = None, ax=None, **kwargs
+):
     r"""Base plots the selected quantity's (:math:`\Psi`, E, B, I, g,
-    :math:`\frac{\partial B}{\partial\theta}`, :math:`\frac{\partial B}{\partial\psi}`,
-    :math:`\frac{\partial I}{\partial\psi}`, :math:`\frac{\partial g}{\partial\psi}`)
-    contour plot in R, Z tokamak (cylindrical) coordinates.
+    :math:`\frac{\partial B}{\partial\theta}`, :math:`\frac{\partial
+    B}{\partial\psi}`, :math:`\frac{\partial I}{\partial\psi}`,
+    :math:`\frac{\partial g}{\partial\psi}`) contour plot in R, Z tokamak
+    (cylindrical) coordinates.
 
     Parameters
     ----------
-    profile : Profile
-        The Profile entity.
+    entity : Tokamak | Profile
+        The Tokamak or Profile entity. Energy contour is available only if
+        entity is of type Profile.
     fig : Figure
         The figure upon which the image will be drawn. Defaults to none.
     ax : Axes
@@ -37,24 +42,27 @@ def _base_RZ_contour(profile: Profile, fig: Figure = None, ax=None, **kwargs):
         Practiacally the density of the :math:`\theta`, :math:`\psi` contour
         meshgrid, from which the R, Z grid is calculated. Defults to 500.
     xmargin_perc : float, optional
-        x-axis margin of xlim so that there is some blank (white) space in between the
-        plot limits and the contour drawing. Defaults to 0.1.
+        x-axis margin of xlim so that there is some blank (white) space in
+        between the plot limits and the contour drawing. Defaults to 0.1.
     ymargin_perc : float, optional
-        y-axis margin of ylim so that there is some blank (white) space in between the
-        plot limits and the contour drawing. Defaults to 0.1.
+        y-axis margin of ylim so that there is some blank (white) space in
+        between the plot limits and the contour drawing. Defaults to 0.1.
     units : str, optional
-        The units of the quantity depicted on the contour. Can either be flux units,
-        magnetic field units, energy units or plasma current units. WARNING: They must
-        match the dimensionality of the quantity you want to contour.
+        The units of the quantity depicted on the contour. Can either be flux
+        units, magnetic field units, energy units or plasma current units.
+        WARNING: They must match the dimensionality of the quantity you want to
+        contour.
+
     Notes
     -----
     For a full list of all available optional parameters, see the dataclass
-    RZPlotConfig at gcmotion/plot/_base/_config. The defaults values
-    are set there, and are overwritten if passed as arguments.
+    _MachineCoordsContourConfig at gcmotion/plot/_base/_config. The defaults
+    values are set there, and are overwritten if passed as arguments.
+
     """
 
     # Unpack Parameters
-    config = _RZContourConfig()
+    config = _MachineCoordsContourConfig()
     for key, value in kwargs.items():
         setattr(config, key, value)
 
@@ -64,7 +72,7 @@ def _base_RZ_contour(profile: Profile, fig: Figure = None, ax=None, **kwargs):
     logger.info(f"\t==> Plotting RZ {which_Q} Contour...")
 
     # Create figure
-    if fig == None:
+    if fig is None:
         fig_kw = {
             "figsize": config.figsize,
             "dpi": config.dpi,
@@ -78,12 +86,12 @@ def _base_RZ_contour(profile: Profile, fig: Figure = None, ax=None, **kwargs):
     else:
         fig, ax = fig, ax
 
-    plain_name = profile.bfield.plain_name
+    plain_name = entity.bfield.plain_name
     logger.info(f"Opened dataset for {plain_name} in RZ contour.")
 
     # Calculate grid values for contour
     R_grid, Z_grid, Y_grid, Psi_grid = _get_grid_values(
-        profile, which_Q, config.parametric_density, config.units
+        entity, which_Q, config.parametric_density, config.units
     )
 
     # Set locator
@@ -158,7 +166,8 @@ def _base_RZ_contour(profile: Profile, fig: Figure = None, ax=None, **kwargs):
     # Set colorbar
     cbar = fig.colorbar(contour, cax=None, ax=ax)
 
-    # Set colorbar ticks and fromat (All this was necessary did not work any other way)
+    # Set colorbar ticks and fromat (All this was necessary did not work any
+    # other way)
     if config.locator == "log":
         _set_up_log_locator(cbar=cbar, Y_grid=Y_grid, ticks=config.cbar_ticks)
 
@@ -167,17 +176,20 @@ def _base_RZ_contour(profile: Profile, fig: Figure = None, ax=None, **kwargs):
     cbar.ax.set_title(label=clabel, fontsize=config.cbarlabel_fontsize)
 
 
-def _get_grid_values(profile: Profile, which_Q: str, density: int, units: str) -> tuple:
+def _get_grid_values(
+    entity: Tokamak | Profile, which_Q: str, density: int, units: str
+) -> tuple:
     r"""Simple function that takes in a DataSet and prepares the R, Z, Y values
     for the RZ contour"""
 
     try:
-        ds = profile.bfield.dataset
+        ds = entity.bfield.dataset
     except AttributeError:
         print(
-            """WARNING: LAR MAGNETIC FIELD IS NOT NUMERICAL AND DOES NOT HAVE A DATASET
-              ASSOCIATED WITH IT. USE RZ CONTOUR TO PLOT QUANTITIES ONLY FOR RECONSTRUCTED
-              EQUILIBRIA WITH A DATASET THAT CORRESPONDS TO THEM"""
+            """WARNING: LAR MAGNETIC FIELD IS NOT NUMERICAL AND DOES NOT HAVE
+            A DATASET ASSOCIATED WITH IT. USE RZ CONTOUR TO PLOT QUANTITIES
+            ONLY FOR RECONSTRUCTED EQUILIBRIA WITH A DATASET THAT CORRESPONDS
+            TO THEM"""
         )
 
         return
@@ -186,7 +198,7 @@ def _get_grid_values(profile: Profile, which_Q: str, density: int, units: str) -
     R0 = ds.raxis.data
     Z0 = ds.zaxis.data
 
-    Q = profile.Q
+    Q = entity.Q
 
     _psi_valuesNU = ds.psi.data
     # We do not have measurement data at psi=0 so we add it. It is needed so
@@ -200,11 +212,15 @@ def _get_grid_values(profile: Profile, which_Q: str, density: int, units: str) -
     Z_values = ds.Z.data.T
 
     # Define the new column (size: (3620, 1))
-    new_R_column = np.full((R_values.shape[0], 1), R0)  # Insert R0 at first column
-    new_Z_column = np.full((Z_values.shape[0], 1), Z0)  # Insert Z0 at first column
+    new_R_column = np.full(
+        (R_values.shape[0], 1), R0
+    )  # Insert R0 at first column
+    new_Z_column = np.full(
+        (Z_values.shape[0], 1), Z0
+    )  # Insert Z0 at first column
 
-    # Insert at the first column (axis=1), because we inserted a values 0 at psi
-    # so we must insert R0 at R and Z0 at Z along a column to much shapes
+    # Insert at the first column (axis=1), because we inserted a values 0 at
+    # psi so we must insert R0 at R and Z0 at Z along a column to much shapes
     R_values = np.hstack((new_R_column, R_values))  # (3620, 101)
     Z_values = np.hstack((new_Z_column, Z_values))  # (3620, 101)
 
@@ -213,7 +229,9 @@ def _get_grid_values(profile: Profile, which_Q: str, density: int, units: str) -
     Z_spline = RectBivariateSpline(theta_values, _psi_valuesNU, Z_values)
 
     # Grid for plotting
-    _psi_plotNU = np.linspace(_psi_valuesNU.min(), _psi_valuesNU.max(), density)
+    _psi_plotNU = np.linspace(
+        _psi_valuesNU.min(), _psi_valuesNU.max(), density
+    )
     _theta_plot = np.linspace(theta_values.min(), theta_values.max(), density)
 
     # Compute meshgrid
@@ -229,45 +247,52 @@ def _get_grid_values(profile: Profile, which_Q: str, density: int, units: str) -
             case "Ψ":
                 Psi_grid = Q(Psi_grid, "NUmf").to(f"{units}").m
                 Y_grid = Psi_grid
-            # WHEN PULL FROM GEORGE DO NOT PUT INPUT QUANTITY NECESSARILY
             case "Energy":
                 psi_gridNU = Q(_psi_gridNU, "NUmf")
-                Y_grid = profile.findEnergy(psi=psi_gridNU, theta=_theta_grid, units=units).m
+                Y_grid = entity.findEnergy(
+                    psi=psi_gridNU, theta=_theta_grid, units=units
+                ).m
 
             case "B":
-                bspline = profile.bfield.b_spline
+                bspline = entity.bfield.b_spline
                 _Y_gridNU = bspline(x=_theta_grid, y=_psi_gridNU, grid=False)
                 Y_grid = Q(_Y_gridNU, "NUTesla").to(f"{units}").m
 
             case "I":
-                ispline = profile.bfield.i_spline
+                ispline = entity.bfield.i_spline
                 _Y_gridNU = ispline(x=_psi_gridNU)
                 Y_grid = Q(_Y_gridNU, "NUpc").to(f"{units}").m
 
             case "g":
-                gspline = profile.bfield.g_spline
+                gspline = entity.bfield.g_spline
                 _Y_gridNU = gspline(x=_psi_gridNU)
                 Y_grid = Q(_Y_gridNU, "NUpc").to(f"{units}").m
 
             case "b_der_theta":
-                db_dtheta_spline = profile.bfield.db_dtheta_spline
-                Y_grid = db_dtheta_spline(x=_theta_grid, y=_psi_gridNU, grid=False)
+                db_dtheta_spline = entity.bfield.db_dtheta_spline
+                Y_grid = db_dtheta_spline(
+                    x=_theta_grid, y=_psi_gridNU, grid=False
+                )
 
             case "b_der_psi":
-                db_dpsi_spline = profile.bfield.db_dpsi_spline
-                Y_grid = db_dpsi_spline(x=_theta_grid, y=_psi_gridNU, grid=False)
+                db_dpsi_spline = entity.bfield.db_dpsi_spline
+                Y_grid = db_dpsi_spline(
+                    x=_theta_grid, y=_psi_gridNU, grid=False
+                )
 
             case "i_der":
-                ider_spline = profile.bfield.ider_spline
+                ider_spline = entity.bfield.ider_spline
                 Y_grid = ider_spline(x=_psi_gridNU)
 
             case "g_der":
-                gder_spline = profile.bfield.gder_spline
+                gder_spline = entity.bfield.gder_spline
                 Y_grid = gder_spline(x=_psi_gridNU)
 
     except DimensionalityError as e:
         print(
-            f"Dimensionality error encountered: {e}.\n\nMAKE SURE THE UNITS YOU INPUTED DESCRIBE THE QUANTITY YOU INPUTED TO CONTOUR PLOT.\n\n"
+            f"Dimensionality error encountered: {e}."
+            "\n\nMAKE SURE THE UNITS YOU INPUTED DESCRIBE THE "
+            "QUANTITY YOU INPUTED TO CONTOUR PLOT.\n\n"
         )
         return
 
@@ -308,20 +333,43 @@ def _handle_quantity_input(input: str) -> str:
     if input in ["g", "poloidal current", "Poloidal Current"]:
         return "g"
 
-    if input in ["b_der_theta", "B_der_theta", "db/dtheta", "dB/dtheta", "dbdtheta", "dBdtheta"]:
+    if input in [
+        "b_der_theta",
+        "B_der_theta",
+        "db/dtheta",
+        "dB/dtheta",
+        "dbdtheta",
+        "dBdtheta",
+    ]:
         return "b_der_theta"
 
-    if input in ["b_der_psi", "B_der_psi", "db/dpsi", "dB/dpsi", "dbdpsi", "dBdpsi"]:
+    if input in [
+        "b_der_psi",
+        "B_der_psi",
+        "db/dpsi",
+        "dB/dpsi",
+        "dbdpsi",
+        "dBdpsi",
+    ]:
         return "b_der_psi"
 
-    if input in ["ider", "i_der", "i_der_psi", "didpsi", "dIdpsi", "di_dpsi", "dI_dpsi"]:
+    if input in [
+        "ider",
+        "i_der",
+        "i_der_psi",
+        "didpsi",
+        "dIdpsi",
+        "di_dpsi",
+        "dI_dpsi",
+    ]:
         return "i_der"
 
     if input in ["gder", "g_der", "g_der_psi", "dgdpsi", "dg_dpsi"]:
         return "g_der"
 
     print(
-        "\n\nWARNING: Selected quantity to be contoured must either be 'flux', 'bfield','energy', 'ider', 'gder', 'dBdtheta', 'dBdpsi'\n\n"
+        "\n\nWARNING: Selected quantity to be contoured must either be 'flux',"
+        "'bfield','energy', 'ider', 'gder', 'dBdtheta', 'dBdpsi'\n\n"
     )
 
 
@@ -351,7 +399,9 @@ def _set_up_log_locator(cbar, Y_grid: np.ndarray, ticks: int) -> None:
     cbar.ax.yaxis.set_major_locator(ticker.FixedLocator(tick_positions))
 
     # Use a formatter that forces all labels to appear
-    cbar.ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f"{x:.1e}"))
+    cbar.ax.yaxis.set_major_formatter(
+        ticker.FuncFormatter(lambda x, _: f"{x:.1e}")
+    )
 
 
 def _get_clabel(which_Q: str, units: str) -> str:

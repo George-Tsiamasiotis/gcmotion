@@ -1,17 +1,16 @@
-from collections import deque
+r"""Simple script that draws the number of distinct fixed points for each
+:math:`\mu` or :math:`P_{\zeta}` of the bifurcation analysis"""
+
 from matplotlib.ticker import MaxNLocator
 from gcmotion.utils.logger_setup import logger
-from gcmotion.entities.profile import Profile
 
 from gcmotion.plot._base._bif_base._bif_config import _NDFPlotConfig
 
 
 def _ndfp_bif_plot(
-    profile: Profile,
-    COM_values: list | deque,
-    num_of_XP: list | deque,
-    num_of_OP: list | deque,
-    which_COM: str,
+    COM_values: list,
+    num_of_XP: list,
+    num_of_OP: list,
     ax=None,
     **kwargs,
 ):
@@ -20,8 +19,6 @@ def _ndfp_bif_plot(
 
     Parameters
     ----------
-    profile : Profile
-        Profile object containing Tokamak information.
     COM_values : list, deque
         List of COM values :math:`P_{\zeta}`'s or :math:`\mu`'s in [NU].
     num_of_XP : deque, list
@@ -29,8 +26,9 @@ def _ndfp_bif_plot(
     num_of_OP : deque, list
         The number of distinct O points found for each COM value.
     which_COM : str
-        String that indicates with respect to which constant of motion (COM) :math:`\mu`
-        or :math:`P_{\zeta}` the number of distinct fixed points fixed are plotted.
+        String that indicates with respect to which constant of motion (COM)
+        :math:`\mu` or :math:`P_{\zeta}` the number of distinct fixed points
+        fixed are plotted.
     ax : Axes
         The ax upon which to draw.
 
@@ -41,14 +39,15 @@ def _ndfp_bif_plot(
     values are set there, and are overwritten if passed as arguements.
 
     """
-    logger.info("\t==> Plotting Base Number of distinct Fixed Points Bifurcation Diagram...")
+    logger.info(
+        """\t==> Plotting Base Number of distinct Fixed Points Bifurcation
+        Diagram..."""
+    )
 
     # Unpack parameters
     config = _NDFPlotConfig()
     for key, value in kwargs.items():
         setattr(config, key, value)
-
-    selected_COMNU_str = which_COM + "NU"
 
     # Number of distinct fixed points Diagram
     selected_COMs = COM_values

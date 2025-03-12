@@ -1,62 +1,95 @@
-"""Function that draws figures depicting the B, i, g, E, Ψ quantities' contours in RZ
-coordinates. It can also plot fixed points on certain plots."""
+"""
+Machine Coordinates Magnetic Profile & Energy Contours
+------------------------------------------------------
 
-from gcmotion.plot.fixed_points_profile_contour import fixed_points_energy_contour
+Function that draws figures depicting the B, i, g, E, Ψ quantities' contours in
+RZ coordinates. It can also plot fixed points on certain plots.
+
+"""
+
 import matplotlib.pyplot as plt
 
-from gcmotion.configuration.plot_parameters import RZBigContoursConfig
-from gcmotion.plot._base._base_RZ_contour import _base_RZ_contour
-from gcmotion.plot._base._base_fixed_points_profile_contour import _base_fixed_points_plot
+from gcmotion.configuration.plot_parameters import MachineCoordsContoursConfig
+from gcmotion.plot._base._base_machine_coords_profile_contour import (
+    _base_machine_coords_profile_contour,
+)
+from gcmotion.plot._base._base_fixed_points_profile_contour import (
+    _base_fixed_points_plot,
+)
+
 from gcmotion.entities.profile import Profile
+from gcmotion.entities.tokamak import Tokamak
 
 from gcmotion.utils.logger_setup import logger
 
 
-def R_Z_contours(profile: Profile, **kwargs):
+def machine_coords_profile(entity: Tokamak | Profile, **kwargs):
     r"""Plots the selected quantity's (:math:`\Psi`, E, B, I, g,
-    :math:`\frac{\partial B}{\partial\theta}`, :math:`\frac{\partial B}{\partial\psi}`,
-    :math:`\frac{\partial I}{\partial\psi}`, :math:`\frac{\partial g}{\partial\psi}`)
-    contour plot in R, Z tokamak (cylindrical) coordinates, and in separate figures. Can
-    also plot fixed points on certain contours.
+    :math:`\frac{\partial B}{\partial\theta}`, :math:`\frac{\partial
+    B}{\partial\psi}`, :math:`\frac{\partial I}{\partial\psi}`,
+    :math:`\frac{\partial g}{\partial\psi}`) contour plot in R, Z tokamak
+    (cylindrical) coordinates, and in separate figures. Can also plot fixed
+    points on certain contours.
+
+    .. todo::
+
+        fixed point analysis to be implemented.
 
     Parameters
     ----------
-    profile : Profile
-        The Profile entity.
+    entity : Tokamak | Profile
+        The Tokamak or Profile entity. Energy contour is available only if
+        entity is of type Profile.
+
     Other Parameters
     ----------------
     parametric_density : int, optional
         Practiacally the density of the :math:`\theta`, :math:`\psi` contour
         meshgrid, from which the R, Z grid is calculated. Defults to 500.
     xmargin_perc : float, optional
-        x-axis margin of xlim so that there is some blank (white) space in between the
-        plot limits and each contour drawing. Defaults to 0.1.
+        x-axis margin of xlim so that there is some blank (white) space in
+        between the plot limits and each contour drawing. Defaults to 0.1.
     ymargin_perc : float, optional
-        y-axis margin of ylim so that there is some blank (white) space in between the
-        plot limits and each contour drawing. Defaults to 0.1.
-    which : str
-        String of the form 'fp E b i g', 'fp E b i', 'fp E b g', 'fp E i g', 'fp E b', 'fp E i', 'fp E g'
-        'fp b i g', 'fp b i', 'fp b g', 'fp i g', 'fp b', 'fp i', 'fp g', 'E b i g', E 'b i', 'E b g', 'E i g',
-        'E b', 'E i', 'E g' 'b i g', 'b i', 'b g', 'i g', 'b', 'i', 'g'  (case insensitive)
-        that determines which figures will be plotted, that of the Energy and magnetic flux,
-        that of the magnetic field and its derivatives and/or that of the toroidal current and
-        its derivative and/or that of the poloidal current and its derivatives. Defaults to 'E b i g'.
+        y-axis margin of ylim so that there is some blank (white) space in
+        between the plot limits and each contour drawing. Defaults to 0.1.
+    which : Union[{"fp", "E", "b", "i", "g"}], optional
+        String of the form 'fp E b i g', 'fp E b i', 'fp E b g', 'fp E i g',
+        i', 'E g' 'b i g', 'b i', 'b g', 'i g', 'b', 'i', 'g'  (case
+        insensitive) that determines which figures will be plotted, that of the
+        Energy and magnetic flux, that of the magnetic field and its
+        derivatives and/or that of the toroidal current and its derivative
+        and/or that of the poloidal current and its derivatives. Defaults to 'E
+        b i g'.
 
     Notes
     -----
     For a full list of all available optional parameters, see the dataclass
-    RZBigContoursConfig at gcmotion/configuration/plot_parameters. The defaults values
-    are set there, and are overwritten if passed as arguments.
+    MachineCoordsContoursConfig at gcmotion/configuration/plot_parameters.
+    The defaults values are set there, and are overwritten if passed as
+    arguments.
     """
 
     logger.info("\t==> Plotting RZ big Contour...")
 
     # Unpack Parameters
-    config = RZBigContoursConfig()
+    config = MachineCoordsContoursConfig()
     for key, value in kwargs.items():
         setattr(config, key, value)
 
-    plain_name = profile.bfield.plain_name
+    # Check if Energy is requested but with Tokamak
+    if "e" in config.which.lower() and isinstance(entity, Tokamak):
+        print("Energy contour is available only if entity is of type Profile")
+        return
+
+    # Check if Fixed Points is requested but with Tokamak
+    if "fp" in config.which.lower() and isinstance(entity, Tokamak):
+        print(
+            """Fixed Points Analysis contour is available only if
+             entity is of type Profile"""
+        )
+        return
+
+    plain_name = entity.bfield.plain_name
 
     # -----------------E, Ψ Figure--------------------
 
@@ -85,8 +118,8 @@ def R_Z_contours(profile: Profile, **kwargs):
 
         # -------------Ψ-------------
 
-        _base_RZ_contour(
-            profile=profile,
+        _base_machine_coords_profile_contour(
+            entity=entity,
             fig=fig_psi,
             ax=ax_psi,
             which_Q="flux",
@@ -98,9 +131,9 @@ def R_Z_contours(profile: Profile, **kwargs):
 
         # -----------E---------------
 
-        _base_RZ_contour(
-            profile=profile,
-            fig=fig_E,
+        _base_machine_coords_profile_contour(
+            entity=entity,
+            fig=fig_e,
             ax=ax_e,
             which_Q="E",
             units=config.E_units,
@@ -130,7 +163,9 @@ def R_Z_contours(profile: Profile, **kwargs):
             "color": config.B_suptitle_color,
         }
 
-        fig_B.suptitle(f"B Profile in R-Z Coordinates ({plain_name})", **tit_kw)
+        fig_B.suptitle(
+            f"B Profile in R-Z Coordinates ({plain_name})", **tit_kw
+        )
 
         fig_b, fig_dbdtheta, fig_dbdpsi = fig_B.subfigures(1, 3)
 
@@ -140,8 +175,8 @@ def R_Z_contours(profile: Profile, **kwargs):
 
         # ------------B--------------
 
-        _base_RZ_contour(
-            profile=profile,
+        _base_machine_coords_profile_contour(
+            entity=entity,
             fig=fig_b,
             ax=ax_b,
             which_Q="B",
@@ -153,8 +188,8 @@ def R_Z_contours(profile: Profile, **kwargs):
 
         # -----------dB/dθ---------------
 
-        _base_RZ_contour(
-            profile=profile,
+        _base_machine_coords_profile_contour(
+            entity=entity,
             fig=fig_dbdtheta,
             ax=ax_dbdtheta,
             which_Q="dbdtheta",
@@ -166,8 +201,8 @@ def R_Z_contours(profile: Profile, **kwargs):
 
         # -----------dB/dψ---------------
 
-        _base_RZ_contour(
-            profile=profile,
+        _base_machine_coords_profile_contour(
+            entity=entity,
             fig=fig_dbdpsi,
             ax=ax_dbdpsi,
             which_Q="dbdpsi",
@@ -197,7 +232,9 @@ def R_Z_contours(profile: Profile, **kwargs):
             "color": config.I_suptitle_color,
         }
 
-        fig_I.suptitle(f"I Profile in R-Z Coordinates ({plain_name})", **tit_kw)
+        fig_I.suptitle(
+            f"I Profile in R-Z Coordinates ({plain_name})", **tit_kw
+        )
 
         fig_i, fig_ider = fig_I.subfigures(1, 2)
 
@@ -206,8 +243,8 @@ def R_Z_contours(profile: Profile, **kwargs):
 
         # -----------I---------------
 
-        _base_RZ_contour(
-            profile=profile,
+        _base_machine_coords_profile_contour(
+            entity=entity,
             fig=fig_i,
             ax=ax_i,
             which_Q="I",
@@ -219,8 +256,8 @@ def R_Z_contours(profile: Profile, **kwargs):
 
         # ----------dI/dψ----------------
 
-        _base_RZ_contour(
-            profile=profile,
+        _base_machine_coords_profile_contour(
+            entity=entity,
             fig=fig_ider,
             ax=ax_ider,
             which_Q="ider",
@@ -250,7 +287,9 @@ def R_Z_contours(profile: Profile, **kwargs):
             "color": config.g_suptitle_color,
         }
 
-        fig_g.suptitle(f"g Profile in R-Z Coordinates ({plain_name})", **tit_kw)
+        fig_g.suptitle(
+            f"g Profile in R-Z Coordinates ({plain_name})", **tit_kw
+        )
 
         fig_g, fig_gder = fig_g.subfigures(1, 2)
 
@@ -259,8 +298,8 @@ def R_Z_contours(profile: Profile, **kwargs):
 
         # ------------g--------------
 
-        _base_RZ_contour(
-            profile=profile,
+        _base_machine_coords_profile_contour(
+            entity=entity,
             fig=fig_g,
             ax=ax_g,
             which_Q="g",
@@ -272,8 +311,8 @@ def R_Z_contours(profile: Profile, **kwargs):
 
         # ----------dg/dψ----------------
 
-        _base_RZ_contour(
-            profile=profile,
+        _base_machine_coords_profile_contour(
+            entity=entity,
             fig=fig_gder,
             ax=ax_gder,
             which_Q="gder",
@@ -303,7 +342,9 @@ def R_Z_contours(profile: Profile, **kwargs):
             "color": config.fp_suptitle_color,
         }
 
-        fig_fp.suptitle(f"Fixed Points Analysis in RZ Plain ({plain_name})", **tit_kw)
+        fig_fp.suptitle(
+            f"Fixed Points Analysis in RZ Plain ({plain_name})", **tit_kw
+        )
 
         fig_fp_E, fig_fp_dB = fig_fp.subfigures(1, 2)
 
@@ -312,8 +353,8 @@ def R_Z_contours(profile: Profile, **kwargs):
 
         # ------------Fixed Points on Energy contour--------------
 
-        _base_RZ_contour(
-            profile=profile,
+        _base_machine_coords_profile_contour(
+            entity=entity,
             fig=fig_fp_E,
             ax=ax_fp_E,
             which_Q="E",
@@ -323,7 +364,7 @@ def R_Z_contours(profile: Profile, **kwargs):
         )
 
         _base_fixed_points_plot(
-            profile=profile,
+            profile=entity,
             ax=ax_fp_E,
             RZ_coords=True,
             **kwargs,
@@ -333,8 +374,8 @@ def R_Z_contours(profile: Profile, **kwargs):
 
         # ----------Fixed Points on Stationary Curves ----------------
 
-        _base_RZ_contour(
-            profile=profile,
+        _base_machine_coords_profile_contour(
+            entity=entity,
             fig=fig_fp_dB,
             ax=ax_fp_dB,
             which_Q="dbdtheta",
@@ -343,7 +384,7 @@ def R_Z_contours(profile: Profile, **kwargs):
         )
 
         _base_fixed_points_plot(
-            profile=profile,
+            profile=entity,
             ax=ax_fp_dB,
             RZ_coords=True,
             **kwargs,

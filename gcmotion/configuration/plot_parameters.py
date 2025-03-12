@@ -1,3 +1,5 @@
+from gcmotion.configuration.scripts_configuration import ContourOrbitConfig
+
 from dataclasses import dataclass
 from numpy import pi
 import numpy as np
@@ -31,28 +33,6 @@ class ProfileEnergyContourConfig:
     cbarlabelsize: int = 12
 
 
-@dataclass()
-class ProfilePzetaContourConfig:
-    # Figure keywords
-    figsize: tuple = figsize
-    dpi: int = dpi
-    layout: str = "constrained"
-    facecolor: str = facecolor
-    # Default parameter values
-    zetalim: tuple = (-pi, pi)
-    psilim: tuple = (0, 1.2)  # times psi_wall
-    levels: int = 30
-    Pzeta_units: str = "Tesla * meter^2"
-    flux_units: str = "Tesla * meter^2"
-    potential: bool = True
-    wall: bool = True
-    cursor: bool = True  # Mild performance hit
-    show: bool = True
-    # Colorbar
-    numticks: int = 10
-    cbarlabelsize: int = 12
-
-
 @dataclass
 class QfactorProfileConfig:
     # Figure keywords
@@ -63,10 +43,10 @@ class QfactorProfileConfig:
     titlesize: float = 20
     titlecolor: str = "blue"
     # Default parameter values
-    span: tuple = (0, 1.1)
+    span: tuple = (0, 1.03)
     show: bool = True
     # Plot options
-    points: int = 200
+    points: int = 600
     wall_color: str = "red"
     qwall_color: str = "black"
     qwall_style: str = "--"
@@ -93,9 +73,11 @@ class EfieldProfileConfig:
     wall_color: str = "red"
     labelsize: float = 10
     ax_title_size: float = 20
+    linewidths: float = 2
+    wall_linewidth: float = 1.5
     # Units options
-    field_units: str = "kV/m"
-    potential_units: str = "kV"
+    field_units: str = "kiloVolt/meters"
+    potential_units: str = "kiloVolt"
 
 
 @dataclass
@@ -114,7 +96,7 @@ class MagneticProfileConfig:
     coord: str = "r"  # psi / r
     show: bool = True
     # Contour options
-    grid_density: int = 200
+    grid_density: int = 400
     levels: int = 20
     bcmap: str = "managua"
     icmap: str = "managua"
@@ -129,6 +111,28 @@ class MagneticProfileConfig:
     labelsize: float = 15
     ax_title_size: float = 20
     ax_title_pad: float = 25
+
+
+@dataclass
+class PsiPthetaConfig:
+    # Figure keywords
+    figsize: tuple = (6, 5)
+    dpi: int = dpi
+    layout: str = "constrained"
+    facecolor: str = facecolor
+    titlesize: float = 20
+    titlecolor: str = "blue"
+    # Default parameter values
+    flux_units: str = "NUMagnetic_flux"
+    Ptheta_units: str = "NUCanonical_momentum"
+    show: bool = True
+    # Plot options
+    linewidth: float = 3
+    points: int = 600
+    wall_color: str = "red"
+    wall_style: str = "--"
+    labelsize: float = 15
+    ax_title_size: float = 15
 
 
 @dataclass()
@@ -181,6 +185,54 @@ class ParticlePoloidalDrift:
 class AutoYspan:
     zoomout: float = 0.75
     hardylim: float = 3  # times psi_wall
+
+
+@dataclass
+class MachineCoordsContoursConfig:
+    # Figure keywords
+    figsize_B: tuple = (17, 8)
+    figsize_E_flux: tuple = (11, 8)
+    figsize_I: tuple = (11, 8)
+    figsize_g: tuple = (11, 8)
+    figsize_fp: tuple = (11, 8)
+    dpi: int = dpi
+    layout: str = "constrained"
+    facecolor: str = "white"
+    # Plots kwywords
+    which: str = "fp E b i g"
+    # E, flux figure keywords
+    E_flux_suptitle_fontsize: float = 15
+    E_flux_suptitle_color: str = "black"
+    flux_units: str = "NUmf"
+    E_units: str = "keV"
+    # B figure keywords
+    B_suptitle_fontsize: float = 15
+    B_suptitle_color: str = "black"
+    B_units: str = "Tesla"
+    # I figure keywords
+    I_suptitle_fontsize: float = 15
+    I_suptitle_color: str = "black"
+    I_units: str = "NUpc"
+    # g figure keywords
+    g_suptitle_fontsize: float = 15
+    g_suptitle_color: str = "black"
+    g_units: str = "NUpc"
+    # Fixed Points figure keywords
+    fp_suptitle_fontsize: float = 15
+    fp_suptitle_color: str = "black"
+    E_fp_units: str = "keV"
+    # Numerical keywords
+    parametric_density: int = 500
+    # Contours keywords
+    levels: int = 20
+
+
+@dataclass
+class FrequencyAnalysisPlotConfig(ContourOrbitConfig):
+    scatter_figsize: tuple = figsize
+    scatter_dpi: int = dpi
+    scatter_size: float = 7
+    add_hline: bool = True
 
 
 @dataclass
@@ -244,67 +296,3 @@ class BifurcationPlotConfig:
     energy_units: str = "NUJoule"
     flux_units: str = "NUmf"
     canmon_units: str = "NUcanmom"
-
-
-@dataclass
-class RZBigContoursConfig:
-    # Figure keywords
-    figsize_B: tuple = (17, 8)
-    figsize_E_flux: tuple = (11, 8)
-    figsize_I: tuple = (11, 8)
-    figsize_g: tuple = (11, 8)
-    figsize_fp: tuple = (11, 8)
-    dpi: int = dpi
-    layout: str = "constrained"
-    facecolor: str = "white"
-    # Plots kwywords
-    which: str = "fp E b i g"
-    # E, flux figure keywords
-    E_flux_suptitle_fontsize: float = 15
-    E_flux_suptitle_color: str = "black"
-    flux_units: str = "NUmf"
-    E_units: str = "keV"
-    # B figure keywords
-    B_suptitle_fontsize: float = 15
-    B_suptitle_color: str = "black"
-    B_units: str = "Tesla"
-    # I figure keywords
-    I_suptitle_fontsize: float = 15
-    I_suptitle_color: str = "black"
-    I_units: str = "NUpc"
-    # g figure keywords
-    g_suptitle_fontsize: float = 15
-    g_suptitle_color: str = "black"
-    g_units: str = "NUpc"
-    # Fixed Points figure keywords
-    fp_suptitle_fontsize: float = 15
-    fp_suptitle_color: str = "black"
-    E_fp_units: str = "keV"
-    # Numerical keywords
-    parametric_density: int = 500
-    # Contours keywords
-    levels: int = 20
-
-
-@dataclass
-class ResRangePlotConfig:
-    # Figure keywords
-    figsize: tuple = figsize
-    dpi: int = dpi
-    layout: str = "constrained"
-    facecolor: str = "white"
-    # Labels Keywords
-    xlabel_fontsize: float = 13
-    xlabel_rotation: int = 0
-    ylabel_fontsize: float = 13
-    ylabel_rotation: int = 90
-    # Title Keywords
-    titlesize: float = 20
-    titlecolor: str = "black"
-    # Scatter kw
-    marker_size: float = 3
-    marker_color: str = "green"
-    marker_style: str = "o"
-    # Omegas Script Keywords
-    freq_units: str = "NUw0"
-    which_COM: str = "Pzeta"

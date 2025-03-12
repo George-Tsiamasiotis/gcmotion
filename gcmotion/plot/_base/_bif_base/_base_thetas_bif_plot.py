@@ -1,17 +1,21 @@
+r"""Simple script that draws the theta coordinate of the distinct fixed points
+for each :math:`\mu` or :math:`P_{\zeta}` of the bifurcation analysis"""
+
 import numpy as np
-from collections import deque
 from gcmotion.utils.logger_setup import logger
 from gcmotion.entities.profile import Profile
 
 from gcmotion.plot._base._bif_base._bif_config import _ThetasFixedPlotConfig
-from gcmotion.scripts.fixed_points_bif.bif_values_setup import set_up_bif_plot_values
+from gcmotion.scripts.fixed_points_bif.bif_values_setup import (
+    set_up_bif_plot_values,
+)
 
 
 def _thetas_bif_plot(
     profile: Profile,
-    COM_values: list | deque,
-    X_thetas: list | deque,
-    O_thetas: list | deque,
+    COM_values: list,
+    X_thetas: list,
+    O_thetas: list,
     which_COM: str,
     ax=None,
     **kwargs,
@@ -30,8 +34,9 @@ def _thetas_bif_plot(
     O_thetas : deque, list
         The values of the :math:`\theta`s of the O points for each COM value.
     which_COM : str
-        String that indicates with respect to which constant of motion (COM) :math:`\mu`
-        or :math:`P_{\zeta}` the :math:`\theta`s fixed are plotted.
+        String that indicates with respect to which constant of motion (COM)
+        :math:`\mu` or :math:`P_{\zeta}` the :math:`\theta`s fixed are
+        plotted.
     ax : Axes
         The ax upon which to draw.
 
@@ -39,7 +44,8 @@ def _thetas_bif_plot(
     -----
     For a full list of all available optional parameters, see the dataclass
     _ThetasFixedPlotConfig at gcmotion/plot/_base/_bif_base/_bif_config.
-    The defaults values are set there, and are overwritten if passed as arguements.
+    The defaults values are set there, and are overwritten if passed as
+    arguements.
 
     """
     logger.info("\t==> Plotting Base Thetas Fixed Bifurcation Diagram...")
@@ -51,10 +57,16 @@ def _thetas_bif_plot(
 
     # Theta Fixed Bifurcation
     COM_plotX, X_theta_plot = set_up_bif_plot_values(
-        profile=profile, COM_values=COM_values, y_values=X_thetas, which_COM=which_COM
+        profile=profile,
+        COM_values=COM_values,
+        y_values=X_thetas,
+        which_COM=which_COM,
     )
     COM_plotO, O_theta_plot = set_up_bif_plot_values(
-        profile=profile, COM_values=COM_values, y_values=O_thetas, which_COM=which_COM
+        profile=profile,
+        COM_values=COM_values,
+        y_values=O_thetas,
+        which_COM=which_COM,
     )
 
     ax.ticklabel_format(style="sci", axis="x", scilimits=(0, 0))

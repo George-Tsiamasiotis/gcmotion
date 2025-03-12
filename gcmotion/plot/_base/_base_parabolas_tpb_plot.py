@@ -1,18 +1,21 @@
+"""Simple script that draws the trapped passing boundary on the
+parabolas plot"""
+
 import numpy as np
-from collections import deque
 from gcmotion.utils.logger_setup import logger
 
-from gcmotion.entities.tokamak import Tokamak
 from gcmotion.entities.profile import Profile
-from gcmotion.scripts.fixed_points_bif.bif_values_setup import set_up_bif_plot_values
+from gcmotion.scripts.fixed_points_bif.bif_values_setup import (
+    set_up_bif_plot_values,
+)
 
 from gcmotion.configuration.plot_parameters import ParabolasPlotConfig
 
 
 def _plot_parabolas_tpb(
-    profile: list,
-    X_energies: list | deque,
-    O_energies: list | deque,
+    profile: Profile,
+    X_energies: list,
+    O_energies: list,
     x_TPB: np.ndarray,
     ax=None,
     **kwargs,
@@ -22,6 +25,8 @@ def _plot_parabolas_tpb(
 
     Parameters
     ----------
+    profile : Profile
+        Profile object containing Tokamak information.
     X_energies : deque, list
         The values of the Energies of the X points for each Pzeta value.
     O_energies : deque, list
@@ -33,7 +38,8 @@ def _plot_parabolas_tpb(
     -----
     For a full list of all available optional parameters, see the dataclass
     ParabolasPlotConfig at gcmotion/configuration/plot_parameters. The
-    defaults values are set there, and are overwritten if passed as arguements.
+    defaults values are set there, and are overwritten if passed as
+    arguements.
 
     """
     logger.info("\t==> Plotting Base Parabolas Trapped Passing Boundary...")
@@ -51,7 +57,8 @@ def _plot_parabolas_tpb(
 
         psip_wallNU = profile.psip_wallNU.m
 
-        # Pzetalim is given in PzetaNU/psip_walNU so we need to multiply bu psip_wallNU
+        # Pzetalim is given in PzetaNU/psip_walNU so we need to multiply by
+        #  psip_wallNU
         Pzetamin, Pzetamax = min(x_TPB), max(x_TPB)  # PzetaNU/psip_wallNU
         Pzetamin *= psip_wallNU  # Pzeta in NUcanmom
         Pzetamax *= psip_wallNU  # Pzeta in NUcanmom
@@ -83,11 +90,19 @@ def _plot_parabolas_tpb(
         B0NU = profile.bfield.B0.to("NUTesla").m
         muB0NU = muNU * B0NU
 
-        Pzeta_plotO = [O / psip_wallNU for O in Pzeta_plotO]  # NUCanmom/ψpw
-        Pzeta_plotX = [X / psip_wallNU for X in Pzeta_plotX]  # NUCanmom/ψpw
+        Pzeta_plotO = [
+            Opoint / psip_wallNU for Opoint in Pzeta_plotO
+        ]  # NUCanmom/ψpw
+        Pzeta_plotX = [
+            Xpoint / psip_wallNU for Xpoint in Pzeta_plotX
+        ]  # NUCanmom/ψpw
 
-        O_energies_plot = [O / muB0NU for O in O_energies_plot]  # NUJoule/(μΒ0)
-        X_energies_plot = [X / muB0NU for X in X_energies_plot]  # NUJoule/(μΒ0)
+        O_energies_plot = [
+            Opoint / muB0NU for Opoint in O_energies_plot
+        ]  # NUJoule/(μΒ0)
+        X_energies_plot = [
+            Xpoint / muB0NU for Xpoint in X_energies_plot
+        ]  # NUJoule/(μΒ0)
 
         ax.scatter(
             Pzeta_plotX,
@@ -123,43 +138,5 @@ def _plot_parabolas_tpb(
             linewidth=config.linewidth,
         )
 
-    # In case the Pzeta limits are very close to zero
+    # In case the Pzeta limits are very close to zero set xlim accordingly
     ax.set_xlim([1.1 * config.Pzetalim[0], 1.1 * abs(config.Pzetalim[1])])
-
-
-def _create_profiles_list(profile: Profile, x_TPB: list | tuple, TPB_density: int) -> list:
-    r"""
-    Simple function that takes in a profile object and creates a list of profiles with
-    different Pzeta values, but all other attributes remain the same.
-    """
-    tokamak = Tokamak(
-        R=profile.R,
-        a=profile.a,
-        qfactor=profile.qfactor,
-        bfield=profile.bfield,
-        efield=profile.efield,
-    )
-
-    psip_wallNU = profile.psip_wallNU.m
-
-    # Pzetalim is given in PzetaNU/psip_walNU so we need to multiply bu psip_wallNU
-    Pzetamin, Pzetamax = min(x_TPB), max(x_TPB)  # PzetaNU/psip_wallNU
-    Pzetamin *= psip_wallNU  # Pzeta in NUcanmom
-    Pzetamax *= psip_wallNU  # Pzeta in NUcanmom
-
-    PzetasNU = np.linspace(Pzetamin, Pzetamax, TPB_density)
-
-    profiles = deque([])
-
-    for PzetaNU in PzetasNU:
-
-        current_profile = Profile(
-            tokamak=tokamak,
-            species=profile.species,
-            mu=profile.muNU,
-            Pzeta=profile.Q(PzetaNU, "NUCanonical_momentum"),
-        )
-
-        profiles.append(current_profile)
-
-    return list(profiles)

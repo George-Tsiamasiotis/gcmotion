@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "GCMotion"
-version = "0.0.1"   # Also update version at docs:conf.py
+version = "0.0.2"   # Also update version at docs:conf.py
 authors = [
   { name="George Tsiamasiotis", email="gtsiamasiotis@gmail.com" },
 ]
@@ -42,6 +42,7 @@ dependencies = [
   "xarray",
   "netcdf4",
   "tqdm",
+  "numba",
   "pyqt6", # Default matplotlib backend, causes annoying warnings in wayland
   #but works
   # "pygobject", # Needed for matplotlib's gtk3agg backend, but requires
@@ -83,15 +84,15 @@ addopts = """
 --benchmark-name=short
 """
 console_output_style = "progress-even-when-capture-no"
-filterwarnings = [
-  "ignore::DeprecationWarning:jupyter_client.*",
+markers = [
+  "slow: mark test as slow",
 ]
 
 
 [project.urls]
-Homepage = "https://github.com/PlasmaPhy/gcmotion"
-Issues = "https://github.com/PlasmaPhy/gcmotion/issues"
-Documentation = "https://plasmaphy.github.io/gcmotion/"
+Homepage = "https://github.com/George-Tsiamasiotis/gcmotion"
+Issues = "https://github.com/George-Tsiamasiotis/gcmotion/issues"
+Documentation = "https://george-tsiamasiotis.github.io/gcmotion/"
 
 # U2FsdGVkX1/bMVdPSKQ6YUP8rVMA3fHifjdVxGbvMFFeaJp9pzzW6YPYTzDaIeOi
 # e3gEiFseNABMpPpntDoOSfxykQVi+NoCBCABrNpjXjfkSwlKl5BU2OkD/2DwuS6J

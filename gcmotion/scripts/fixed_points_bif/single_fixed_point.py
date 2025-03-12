@@ -1,10 +1,13 @@
 r"""
-Script/function that calculates (a single) fixed point of the GC Hamiltonian, based on a
-single initial condition.
+==================
+Single Fixed Point
+==================
+
+Script/function that calculates (a single) fixed point of the GC Hamiltonian,
+based on  single initial condition.
 """
 
 from scipy.optimize import differential_evolution, fsolve
-from collections import deque
 from gcmotion.entities.profile import Profile
 from gcmotion.scripts.fixed_points_bif.fp_system import system
 
@@ -12,36 +15,36 @@ from gcmotion.scripts.fixed_points_bif.fp_system import system
 # Function to locate a single fixed point
 def fixed_point(
     method: str,
-    initial_condition: list | tuple | deque,
+    initial_condition: list,
     bounds: list,
     profile: Profile,
-) -> tuple[float, float]:
+) -> tuple[float]:
     r"""
-    Function that finds a single fixed point of the GC Hamiltonian for a given profile
-    (tokamak, particle information). It uses numerical solvers/methods "fsolve" or
-    "differential evolution" to locate for which values of the :math:`\theta` and :math:`\psi`
-    variables, their time derivatives become zero.
+    Function that finds a single fixed point of the GC Hamiltonian for a given
+    profile (tokamak, particle information). It uses numerical solvers/methods
+    "fsolve" or "differential evolution" to locate for which values of the
+    :math:`\theta` and :math:`\psi` variables, their time derivatives become
+    zero.
 
+    Parameters
+    ----------
+    profile : Profile
+        Profile object that contains Tokamak and Particle information.
+    method : str
+        Indicates which numerical method (solver) is used. Can be "fsolve" or
+        "differential evolution". Defaults to 'fsolve'.
+    initial_condition : list | tuple | deque
+        Initial condition passed into the numerical solver, in order to begin
+        its search/iterative process.
+    bounds : list
+        Necessary to define a search region for the "differential evolution"
+        numerical solver. Not used in "fsolve".
 
-        Parameters
-        ----------
-        profile : Profile
-            Profile object that contains Tokamak and Particle information.
-        method : str
-            Indicates which numerical method (solver) is used. Can be "fsolve" or "differential evolution".
-        initial_condition : list | tuple | deque
-            Initial condition passed into the numerical solver, in order to begin its search/
-            iterative process.
-        bounds : list
-            Necessary to define a search region for the "differential evolution" numerical
-            solver. Not used in "fsolve".
-
-        Returns
-        -------
-        tuple
-            Fixed point (tuple) of the form (:math:`\theta`,:math:`\psi`) that essentially
-            represents a solution of the numercial solver. :math:`\psi` is calculated in
-            "NUMagnetic_flux" units.
+    Returns
+    -------
+    Fixed point (tuple) of the form (:math:`\theta`,:math:`\psi`) that
+    essentially represents a solution of the numercial solver. :math:`\psi`
+    is calculated in "NUMagnetic_flux" units.
 
     """
 
@@ -50,9 +53,11 @@ def fixed_point(
 
         theta, psi = vars
 
-        # We calculate the quantity theta_dot**2+psi_dot**2 or [theta_dot, psi_dot]
-        # depending on the method
-        system_result = system(theta=theta, psi=psi, profile=profile, method=method)
+        # We calculate the quantity theta_dot**2+psi_dot**2 or
+        # [theta_dot, psi_dot] depending on the method
+        system_result = system(
+            theta=theta, psi=psi, profile=profile, method=method
+        )
 
         return system_result
 
@@ -77,7 +82,11 @@ def fixed_point(
     elif method == "fsolve":
 
         result = fsolve(
-            fixed_point_system, x0=initial_condition, xtol=1e-10, maxfev=1_000, factor=0.1
+            fixed_point_system,
+            x0=initial_condition,
+            xtol=1e-10,
+            maxfev=1_000,
+            factor=0.1,
         )
 
         theta_solution = result[0]

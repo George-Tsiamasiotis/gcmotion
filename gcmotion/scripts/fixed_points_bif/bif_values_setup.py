@@ -1,5 +1,6 @@
 r"""
-Simple script that sets up the values of the desired quantities in a bifurcation plot.
+Simple script that sets up the values of the desired quantities in a
+bifurcation plot.
 """
 
 from gcmotion.entities.profile import Profile
@@ -16,9 +17,10 @@ def set_up_bif_plot_values(
     input_energy_units: str = "NUJoule",
 ) -> tuple[list, list]:
     r"""
-    Simple function that sets up the values of the desired quantity in a bifurcation plot.
-    Due to bifurcations an two or more y values may correspond to asingle x value.
-    This function ensures that the plotted arrays have the same length.
+    Simple function that sets up the values of the desired quantity in a
+    bifurcation plot. Due to bifurcations an two or more y values may
+    correspond to a single x value. This function ensures that the plotted
+    arrays have the same length.
     """
 
     set_up_x_values = []

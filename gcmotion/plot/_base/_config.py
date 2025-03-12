@@ -39,31 +39,6 @@ class _ProfileEnergyContourConfig:
 
 
 @dataclass
-class _ProfilePzetaContourConfig:
-    # Default optional arguements
-    thetalim: tuple = (-np.pi, np.pi)
-    psilim: tuple = (0, 1.2)
-    levels: int = 30
-    flux_units: str = "Tesla * meters^2"
-    Pzeta_units: str = "Tesla * meters^2"
-    potential: bool = True
-    wall: bool = True
-    # Contour
-    mode: str = "filled"  # "filled" or "lines"
-    grid_density: int = 200
-    cmap: str = "plasma"
-    locator: str = ""  # Pzeta can be negative so dont use LogLocator
-    log_base: float = 1.0001
-    zorder: int = 0
-    Pthetaax: bool = True
-    cursor: bool = True
-    # Labels
-    labelsize: float = 15
-    ticknum: int = 10
-    ticksize: float = 12
-
-
-@dataclass
 class _ColorbarConfig:
     location: str = "top"
     numticks: int = 15
@@ -93,31 +68,8 @@ class _ParticlePoloidalDrift:
     init_marker: str = "."
 
 
-@dataclass()
-class _FixedPointsPlotConfig:
-    # Figure keywords
-    figsize: tuple = (13, 7)
-    dpi: int = 100
-    layout: str = "constrained"
-    facecolor: str = "lightskyblue"
-    projection: str | None = None  # None = default
-    # Fixed points keywords
-    fp_plot_init_cond: bool = False
-    flux_units: str = "Tesla * meter^2"
-    X_color: str = "#80FF80"
-    O_color: str = "yellow"
-    X_size: float = 100
-    O_size: float = 100
-    # IC Keywords
-    ic_marker: str = ">"
-    ic_markercolor: str = "red"
-    ic_markersize: float = 100
-    # RZ coords
-    RZ_coords: bool = False
-
-
 @dataclass
-class _RZContourConfig:
+class _MachineCoordsContourConfig:
     # Figure keywords
     figsize: tuple = (6, 8)
     dpi: int = 100
@@ -151,3 +103,26 @@ class _RZContourConfig:
     parametric_density: int = 500
     xmargin_perc: float = 0.1
     ymargin_perc: float = 0.1
+
+
+@dataclass()
+class _FixedPointsPlotConfig:
+    # Figure keywords
+    figsize: tuple = (13, 7)
+    dpi: int = 100
+    layout: str = "constrained"
+    facecolor: str = "white"
+    projection: str | None = None  # None = default
+    # Fixed points keywords
+    fp_plot_init_cond: bool = False
+    flux_units: str = "Tesla * meter^2"
+    X_color: str = "#80FF80"
+    O_color: str = "yellow"
+    X_size: float = 100
+    O_size: float = 100
+    # IC Keywords
+    ic_marker: str = ">"
+    ic_markercolor: str = "red"
+    ic_markersize: float = 100
+    # RZ coords
+    RZ_coords: bool = False

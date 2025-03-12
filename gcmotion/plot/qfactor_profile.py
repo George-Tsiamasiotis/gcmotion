@@ -56,6 +56,8 @@ def qfactor_profile(entity: Tokamak | Profile | Particle, **kwargs):
     fig = plt.figure(**fig_kw)
     ax_dict = fig.subplot_mosaic([["q", "p"]])
     axq, axp = ax_dict["q"], ax_dict["p"]
+    axq.grid(True)
+    axp.grid(True)
     axq.margins(0)
     axp.margins(0)
 
@@ -63,11 +65,8 @@ def qfactor_profile(entity: Tokamak | Profile | Particle, **kwargs):
     psi = psi_wallNU * np.linspace(
         config.span[0], config.span[1], config.points
     )
-    logger.trace(psi)
     q = qfactor.solverqNU(psi.m)
     psip = qfactor.psipNU(psi.m)
-    logger.trace(q.shape)
-    logger.trace(psi_wallNU)
 
     # Plot
     axq.plot(psi / psi_wallNU, q)

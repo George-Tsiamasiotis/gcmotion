@@ -41,6 +41,7 @@ print(particle)
 # Some plots
 gplt.qfactor_profile(particle.profile)
 gplt.magnetic_profile(particle.profile, coord="rho")
+gplt.psi_ptheta_plot(particle)
 gplt.particle_evolution(particle, units="NU")
 gplt.particle_poloidal_drift(
     particle,

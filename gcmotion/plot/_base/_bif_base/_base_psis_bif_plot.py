@@ -1,18 +1,22 @@
+r"""Simple script that draws the psi coordinate of the distinct fixed points
+for each :math:`\mu` or :math:`P_{\zeta}` of the bifurcation analysis"""
+
 import numpy as np
 from matplotlib import ticker
-from collections import deque
 from gcmotion.utils.logger_setup import logger
 from gcmotion.entities.profile import Profile
 
-from gcmotion.scripts.fixed_points_bif.bif_values_setup import set_up_bif_plot_values
+from gcmotion.scripts.fixed_points_bif.bif_values_setup import (
+    set_up_bif_plot_values,
+)
 from gcmotion.plot._base._bif_base._bif_config import _PsisFixedPlotConfig
 
 
 def _psis_bif_plot(
     profile: Profile,
-    COM_values: list | deque,
-    X_psis: list | deque,
-    O_psis: list | deque,
+    COM_values: list,
+    X_psis: list,
+    O_psis: list,
     which_COM: str,
     ax=None,
     **kwargs,
@@ -31,8 +35,8 @@ def _psis_bif_plot(
     O_psis : deque, list
         The values of the :math:`\psi`s of the O points for each COM value.
     which_COM : str
-        String that indicates with respect to which constant of motion (COM) :math:`\mu`
-        or :math:`P_{\zeta}` the :math:`\psi`s fixed are plotted.
+        String that indicates with respect to which constant of motion (COM)
+        :math:`\mu` or :math:`P_{\zeta}` the :math:`\psi`s fixed are plotted.
     ax : Axes
         The ax upon which to draw.
 
@@ -40,7 +44,8 @@ def _psis_bif_plot(
     -----
     For a full list of all available optional parameters, see the dataclass
     _PsisFixedPlotConfig at gcmotion/plot/_base/_bif_base/_bif_config.
-    The defaults values are set there, and are overwritten if passed as arguements.
+    The defaults values are set there, and are overwritten if passed as
+    arguements.
 
     """
     logger.info("\t==> Plotting Base psis Fixed Bifurcation Diagram...")
@@ -52,10 +57,16 @@ def _psis_bif_plot(
 
     # psi Fixed Bifurcation
     COM_plotX, X_psi_plot = set_up_bif_plot_values(
-        profile=profile, COM_values=COM_values, y_values=X_psis, which_COM=which_COM
+        profile=profile,
+        COM_values=COM_values,
+        y_values=X_psis,
+        which_COM=which_COM,
     )
     COM_plotO, O_psi_plot = set_up_bif_plot_values(
-        profile=profile, COM_values=COM_values, y_values=O_psis, which_COM=which_COM
+        profile=profile,
+        COM_values=COM_values,
+        y_values=O_psis,
+        which_COM=which_COM,
     )
 
     # Set the upper limit of the y axis properly

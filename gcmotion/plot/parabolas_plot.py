@@ -1,6 +1,6 @@
 """
-Simple script that draws parabolas diagram along with the trapped passing boundary
-if asked.
+Simple script that draws parabolas diagram along with the trapped passing
+boundary if asked.
 """
 
 from gcmotion.utils.logger_setup import logger
@@ -15,8 +15,9 @@ from gcmotion.plot._base._base_parabolas_tpb_plot import _plot_parabolas_tpb
 def parabolas_diagram(profile: Profile, **kwargs):
     r"""
 
-    This script draw the parabolas diagram along with the trapped passing boundary
-    (if asked) by plotting the values calculated in :py:func:`calc_parabolas_tpb`.
+    This script draw the parabolas diagram along with the trapped passing
+    boundary (if asked) by plotting the values calculated in
+    :py:func:`calc_parabolas_tpb`.
 
     Parameters
     ----------
@@ -25,7 +26,7 @@ def parabolas_diagram(profile: Profile, **kwargs):
         useful psi values.
 
     Other Parameters
-    ----------
+    ----------------
     Pzetalim : tuple,list, optional
         The Pzeta limits within which the RW, LW, MA parabolas' values are to
         be calculated. CAUTION: the limits must be normalized to psip_wallNU.
@@ -35,8 +36,8 @@ def parabolas_diagram(profile: Profile, **kwargs):
         the RW, LW, MA parabolas' values. Defaults to 1000.
     enlim : tuple, list, optional
         The Pzeta limits within which the RW, LW, MA parabolas' values are to
-        be calculated. CAUTION: the limits must be normalized to E/:math:`\mu B_0`.
-        Defaults to (0,3).
+        be calculated. CAUTION: the limits must be normalized to
+        E/:math:`\mu B_0`. Defaults to (0,3).
     TPB : bool, optional
         Boolean that determines weather the trapped-passing boundary is to
         be plotted. Defaults to ``False``.
@@ -44,8 +45,8 @@ def parabolas_diagram(profile: Profile, **kwargs):
     Notes
     -----
     For a full list of all available optional parameters, see the dataclass
-    ParabolasPlotConfig at gcmotion/config/plot_parameters. The defaults values
-    are set there, and are overwritten if passed as arguements.
+    ParabolasPlotConfig at gcmotion/config/plot_parameters. The defaults
+    values are set there, and are overwritten if passed as arguements.
     """
 
     # Unpack parameters
@@ -61,7 +62,7 @@ def parabolas_diagram(profile: Profile, **kwargs):
         "facecolor": config.facecolor,
     }
 
-    fig, par_ax = plt.subplots(1, 1, **fig_kw)
+    _, par_ax = plt.subplots(1, 1, **fig_kw)
 
     logger.info("Creating parabolas diagram figure.")
 
@@ -85,7 +86,8 @@ def parabolas_diagram(profile: Profile, **kwargs):
     v_MA = parabolas_output["v_MA"]
 
     logger.info(
-        f"Successfully calculated {y_L.shape[0]} parabolas values with vertices RW: {v_R}, LW: {v_L}, MA: {v_MA}"
+        f"""Successfully calculated {y_L.shape[0]} parabolas values with
+         vertices RW: {v_R}, LW: {v_L}, MA: {v_MA}"""
     )
 
     # Plot right left boundar, magnetic axis
@@ -130,11 +132,17 @@ def parabolas_diagram(profile: Profile, **kwargs):
     # If asked plot trapped-passing boundary
     if config.plot_TPB:
         _plot_parabolas_tpb(
-            profile=profile, X_energies=TPB_X, O_energies=TPB_O, ax=par_ax, x_TPB=x_TPB, **kwargs
+            profile=profile,
+            X_energies=TPB_X,
+            O_energies=TPB_O,
+            ax=par_ax,
+            x_TPB=x_TPB,
+            **kwargs,
         )
 
         logger.info(
-            f"Plotted {profile.bfield.plain_name} trapped-passing boundary in parabolas diagram."
+            f"""Plotted {profile.bfield.plain_name} trapped-passing boundary
+             in parabolas diagram."""
         )
 
     par_ax.set_xlabel(
@@ -143,7 +151,9 @@ def parabolas_diagram(profile: Profile, **kwargs):
         fontsize=config.xlabel_fontsize,
     )
     par_ax.set_ylabel(
-        r"$\dfrac{E}{\mu B_0}$", rotation=config.ylabel_rotation, fontsize=config.ylabel_fontsize
+        r"$\dfrac{E}{\mu B_0}$",
+        rotation=config.ylabel_rotation,
+        fontsize=config.ylabel_fontsize,
     )
 
     par_ax.set_title(

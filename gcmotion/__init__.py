@@ -36,7 +36,11 @@ from gcmotion.entities.particle import Particle
 
 # Scripts
 from gcmotion.scripts import events
-
+from gcmotion.scripts.frequency_analysis.frequency_analysis import (
+    FrequencyAnalysis,
+)
+from gcmotion.scripts.fixed_points_bif.fixed_points import fixed_points
+from gcmotion.scripts.fixed_points_bif.bifurcation import bifurcation
 
 # main namespace
 __all__ = [
@@ -59,4 +63,7 @@ __all__ = [
     "Particle",
     # Scripts
     "events",
+    "FrequencyAnalysis",
+    "fixed_points",
+    "bifurcation",
 ]

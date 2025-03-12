@@ -15,7 +15,7 @@ sys.path.insert(0, os.path.abspath("."))
 project = "gcmotion"
 copyright = "2024, George Tsiamasiotis"
 author = "George Tsiamasiotis"
-release = "0.0.1"
+release = "0.0.2"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

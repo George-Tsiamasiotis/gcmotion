@@ -1,6 +1,11 @@
 r"""
-Function that calculates the time derivatives of the :math:`\theta` and :math:`\psi`
-variables, :math:`\dot{\theta}` and :math:`\dot{\psi}` respectively, according to White's equations.
+===================
+Fixed Points System
+===================
+
+Function that calculates the time derivatives of the :math:`\theta` and
+:math:`\psi` variables, :math:`\dot{\theta}` and :math:`\dot{\psi}`
+respectively, according to White's equations.
 """
 
 from gcmotion.entities.profile import Profile
@@ -8,39 +13,45 @@ from gcmotion.entities.profile import Profile
 
 # System of equations to be solved
 def system(
-    theta: float, psi: float, profile: Profile, method: str, psi_dot_scaling_factor: float = 70
+    theta: float,
+    psi: float,
+    profile: Profile,
+    method: str,
+    psi_dot_scaling_factor: float = 70,
 ) -> float | list:
     r"""
-    Function that calculates the time derivatives of the :math:`\theta` and :math:`\psi`
-    variables, based on White's equations. It will be used in the :py:func:`single_fixed_point`
-    and :py:func:`fp_ic_scan` methods, to evaluate for which :math:`\theta` and :math:`\psi`
-    values the derivatives become zero.
+    Function that calculates the time derivatives of the :math:`\theta`
+    and :math:`\psi` variables, based on White's equations. It will be
+    used in the :py:func:`single_fixed_point` and :py:func:`fp_ic_scan`
+    methods, to evaluate for which :math:`\theta` and :math:`\psi`
+    values the time derivatives become zero.
 
-        Parameters
-        ----------
-        theta : float
-            Value of the :math:`\theta` for which the time derivatives will be calculated.
-        psi : float
-            Value of the :math:`\psi` for which the time derivatives will be calculated.
-        profile : Profile
-            Profile object that contains Tokamak and Particle information.
-        method : str
-            String that indicates which method will be used to find the systems fixed
-            points in :py:func:`single_fixed_point`. Can either be "fsolve" (deterministic)
-            or "differential evolution" (stochastic).
-        psi_dot_scaling_factor : float,optional
-            Scaling factor that is used in the sum of squares of the time derivatives of the
-            :math:`\theta` and :math:`\psi` values like so -->
-            :math:`\dot{\theta}^2` + (psi_dot_scaling_factor:math:`\dot{\psi})^2` because physiacally
-            the time derivative of :math:`\psi` is quite smaller than that of :math:`\theta`. Defaults to 70.
+    Parameters
+    ----------
+    theta : float
+        Value of the :math:`\theta` for which the time derivatives will be
+        calculated.
+    psi : float
+        Value of the :math:`\psi` for which the time derivatives will be
+        calculated.
+    profile : Profile
+        Profile object that contains Tokamak and Particle information.
+    method : str
+        String that indicates which method will be used to find the systems
+        fixed points in :py:func:`single_fixed_point`. Can either be "fsolve"
+        (deterministic) or "differential evolution" (stochastic).
+    psi_dot_scaling_factor : float,optional
+        Scaling factor that is used in the sum of squares of the time
+        derivatives of the :math:`\theta` and :math:`\psi` values like so -->
+        :math:`\dot{\theta}^2` + (psi_dot_scaling_factor:math:`\dot{\psi})^2`
+        because physiacally the time derivative of :math:`\psi` is quite
+        smaller than that of :math:`\theta`. Defaults to 70.
 
-
-
-        Returns
-        -------
-        The time derivatives of the :math:`\theta` and :math:`\psi`
-        variables or the sum of the time derivatives' squares (depends on the
-        selected method)
+    Returns
+    -------
+    The time derivatives of the :math:`\theta` and :math:`\psi`
+    variables or the sum of the time derivatives' squares (depends on the
+    selected method)
 
     """
 
