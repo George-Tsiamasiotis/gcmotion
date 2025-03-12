@@ -142,10 +142,13 @@ def res_range_plot(profile: Profile, COM_values: list | deque, **kwargs):
     ax.ticklabel_format(style="sci", axis="x", scilimits=(0, 0))
     ax.ticklabel_format(style="sci", axis="y", scilimits=(0, 0))
 
-    # df = pd.read_pickle(r"C:\Users\georg\Downloads\max_omega_theta_per_Pzeta_df")
-    # # print(df)
-    # df = df.reset_index()
-    # ax.scatter(df.iloc[:, 0], abs(df.iloc[:, 1]), marker="x", color="b")
+    df = pd.read_pickle(r"C:\Users\georg\Downloads\max_omega_theta_per_Pzeta_trapped")
+    ax.scatter(df.Pzeta, df.max_omega_theta, marker="x", color="b")
+
+    if all(a < b for a, b in zip(df.max_omega_theta, omegas_plot)):
+        print("SUCCESS")
+    else:
+        print("FAILED")
 
     plt.ion()
     plt.show(block=True)

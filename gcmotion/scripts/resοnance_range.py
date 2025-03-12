@@ -121,7 +121,7 @@ def omegas_max(
         )
 
         for O_Point in current_O_points:
-            omega_maxNU = _omega_maxNU(profile=profile, O_Point=O_Point, delta=config.delta)
+            omega_maxNU = _omega_maxNU(profile=profile, O_Point=O_Point, delta=config.hessian_delta)
 
             current_omegas_max.append(profile.Q(omega_maxNU, "NUw0").to(config.freq_units).m)
 
