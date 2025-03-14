@@ -11,7 +11,6 @@ Tests
 
 """
 
-import pint
 import pytest
 import numpy as np
 
@@ -20,6 +19,7 @@ import numpy as np
     "efields",
     [
         "nofield",
+        "cosine_potential",
         "radial",
     ],
     indirect=True,
@@ -61,5 +61,5 @@ class TestAnalytical:
         r"""Must return np.ndarray (or np.float64), since its only used for
         plotting.
         """
-        Er = efields.Er(self.psi_array)
+        Er = efields.Er(self.psi_array, self.theta_array)
         assert isinstance(Er, np.ndarray)
