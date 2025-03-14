@@ -56,6 +56,8 @@ def qfactor_profile(entity: Tokamak | Profile | Particle, **kwargs):
     fig = plt.figure(**fig_kw)
     ax_dict = fig.subplot_mosaic([["q", "p"]])
     axq, axp = ax_dict["q"], ax_dict["p"]
+    axq.grid(True)
+    axp.grid(True)
     axq.margins(0)
     axp.margins(0)
 

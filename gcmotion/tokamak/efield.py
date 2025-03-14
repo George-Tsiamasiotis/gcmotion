@@ -8,7 +8,7 @@ import numpy as np
 
 from termcolor import colored
 from scipy.special import erf
-from math import sqrt, exp
+from math import sqrt, exp, sin, cos, pi
 from abc import ABC, abstractmethod
 
 # Quantity alias for type annotations
@@ -76,7 +76,7 @@ class ElectricField(ABC):
         """
 
     @abstractmethod
-    def Er(self, psi: np.ndarray) -> np.ndarray:
+    def Er(self, psi: np.ndarray, theta: np.ndarray) -> np.ndarray:
         r"""Calculates the electric field strength in [NU].
 
         Used for plotting.
@@ -119,12 +119,75 @@ class Nofield(ElectricField):
         r"""Always returns a zero array in the same shape as `psi`."""
         return 0 * psi
 
-    def Er(self, psi: np.ndarray) -> np.ndarray:
+    def Er(self, psi: np.ndarray, theta: np.ndarray) -> np.ndarray:
         r"""Always returns a zero array in the same shape as `psi`."""
         return 0 * psi
 
     def __repr__(self):
         return colored("No electric field", "light_blue")
+
+
+class CosinePotential(ElectricField):
+    r"""Initializes a cosine-like radial electric field of the form:
+
+    .. math::
+
+        E(r) = V_0f\pi\sin(f\pi\psi)
+
+    with
+
+    .. math::
+
+        \Phi(\psi) = V_0 + V_0\cos(f\pi\psi)
+
+    .. important::
+
+        This Electric field is defined through its Potential.
+
+    Parameters
+    ----------
+    V0: Quantity
+        The Electric **Potential** amplitude.
+    f: float
+        The "frequency" factor of the cosine term.
+
+    """
+
+    is_analytical = True
+    is_numerical = False
+
+    def __init__(self, V0: Quantity, f: float):
+        r"""Initializes the field's parameters."""
+
+        self.V0 = V0.to("Volts")
+        self.V0NU = V0.to("NUVolts")
+        self.f = f
+
+        self._V0NU = self.V0NU.magnitude
+
+    def solverPhiderNU(self, psi: float, theta: float) -> tuple[float]:
+        Phi_der_psi = -self._V0NU * self.f * pi * sin(self.f * pi * psi)
+        Phi_der_theta = 0
+
+        return (Phi_der_psi, Phi_der_theta)
+
+    def PhiNU(
+        self, psi: float | np.ndarray, theta: float | np.ndarray
+    ) -> float | np.ndarray:
+
+        if isinstance(psi, float):
+            return self._V0NU + self._V0NU * cos(20 * np.pi * psi)
+        elif isinstance(psi, np.ndarray):
+            return self._V0NU + self._V0NU * np.cos(20 * np.pi * psi)
+
+    def Er(self, psi: np.ndarray, theta: np.ndarray) -> np.ndarray:
+        return self._V0NU * self.f * np.sin(self.f * psi)
+
+    def __repr__(self):
+        return (
+            colored("Cosine Potential", "light_blue")
+            + f": V0 ={self.V0:.4g~}, f={self.f:.4g}, "
+        )
 
 
 class Radial(ElectricField):
@@ -230,7 +293,7 @@ class Radial(ElectricField):
         )
         return Phi
 
-    def Er(self, psi: np.ndarray) -> np.ndarray:
+    def Er(self, psi: np.ndarray, theta: np.ndarray) -> np.ndarray:
         r = np.sqrt(2 * psi)
         E = -self._EaNU * np.exp(-((r - self._rpeakNU) ** 2) / self._rwNU**2)
         return E

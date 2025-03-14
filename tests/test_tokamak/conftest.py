@@ -203,6 +203,12 @@ def no_efield():
     return gcm.efield.Nofield()
 
 
+def cosine_potential_efield(Q):
+    r"""Creates a CosinePotential efield."""
+    V0 = Q(1e-5, "NUVolts")
+    return gcm.efield.CosinePotential(V0=V0, f=20)
+
+
 def radial_efield(Q):
     r"""Creates a Radial efield."""
     B0 = Q(2, "Tesla")
@@ -217,5 +223,7 @@ def efields(request, Q):
 
     if request.param == "nofield":
         return no_efield()
+    if request.param == "cosine_potential":
+        return cosine_potential_efield(Q)
     if request.param == "radial":
         return radial_efield(Q)
