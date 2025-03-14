@@ -284,3 +284,29 @@ class RZBigContoursConfig:
     parametric_density: int = 500
     # Contours keywords
     levels: int = 20
+
+
+@dataclass
+class ResRangePlotConfig:
+    # Figure keywords
+    figsize: tuple = figsize
+    dpi: int = dpi
+    layout: str = "constrained"
+    facecolor: str = "white"
+    # Labels Keywords
+    xlabel_fontsize: float = 13
+    xlabel_rotation: int = 0
+    ylabel_fontsize: float = 13
+    ylabel_rotation: int = 90
+    # Title Keywords
+    titlesize: float = 20
+    titlecolor: str = "black"
+    # Scatter kw
+    marker_size: float = 3
+    marker_color: str = "green"
+    marker_style: str = "o"
+    # Omegas Script Keywords
+    freq_units: str = "NUw0"
+    which_COM: str = "Pzeta"
+    hessian_dtheta: float = 1e-5
+    hessian_dpsi: float = 1e-5
