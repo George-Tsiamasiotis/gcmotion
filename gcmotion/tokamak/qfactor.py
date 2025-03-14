@@ -12,12 +12,15 @@ from abc import ABC, abstractmethod
 from termcolor import colored
 from math import sqrt, atan
 from scipy.special import hyp2f1
-from scipy.interpolate import UnivariateSpline, InterpolatedUnivariateSpline
+from scipy.integrate import quad
+from scipy.interpolate import make_interp_spline
 
 from gcmotion.utils.logger_setup import logger
 from gcmotion.utils.precompute import precompute_hyp2f1
-from gcmotion.configuration.scripts_configuration import PrecomputedConfig
-
+from gcmotion.configuration.scripts_configuration import (
+    PrecomputedConfig,
+    NumericalDatasetsConfig,
+)
 
 # Quantity alias for type annotations
 type Quantity = pint.Quantity
@@ -109,12 +112,23 @@ class NumericalQFactor(QFactor):
         q_values = np.insert(q_values, 0, q_values[0])
 
         # Create q spline
-        self.qspline = UnivariateSpline(x=psi_values, y=q_values)
+        self.qspline = make_interp_spline(
+            x=psi_values,
+            y=q_values,
+            k=NumericalDatasetsConfig.qfactor_spline_order,
+        )
 
-        # Create psip spline
-        iota_values = 1 / q_values
-        iota_spline = UnivariateSpline(x=psi_values, y=iota_values)
-        self.psip_spline = iota_spline.antiderivative(n=1)
+        # Create psip spline by integrating iota=1/q from 0 to all the
+        # availiable psi coords. This is necessary since make_interp_spline has
+        # no antiderivative implementation.
+        def iota(psi):
+            return 1 / self.qspline(psi)
+
+        def psip_quad(psi):
+            return quad(iota, 0, psi, epsabs=1e-10)[0]
+
+        psip_values = np.array([psip_quad(psi) for psi in psi_values])
+        self.psip_spline = make_interp_spline(x=psi_values, y=psip_values)
 
         # Calculate useful attributes
         self.q0 = q_values[0]
@@ -356,7 +370,7 @@ class PrecomputedHypergeometric(Hypergeometric):
         ) ** self.n
         zspan = (zlower, 0)
         z, values = precompute_hyp2f1(n=n, zspan=zspan)
-        self.z_spline = InterpolatedUnivariateSpline(x=z, y=values)
+        self.z_spline = make_interp_spline(x=z, y=values)
         logger.info("Using Precomputed Hyp2F1 values.")
 
     def psipNU(self, psi: float | np.ndarray) -> float | np.ndarray:
@@ -475,56 +489,3 @@ class DTTNegative(NumericalQFactor):
             colored("DTT - Negative", "light_blue")
             + f": q0={self.q0:.4g}, q_wall={self.q_wall:.4g}."
         )
-
-
-# class Chris(QFactor):
-#     r"""Chris's thesis qfactor."""
-#
-#     def __init__(self, B0: Quantity, a: Quantity, q0: float, q_wall: float):
-#
-#         # SI Quantities
-#         self.B0 = B0.to("Tesla")
-#         self.a = a.to("meters")
-#         self.psi_wall = (B0 * a**2 / 2).to("Magnetic_flux")
-#
-#         # [NU] Conversions
-#         self.psi_wallNU = self.psi_wall.to("NUMagnetic_flux")
-#
-#         # Unitless quantities, makes it a bit faster if defined here
-#         for key, value in self.__dict__.copy().items():
-#             self.__setattr__("_" + key, value.magnitude)
-#
-#         # Purely Numerical Quantities
-#         self.q0 = q0
-#         self.q_wall = q_wall
-#
-#         self.is_analytic = True
-#
-#     def solverqNU(self, psi: float):
-#
-#         return self.q0 * (
-#             1
-#             + (-1 + (self.q_wall / self.q0) ** 2) * (psi / self._psi_wall) ** 2
-#         ) ** (1 / 2)
-#
-#     def psipNU(self, psi: float):
-#         if isinstance(psi, (int, float)):
-#             sinh = asinh(
-#                 (psi * sqrt(-1 + (self.q_wall / self.q0) ** 2))
-#                 / self._psi_wall
-#             )
-#         else:
-#             sinh = np.arcsinh(
-#                 (psi * sqrt(-1 + (self.q_wall / self.q0) ** 2))
-#                 / self._psi_wall
-#             )
-#         return (
-#             self._psi_wall
-#             / (self.q0 * sqrt(-1 + (self.q_wall / self.q0) ** 2))
-#         ) * sinh
-#
-#     def __repr__(self):
-#         return (
-#             colored("Chris's q-factor", "light_blue")
-#             + f": q0={self.q0:.4g}, q_wall={self.q_wall:.4g}"
-#         )

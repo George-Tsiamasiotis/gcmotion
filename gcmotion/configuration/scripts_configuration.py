@@ -32,7 +32,10 @@ class ParabolasConfig:
 
 @dataclass
 class NumericalDatasetsConfig:
-    boozer_theta_downsampling_factor: int = 1  # 10
+    # Above 10-20 orbits seem to not conserve energy
+    boozer_theta_downsampling_factor: int = 5
+    currents_spline_order: int = 3
+    qfactor_spline_order: int = 3
 
 
 @dataclass
