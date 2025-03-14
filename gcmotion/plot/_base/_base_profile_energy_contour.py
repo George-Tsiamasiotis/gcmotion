@@ -93,7 +93,6 @@ def _base_profile_energy_contour(profile: Profile, ax: Axes, **kwargs):
         "cmap": config.cmap,
         "locator": locator,
         "zorder": config.zorder,
-        "linewidths": config.linewidths,
     }
 
     # Contour plot
@@ -108,7 +107,6 @@ def _base_profile_energy_contour(profile: Profile, ax: Axes, **kwargs):
         )
         logger.debug("\t\tContour mode: lines")
     else:
-        del kw["linewidths"]
         C = ax.contourf(
             "theta",
             "ycoord",
