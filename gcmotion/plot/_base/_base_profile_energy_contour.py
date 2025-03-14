@@ -121,9 +121,7 @@ def _base_profile_energy_contour(profile: Profile, ax: Axes, **kwargs):
     # Setup labels.
     # Also add a second axis for Ptheta
     ylabel = r"\psi" if config.ycoord == "psi" else r"P_\theta"
-    ax.set_ylabel(
-        rf"${ylabel}$ [{ycoordgrid.units:.4g~P}]", size=config.labelsize
-    )
+    ax.set_ylabel(rf"${ylabel}$ [{ycoordgrid.units:.4g~P}]", size=config.labelsize)
     ax.set_xlabel(r"$\theta$ [radians]", size=config.labelsize)
     ax.tick_params(labelsize=config.ticksize)
     ax.set_xticks(
@@ -136,23 +134,15 @@ def _base_profile_energy_contour(profile: Profile, ax: Axes, **kwargs):
 
     # Add secondary axes with Ptheta
     twin_ax_condition = bool(
-        config.Pthetaax
-        and config.projection is None
-        and not (config.ycoord.lower() == "ptheta")
+        config.Pthetaax and config.projection is None and not (config.ycoord.lower() == "ptheta")
     )
     if twin_ax_condition:
         logger.debug("\t\tAdding secondary Ptheta ax.")
         ax2 = ax.twinx()
         psiticks = profile.Q(ax.get_yticks(), config.flux_units)
-        Pthetamin = profile.findPtheta(
-            psiticks.min(), units=config.canmon_units
-        )
-        Pthetamax = profile.findPtheta(
-            psiticks.max(), units=config.canmon_units
-        )
-        ax2.set_ylabel(
-            rf"$P_\theta$ [{Pthetamax.units:.4g~P}]", size=config.labelsize
-        )
+        Pthetamin = profile.findPtheta(psiticks.min(), units=config.canmon_units)
+        Pthetamax = profile.findPtheta(psiticks.max(), units=config.canmon_units)
+        ax2.set_ylabel(rf"$P_\theta$ [{Pthetamax.units:.4g~P}]", size=config.labelsize)
         ax2.yaxis.set_major_locator(ticker.MaxNLocator(config.ticknum))
         ax2.set_ylim([Pthetamin.m, Pthetamax.m])
         ax2.tick_params(labelsize=config.ticksize)
@@ -183,9 +173,7 @@ def _base_profile_energy_contour(profile: Profile, ax: Axes, **kwargs):
         y_lower = np.linspace(wall_pos, wall_pos, 100)
         y_upper = np.linspace(ax_lim[1], ax_lim[1], 100)
 
-        ax.fill_between(
-            x=x, y1=y_lower, y2=y_upper, color="k", alpha=0.15, zorder=2
-        )
+        ax.fill_between(x=x, y1=y_lower, y2=y_upper, color="k", alpha=0.15, zorder=2)
 
     # Cosmetic polar projection tweaks
     if config.projection == "polar":

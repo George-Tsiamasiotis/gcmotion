@@ -86,7 +86,6 @@ def omegas_max(
     for key, value in kwargs.items():
         setattr(config, key, value)
 
-    N = len(COM_values)
     selected_COMNU_str = config.which_COM + "NU"
 
     if config.which_COM == "Pzeta":
@@ -95,6 +94,10 @@ def omegas_max(
         COM_NU_units = "NUmagnetic_moment"
 
     Omegas_max = deque()
+
+    logger.info(
+        f"Starting omega_max calculation with hessian_deltas:{config.hessian_dtheta=} and {config.hessian_dpsi=}"
+    )
 
     for COM_valueNU in tqdm(COM_values, desc="Processing"):
 
@@ -109,6 +112,7 @@ def omegas_max(
         logger.info(
             f"Calculated fixed points ['NUMagnetic_flux'] for res_range script with {selected_COMNU_str}={current_COMNU}"
         )
+        logger.info(f"Calculated fixed points for res_range {current_fp=}")
 
         _, current_O_points = xoc(
             unclassified_fixed_points=current_fp,
@@ -121,7 +125,12 @@ def omegas_max(
         )
 
         for O_Point in current_O_points:
-            omega_maxNU = _omega_maxNU(profile=profile, O_Point=O_Point, delta=config.hessian_delta)
+            omega_maxNU = _omega_maxNU(
+                profile=profile,
+                O_Point=O_Point,
+                dtheta=config.hessian_dtheta,
+                dpsi=config.hessian_dpsi,
+            )
 
             current_omegas_max.append(profile.Q(omega_maxNU, "NUw0").to(config.freq_units).m)
 
@@ -134,7 +143,9 @@ def omegas_max(
     return Omegas_max
 
 
-def _omega_maxNU(profile: Profile, O_Point: tuple, delta: float = 1e-5) -> float:
+def _omega_maxNU(
+    profile: Profile, O_Point: tuple, dtheta: float = 1e-5, dpsi: float = 1e-5
+) -> float:
     r"""
     Function that calculates the frequency :math:`\omega_{\theta}` at an O Point. This
     frequency will be the maximum frequency of the family of orbits occupying this
@@ -142,22 +153,24 @@ def _omega_maxNU(profile: Profile, O_Point: tuple, delta: float = 1e-5) -> float
     this function provides the frequancy range for the entire family of orbits
     inside this "island".
 
-        Parameters
-        ----------
-        profile : Profile
-            Profile object that contains Tokamak and Particle information.
-        O_Points : tuple
-        O Point where the frequancy will be calculated.
-        Has the form (:math:`\theta`, :math:`\psi`).
-        delta : float
-            Finite difference parameter (very small number) used for the calculation of the
-            derivatives with respect to the :math:`\theta`, :math:`\psi` variables.
-            Defaults to 1e-5.
+    Parameters
+    ----------
+    profile : Profile
+        Profile object that contains Tokamak and Particle information.
+    O_Points : tuple
+    O Point where the frequancy will be calculated.
+    Has the form (:math:`\theta`, :math:`\psi`).
+    dtheta : float
+        Finite difference parameter (very small number) used for the calculation of the
+        derivatives with respect to the :math:`\theta` variables. Deafults to 1e-5.
+    dpsi : float
+        Finite difference parameter (very small number) used for the calculation of the
+        derivatives with respect to the :math:`\psi` variables. Deafults to 1e-5.
 
 
-        Returns
-        -------
-        The frequency at the O Point.
+    Returns
+    -------
+    The frequency at the O Point.
 
     """
     theta_O_fixed, psi_O_fixed = O_Point
@@ -174,7 +187,7 @@ def _omega_maxNU(profile: Profile, O_Point: tuple, delta: float = 1e-5) -> float
 
         return W.m
 
-    Hessian = hessian(WNU=_WNU, theta=theta_O_fixed, psi=psi_O_fixed, delta=delta)
+    Hessian = hessian(WNU=_WNU, theta=theta_O_fixed, psi=psi_O_fixed, dtheta=dtheta, dpsi=dpsi)
 
     d2W_dtheta2 = Hessian[0][0]
     d2W_dpsi2 = Hessian[1][1]

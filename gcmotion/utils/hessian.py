@@ -5,7 +5,9 @@ import numpy as np
 from typing import Callable
 
 
-def hessian(WNU: Callable, theta: float, psi: float, delta: float) -> np.ndarray:
+def hessian(
+    WNU: Callable, theta: float, psi: float, dtheta: float = 1e-5, dpsi: float = 1e-5
+) -> np.ndarray:
     r"""
     Function that numerically calculates Hessian matrix of the GCM Hamiltonian at a given point
     with respect ot the :math:`\theta`, :math:`\psi` variables.
@@ -18,9 +20,12 @@ def hessian(WNU: Callable, theta: float, psi: float, delta: float) -> np.ndarray
             :math:`\theta` value for which second order derivatives are to be calculated.
         psi : float
             :math:`\psi` value in [NU] for which second order derivatives are to be calculated.
-        delta : float
+        dtheta : float
             Finite difference parameter (very small number) used for the calculation of the
-            derivatives with respect to the :math:`\theta`, :math:`\psi` variables.
+            derivatives with respect to the :math:`\theta` variables. Deafults to 1e-5.
+        dpsi : float
+            Finite difference parameter (very small number) used for the calculation of the
+            derivatives with respect to the :math:`\psi` variables. Deafults to 1e-5.
 
         Returns
         -------
@@ -30,9 +35,9 @@ def hessian(WNU: Callable, theta: float, psi: float, delta: float) -> np.ndarray
     """
 
     # Compute the Hessian matrix elements
-    d2W_dtheta2 = _higher_order_second_derivative(WNU, theta, psi, delta, delta, "x")
-    d2W_dpsi2 = _higher_order_second_derivative(WNU, theta, psi, delta, delta, "y")
-    d2W_dtheta_dpsi = _higher_order_second_derivative(WNU, theta, psi, delta, delta, "mixed")
+    d2W_dtheta2 = _higher_order_second_derivative(WNU, theta, psi, dtheta, dpsi, "x")
+    d2W_dpsi2 = _higher_order_second_derivative(WNU, theta, psi, dtheta, dpsi, "y")
+    d2W_dtheta_dpsi = _higher_order_second_derivative(WNU, theta, psi, dtheta, dpsi, "mixed")
     # Hessian matrix
     Hessian = np.array([[d2W_dtheta2, d2W_dtheta_dpsi], [d2W_dtheta_dpsi, d2W_dpsi2]])
 

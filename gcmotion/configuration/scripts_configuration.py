@@ -76,5 +76,6 @@ class BifurcationConfig:
 @dataclass
 class ResRangeConfig:
     freq_units: str = "NUw0"
-    hessian_delta: float = 1e-5
+    hessian_dtheta: float = 1e-5
+    hessian_dpsi: float = 1e-5
     which_COM: str = "Pzeta"

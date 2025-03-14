@@ -113,7 +113,7 @@ def res_range_plot(profile: Profile, COM_values: list | deque, **kwargs):
     selected_COM_units = selected_COM_Q.units
 
     ax.set_title(
-        rf"Island Resonance Range - $\omega_\theta$ at O Points ({profile.bfield.plain_name})",
+        f"{profile.bfield.plain_name}",
         fontsize=config.titlesize,
         color=config.titlecolor,
     )
@@ -124,6 +124,7 @@ def res_range_plot(profile: Profile, COM_values: list | deque, **kwargs):
         marker=config.marker_style,
         color=config.marker_color,
         s=config.marker_size,
+        label="Tzimopoulos Fixed Point Method",
     )
 
     xlabel_COM = _set_xlabel(which_COM=config.which_COM)
@@ -134,7 +135,7 @@ def res_range_plot(profile: Profile, COM_values: list | deque, **kwargs):
     )
 
     ax.set_ylabel(
-        r"$\omega_\theta^{max}$" + f" [{config.freq_units}]",
+        r"$\omega_\theta^{O Point}$" + f" [{config.freq_units}]",
         fontsize=config.ylabel_fontsize,
         rotation=config.ylabel_rotation,
     )
@@ -142,13 +143,21 @@ def res_range_plot(profile: Profile, COM_values: list | deque, **kwargs):
     ax.ticklabel_format(style="sci", axis="x", scilimits=(0, 0))
     ax.ticklabel_format(style="sci", axis="y", scilimits=(0, 0))
 
-    df = pd.read_pickle(r"C:\Users\georg\Downloads\max_omega_theta_per_Pzeta_trapped")
-    ax.scatter(df.Pzeta, df.max_omega_theta, marker="x", color="b")
+    # df = pd.read_pickle(r"C:\Users\georg\Downloads\max_omega_theta_per_Pzeta_trapped")
+    # ax.scatter(
+    #     df.Pzeta,
+    #     df.max_omega_theta,
+    #     marker="x",
+    #     color="b",
+    #     label="Tsiamasiotis Contours Shoelace Method",
+    # )
 
-    if all(a < b for a, b in zip(df.max_omega_theta, omegas_plot)):
-        print("SUCCESS")
-    else:
-        print("FAILED")
+    # ax.legend()
+
+    # if all(a < b for a, b in zip(df.max_omega_theta, omegas_plot)):
+    #     print("SUCCESS")
+    # else:
+    #     print("FAILED")
 
     plt.ion()
     plt.show(block=True)

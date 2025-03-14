@@ -308,4 +308,5 @@ class ResRangePlotConfig:
     # Omegas Script Keywords
     freq_units: str = "NUw0"
     which_COM: str = "Pzeta"
-    hessian_delta: float = 1e-5
+    hessian_dtheta: float = 1e-5
+    hessian_dpsi: float = 1e-5

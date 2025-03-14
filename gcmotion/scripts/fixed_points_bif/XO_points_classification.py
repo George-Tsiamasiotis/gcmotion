@@ -13,7 +13,8 @@ from gcmotion.utils.hessian import hessian
 def XO_points_classification(
     unclassified_fixed_points: np.ndarray,
     profile: Profile,
-    delta: float = 1e-5,
+    dtheta: float = 1e-5,
+    dpsi: float = 1e-5,
     to_P_thetas: bool = False,
 ) -> tuple[list, list]:
     r"""
@@ -27,9 +28,12 @@ def XO_points_classification(
             np.ndarray that contains point of the form [:math:`\theta_{fixed}`, :math:`\psi_{fixed}`].
         profile : Profile
             Profile object that contains Tokamak and Particle information.
-        delta : float, optional
-            Very small number used to calculate the second order derivatives, with
-            a finite difference method, needed for the Hessian. Deafults to 1e-5.
+        dtheta : float
+            Finite difference parameter (very small number) used for the calculation of the
+            derivatives with respect to the :math:`\theta` variables. Deafults to 1e-5.
+        dpsi : float
+            Finite difference parameter (very small number) used for the calculation of the
+            derivatives with respect to the :math:`\psi` variables. Deafults to 1e-5.
         to_P_thetas : bool, optional
             Boolean that determines weather :math:`\psi_{fixed}` will be turned into
             :math:`P_{\theta,fixed}` in the resulting X,O Points lists. Defaults to ``False``.
@@ -48,7 +52,7 @@ def XO_points_classification(
 
     # Might need regulation depending on Pzeta (close or above 0)
     if profile.PzetaNU.m >= -1e-3:
-        delta = 1e-9
+        dtheta = dpsi = 1e-9
 
     O_points = deque()  # Deque for stable O-points
     X_points = deque()  # Deque for unstable X-points and saddle X-points
@@ -69,7 +73,7 @@ def XO_points_classification(
 
         theta_fixed, psi_fixed = fixed_point
 
-        Hessian = hessian(WNU=WNU, theta=theta_fixed, psi=psi_fixed, delta=delta)
+        Hessian = hessian(WNU=WNU, theta=theta_fixed, psi=psi_fixed, dtheta=dtheta, dpsi=dpsi)
 
         # Determinant of the Hessian
         det_Hessian = np.linalg.det(Hessian)
