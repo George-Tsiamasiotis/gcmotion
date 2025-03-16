@@ -6,12 +6,13 @@ gcmotion.efield
 
 .. currentmodule:: gcmotion.efield
 
-Here is a list of the availiable q-factor configurations:
+Here is a list of the availiable efield configurations:
 
-======================     ===================
-No Electric field          :py:class:`Nofield`
-Raidial Electric field     :py:class:`Radial`
-======================     ===================
+===============================  ============================
+No Electric field                :py:class:`Nofield`
+Cosine Potential Electric field  :py:class:`CosinePotential`
+Radial Electric field            :py:class:`Radial`
+===============================  ============================
 
 Their parameters are documented below.
 
@@ -56,6 +57,11 @@ Available electric fields
 .. rubric:: Nofield
 
 .. autoclass:: Nofield
+   :class-doc-from: class
+
+.. rubric:: CosinePotential
+
+.. autoclass:: CosinePotential
    :class-doc-from: class
 
 .. rubric:: Radial

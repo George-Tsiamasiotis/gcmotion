@@ -141,7 +141,7 @@ def _base_profile_energy_contour(profile: Profile, ax: Axes, **kwargs):
     if twin_ax_condition:
         logger.debug("\t\tAdding secondary Ptheta ax.")
         ax2 = ax.twinx()
-        psiticks = profile.Q(ax.get_yticks(), config.flux_units)
+        psiticks = profile.Q(ax.get_ylim(), config.flux_units)
         Pthetamin = profile.findPtheta(
             psiticks.min(), units=config.canmon_units
         )
