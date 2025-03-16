@@ -30,10 +30,10 @@ def main_contour(profile: Profile, psilim: tuple, **kwargs):
         np.linspace(-tau, tau, config.main_grid_density),
     )
 
-    energy_grid = profile.findEnergy(
+    energy_grid = profile._findEnergyNU(
         psi=psi_grid,
         theta=theta_grid,
-        units="will return float",
+        potential=True,
     )
 
     # NOTE: Use line_type="Separate". Then C.lines(level) returns a list of
@@ -91,10 +91,10 @@ def local_contour(profile: Profile, orbit: ContourOrbit):
         np.linspace(thetamin, thetamax, config.local_grid_density),
     )
 
-    energy_grid = profile.findEnergy(
+    energy_grid = profile._findEnergyNU(
         psi=psi_grid,
         theta=theta_grid,
-        units="NUjoule",
+        potential=True,
     )
 
     # NOTE: Use line_type="Separate". Then C.lines(level) returns a list of
@@ -128,10 +128,9 @@ def centered_local_contour(profile: Profile, center: tuple, psilim: tuple):
         np.linspace(-tau, tau, config.centered_grid_density),
     )
 
-    energy_grid = profile.findEnergy(
+    energy_grid = profile._findEnergyNU(
         psi=psi_grid,
         theta=theta_grid,
-        units="will return float",
     )
 
     # NOTE: Use line_type="Separate". Then C.lines(level) returns a list of

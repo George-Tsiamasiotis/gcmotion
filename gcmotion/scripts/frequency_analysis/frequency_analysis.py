@@ -17,6 +17,7 @@ action variable. We then use the definitions:
 
 qkin = -dJθ/dJζ = -dJθ/dPζ
 """
+
 import warnings
 import numpy as np
 import pandas as pd
@@ -264,7 +265,7 @@ class FrequencyAnalysis:
 
         # Progress bar
         pbars = _ProgressBars(pbar=pbar)
-        matrix_pbar = pbars.mu_pbar(total=grid.shape[0])
+        matrix_pbar = pbars.matrix_pbar(total=grid.shape[0])
 
         profile = deepcopy(self.profile)
         self.orbits = deque()
@@ -505,8 +506,8 @@ class _ProgressBars:
         return tqdm(
             position=position,
             total=total,
-            desc=self.config.tqdm_energy_desc,
-            unit=self.config.tqdm_energy_unit,
+            desc=self.config.tqdm_matrix_desc,
+            unit=self.config.tqdm_matrix_unit,
             **self.global_pbar_kw,
         )
 
