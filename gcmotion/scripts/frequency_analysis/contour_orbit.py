@@ -94,7 +94,7 @@ class ContourOrbit:
 
         left_to_right = is_left_to_right(self)
 
-        closeoff_point = [self.vertices[0]]  # same for bot cases
+        closeoff_point = [self.vertices[0]]  # same for both cases
         if left_to_right:
             extra = [[tau, 0], [-tau, 0]] + closeoff_point
             self.vertices = np.append(self.vertices, extra, axis=0)

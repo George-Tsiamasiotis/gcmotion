@@ -2,7 +2,7 @@ import numpy as np
 from matplotlib import ticker
 from matplotlib.patches import Rectangle
 from matplotlib.axes import Axes
-from scipy.interpolate import RectBivariateSpline
+from scipy.interpolate import SmoothBivariateSpline
 
 from gcmotion.utils.logger_setup import logger
 
@@ -93,7 +93,6 @@ def _base_profile_energy_contour(profile: Profile, ax: Axes, **kwargs):
         "cmap": config.cmap,
         "locator": locator,
         "zorder": config.zorder,
-        "linewidths": config.linewidths,
     }
 
     # Contour plot
@@ -108,7 +107,6 @@ def _base_profile_energy_contour(profile: Profile, ax: Axes, **kwargs):
         )
         logger.debug("\t\tContour mode: lines")
     else:
-        del kw["linewidths"]
         C = ax.contourf(
             "theta",
             "ycoord",
@@ -143,7 +141,7 @@ def _base_profile_energy_contour(profile: Profile, ax: Axes, **kwargs):
     if twin_ax_condition:
         logger.debug("\t\tAdding secondary Ptheta ax.")
         ax2 = ax.twinx()
-        psiticks = profile.Q(ax.get_yticks(), config.flux_units)
+        psiticks = profile.Q(ax.get_ylim(), config.flux_units)
         Pthetamin = profile.findPtheta(
             psiticks.min(), units=config.canmon_units
         )
@@ -204,7 +202,7 @@ def _base_profile_energy_contour(profile: Profile, ax: Axes, **kwargs):
         cursorx = data["theta"][:, 0]
         cursory = data["ycoord"][0]
         cursorz = data["Energy"]
-        values = RectBivariateSpline(cursorx, cursory, cursorz)
+        values = SmoothBivariateSpline(cursorx, cursory, cursorz)
         ycoord_label = f"{ycoordgrid.units:~P}"
 
     # Always add the main axes cursor, but the twin ax cursor is added only if

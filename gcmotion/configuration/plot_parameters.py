@@ -32,28 +32,6 @@ class ProfileEnergyContourConfig:
     cbarlabelsize: int = 12
 
 
-@dataclass()
-class ProfilePzetaContourConfig:
-    # Figure keywords
-    figsize: tuple = figsize
-    dpi: int = dpi
-    layout: str = "constrained"
-    facecolor: str = facecolor
-    # Default parameter values
-    zetalim: tuple = (-pi, pi)
-    psilim: tuple = (0, 1.2)  # times psi_wall
-    levels: int = 30
-    Pzeta_units: str = "Tesla * meter^2"
-    flux_units: str = "Tesla * meter^2"
-    potential: bool = True
-    wall: bool = True
-    cursor: bool = True  # Mild performance hit
-    show: bool = True
-    # Colorbar
-    numticks: int = 10
-    cbarlabelsize: int = 12
-
-
 @dataclass
 class QfactorProfileConfig:
     # Figure keywords
@@ -167,3 +145,4 @@ class FrequencyAnalysisPlotConfig(ContourOrbitConfig):
     scatter_figsize: tuple = figsize
     scatter_dpi: int = dpi
     scatter_size: float = 7
+    add_hline: bool = True
