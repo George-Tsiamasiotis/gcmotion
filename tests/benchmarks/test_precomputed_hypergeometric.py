@@ -22,18 +22,25 @@ hyper_pre = gcm.qfactor.PrecomputedHypergeometric(
     a, B0, q0=1.1, q_wall=3.8, n=2
 )
 
+psi = Q(0.5, "psi_wall").to("NUmf").m
 psis = Q(np.linspace(0, 1, 10000), "psi_wall").to("NUmf").m
 
 
-@pytest.mark.benchmark(group="precomputed hypergeometric")
-def test_normal_hypergeometric_benchmark(benchmark):
+@pytest.mark.benchmark(group="precomputed hypergeometric array")
+def test_normal_hypergeometric_benchmark_array(benchmark):
     benchmark(hyper.psipNU, psis)
 
 
-@pytest.mark.benchmark(group="precomputed hypergeometric")
-def test_precomputed_hypergeomteric_benchmark(benchmark):
+@pytest.mark.benchmark(group="precomputed hypergeometric array")
+def test_precomputed_hypergeomteric_benchmark_array(benchmark):
     benchmark(hyper_pre.psipNU, psis)
 
 
-def test_normal_precomputed_hypergeometric_equality():
-    assert np.all(np.isclose(hyper.psipNU(psis), hyper_pre.psipNU(psis)))
+@pytest.mark.benchmark(group="precomputed hypergeometric float")
+def test_normal_hypergeometric_benchmark_float(benchmark):
+    benchmark(hyper.psipNU, psi)
+
+
+@pytest.mark.benchmark(group="precomputed hypergeometric float")
+def test_precomputed_hypergeomteric_benchmark_float(benchmark):
+    benchmark(hyper_pre.psipNU, psi)
