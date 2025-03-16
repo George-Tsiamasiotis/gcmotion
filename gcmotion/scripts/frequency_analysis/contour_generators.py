@@ -49,6 +49,8 @@ def main_contour(profile: Profile, psilim: tuple, **kwargs):
         "C": C,
         "psilim": psilim,
     }
+    if getattr(config, "calculate_min", False):
+        MainContour |= {"zmin": energy_grid.min()}
 
     return MainContour
 
@@ -110,3 +112,41 @@ def local_contour(profile: Profile, orbit: ContourOrbit):
     }
 
     return LocalContour
+
+
+def centered_local_contour(profile: Profile, center: tuple, psilim: tuple):
+    r"""Creates a local contour around the center point. Intended to be used
+    with Dynamica Energy minimum mode."""
+    config = ContourGeneratorConfig()
+
+    psimin = max(1e-7, 0.8 * center[1])
+    psimax = min(center[1], 1.2 * psilim[1])
+    psispan = (psimin, psimax)
+
+    psi_grid, theta_grid = np.meshgrid(
+        np.linspace(psispan[0], psispan[1], config.centered_grid_density),
+        np.linspace(-tau, tau, config.centered_grid_density),
+    )
+
+    energy_grid = profile.findEnergy(
+        psi=psi_grid,
+        theta=theta_grid,
+        units="will return float",
+    )
+
+    # NOTE: Use line_type="Separate". Then C.lines(level) returns a list of
+    # (N,2) numpy arrays containing the vertices of each contour line.
+    C = contourpy.contour_generator(
+        x=theta_grid,
+        y=psi_grid,
+        z=energy_grid,
+        line_type="Separate",
+    )
+
+    CenteredContour = {
+        "C": C,
+        "psilim": psilim,
+        "zmin": energy_grid.min(),
+    }
+
+    return CenteredContour

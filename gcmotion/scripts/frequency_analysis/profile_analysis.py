@@ -17,7 +17,9 @@ from collections import deque
 from gcmotion.entities.profile import Profile
 import gcmotion.scripts.frequency_analysis.lines_processing as lp
 from gcmotion.scripts.frequency_analysis.contour_orbit import ContourOrbit
-from gcmotion.configuration.scripts_configuration import ProfileAnalysisConfig
+from gcmotion.configuration.scripts_configuration import (
+    FrequencyAnalysisConfig,
+)
 from .plots import debug_plot_valid_orbits
 from gcmotion.scripts.frequency_analysis.contour_generators import (
     local_contour,
@@ -39,7 +41,7 @@ def profile_analysis(
     """
 
     # Unpack Parameters
-    config = ProfileAnalysisConfig()
+    config = FrequencyAnalysisConfig()
     for key, value in kwargs.items():
         setattr(config, key, value)
 
@@ -78,7 +80,7 @@ def calculate_frequencies(
     main_orbit: ContourOrbit,
     profile: Profile,
     main_contour: dict,
-    config: ProfileAnalysisConfig,
+    config: FrequencyAnalysisConfig,
 ):
     r"""Calculates omega_theta, qkinetic and finally omega_zeta for a given
     orbit.
@@ -91,24 +93,36 @@ def calculate_frequencies(
     main_orbit.mu = profile.muNU.m
     main_orbit.Pzeta = profile.PzetaNU.m
 
+    # Calculate orbits bounding box and t/p classification
+    main_orbit.calculate_bbox()
+    main_orbit.classify_as_tp()
+
+    if main_orbit.trapped and config.skip_trapped:
+        return None
+    if main_orbit.passing and config.skip_passing:
+        return None
+
     # Omega_theta seems to be the fastest of the two, so try this one first
     # and abort if no omega is found.
-    main_orbit.omega_theta = calculate_orbit_omegatheta(
-        orbit=main_orbit,
-        main_contour=main_contour,
-        profile=profile,
-        config=config,
-    )
-    if main_orbit.omega_theta is None:
-        return None
+    if config.calculate_omega_theta:
+        main_orbit.omega_theta = calculate_orbit_omegatheta(
+            orbit=main_orbit,
+            main_contour=main_contour,
+            profile=profile,
+            config=config,
+        )
+        if main_orbit.omega_theta is None:
+            return None
 
-    main_orbit.qkinetic = calculate_orbit_qkin(
-        main_orbit=main_orbit, profile=profile, config=config
-    )
-    if main_orbit.qkinetic is None:
-        return None
+    if config.calculate_qkinetic:
+        main_orbit.qkinetic = calculate_orbit_qkin(
+            main_orbit=main_orbit, profile=profile, config=config
+        )
+        if main_orbit.qkinetic is None:
+            return None
 
-    main_orbit.omega_zeta = calculate_omegazeta(orbit=main_orbit)
+    if config.calculate_omega_theta and config.calculate_qkinetic:
+        main_orbit.omega_zeta = calculate_omegazeta(orbit=main_orbit)
 
     return main_orbit
 
@@ -117,7 +131,7 @@ def calculate_orbit_omegatheta(
     orbit: ContourOrbit,
     main_contour: dict,
     profile: Profile,
-    config: ProfileAnalysisConfig,
+    config: FrequencyAnalysisConfig,
 ) -> float:
     r"""Calculates omega_theta by evaluating the derivative dE/dJθ localy upon
     the orbit.
@@ -173,7 +187,7 @@ def calculate_orbit_omegatheta(
 
 
 def calculate_orbit_qkin(
-    main_orbit: ContourOrbit, profile: Profile, config: ProfileAnalysisConfig
+    main_orbit: ContourOrbit, profile: Profile, config: FrequencyAnalysisConfig
 ) -> float:
     r"""Step 2: For each contour orbit found, calculate qkinetic.
 
@@ -182,10 +196,6 @@ def calculate_orbit_qkin(
     float or None
         The calculated qkinetic, if valid adjacent contours are found.
     """
-
-    # Calculate orbits bounding box and t/p classification
-    main_orbit.calculate_bbox()
-    main_orbit.classify_as_tp()
 
     # Create 2 local contours, 1 from each adjacent profile.
     Pzeta = profile.PzetaNU
@@ -251,7 +261,7 @@ def calculate_orbit_qkin(
     # print(f"{main_orbit.E=}")
 
     qkinetic = -dJtheta / dPzeta
-    if abs(qkinetic) < 4:
+    if abs(qkinetic) < config.qkinetic_cutoff:
         return qkinetic
 
 
@@ -264,7 +274,7 @@ def calculate_omegazeta(orbit: ContourOrbit):
 def finalize_orbits(
     calculated_orbits: list[ContourOrbit],
     main_profile: Profile,
-    config: ProfileAnalysisConfig,
+    config: FrequencyAnalysisConfig,
 ) -> list[ContourOrbit]:
 
     finalized_orbits = deque()

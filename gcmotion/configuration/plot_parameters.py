@@ -167,3 +167,4 @@ class FrequencyAnalysisPlotConfig(ContourOrbitConfig):
     scatter_figsize: tuple = figsize
     scatter_dpi: int = dpi
     scatter_size: float = 7
+    add_hline: bool = True

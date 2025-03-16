@@ -2,7 +2,7 @@ import numpy as np
 from matplotlib import ticker
 from matplotlib.patches import Rectangle
 from matplotlib.axes import Axes
-from scipy.interpolate import RectBivariateSpline
+from scipy.interpolate import SmoothBivariateSpline
 
 from gcmotion.utils.logger_setup import logger
 
@@ -134,7 +134,7 @@ def _base_profile_pzeta_contour(profile: Profile, ax: Axes, **kwargs):
     cursorx = data["theta"][:, 0]
     cursory = data["flux"][0]
     cursorz = data["Pzeta"]
-    values = RectBivariateSpline(cursorx, cursory, cursorz)
+    values = SmoothBivariateSpline(cursorx, cursory, cursorz)
     flux_label = f"{psigrid.units:~P}"
 
     if config.Pthetaax and config.cursor:
