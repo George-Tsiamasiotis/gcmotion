@@ -89,8 +89,8 @@ def test_findPtheta(simple_profile, Q):
     # Check float shapes
     psi_float = 0.5
     psi_array = np.linspace(0.1, 0.5, 5)
-    Ptheta_float = simple_profile.findPtheta(psi_float, "No units")
-    Ptheta_array = simple_profile.findPtheta(psi_array, "No units")
+    Ptheta_float = simple_profile._findPthetaNU(psi_float)
+    Ptheta_array = simple_profile._findPthetaNU(psi_array)
     assert isinstance(Ptheta_float, float)
     assert Ptheta_array.shape == psi_array.shape
 
@@ -109,42 +109,10 @@ def test_findEnergy(simple_profile, Q):
     # Check float shapes
     psi_float = 0.5
     psi_array = np.linspace(0.1, 0.5, 5)
-    E_float = simple_profile.findEnergy(psi_float, theta, "Joule")
-    E_array = simple_profile.findEnergy(psi_array, theta, "keV")
+    E_float = simple_profile._findEnergyNU(psi_float, theta, "Joule")
+    E_array = simple_profile._findEnergyNU(psi_array, theta, "keV")
     assert isinstance(E_float, float)
     assert E_array.shape == psi_array.shape
-
-
-@pytest.mark.parametrize("potential", [True, False])
-def test_findPzeta(simple_profile, Q, potential):
-    """Tests profile.findPzeta for functionality and shape."""
-    theta = -np.pi  # avoid 0, can lead to ZeroDivision
-    psi_float = Q(0.5, "NUmf")
-    psi_array = Q(np.linspace(0.1, 0.5, 5), "mf")
-    Pzeta_float = simple_profile.findPzeta(
-        psi_float, theta, "NUcanmom", potential
-    )
-    Pzeta_array = simple_profile.findPzeta(
-        psi_array, theta, "canmom", potential
-    )
-    assert isinstance(Pzeta_float.m, float)
-    assert Pzeta_array.m.shape == psi_array.m.shape
-
-
-@pytest.mark.parametrize("potential", [True, False])
-def test_findmu(simple_profile, Q, potential):
-    """Tests profile.findmu for functionality and shape."""
-    theta = -np.pi  # avoid 0, can lead to ZeroDivision
-    psi_float = Q(0.5, "NUmf")
-    psi_array = Q(np.linspace(0.1, 0.5, 5), "mf")
-    mu_float = simple_profile.findmu(
-        psi_float, theta, "NUmagnetic_moment", potential
-    )
-    mu_array = simple_profile.findmu(
-        psi_array, theta, "magnetic_moment", potential
-    )
-    assert isinstance(mu_float.m, float)
-    assert mu_array.m.shape == psi_array.m.shape
 
 
 def test_rhosign(simple_profile):

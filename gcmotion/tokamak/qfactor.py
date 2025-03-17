@@ -375,6 +375,13 @@ class PrecomputedHypergeometric(Hypergeometric):
 
     def psipNU(self, psi: float | np.ndarray) -> float | np.ndarray:
 
+        # NOTE: While precomupted splines are much faster for arrays (about 8
+        # times faster), they are considerably slower for single floats (about
+        # 2.3 times slower). If a float is passed, simply call the parent
+        # psipNU. The overhead for this is <1%.
+        if isinstance(psi, float):
+            return super().psipNU(psi)
+
         z = (1 - (self.q_wall / self.q0) ** self.n) * (
             psi / self._psi_wallNU
         ) ** self.n

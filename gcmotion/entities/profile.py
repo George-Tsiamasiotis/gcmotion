@@ -4,8 +4,8 @@ Profile Entity
 ==============
 
 A Profile entity defines the Constants of motion E, Pzeta and mu, as well as
-the particle species. Its methods findEnergy, findPzeta and findmu ignore the
-respective constant and return a new Quantity for a given pair of psi, theta.
+the particle species. Its methods findEnergy ignores the respective constant
+and return a new Quantity for a given pair of psi, theta.
 """
 
 import pint
@@ -18,7 +18,7 @@ from gcmotion.utils.logger_setup import logger
 from gcmotion.entities.tokamak import Tokamak
 from gcmotion.configuration.physical_constants import PhysicalConstants
 
-type Quantity = pint.Quantity
+type Quantity = pint.registry.Quantity
 type SupportedSpecies = Literal["p", "e", "D", "T", "He3", "He4"]
 
 
@@ -220,10 +220,8 @@ class Profile:
     def ENU(self, new_E):
         self.E = new_E
 
-    def findPtheta(self, psi: Quantity, units: str):
-        r"""Calculates Ptheta from psi. "Pzeta"" must be defined.
-
-        Output units are the same as input units.
+    def findPtheta(self, psi: Quantity, units: str) -> Quantity:
+        r"""Calculates Pθ(ψ). "Pzeta" must be defined.
 
         Only applicable in the absence of perturbations.
 
@@ -233,7 +231,7 @@ class Profile:
             The psi Quantity.
         units : str
             The Ptheta units. Must have dimensionality of canonical momentum
-            (orbital momentum \ [energy] * [time]),
+            (orbital momentum = [energy] * [time]),
 
         Returns
         -------
@@ -241,26 +239,13 @@ class Profile:
             The calculated Ptheta Quantity.
 
         """
-        # Do all operations in NU units, and Quantify at the end.
-        if isinstance(psi, pint.Quantity):
-            psiNU = psi.to("NUMagnetic_flux")
-            psiNU = psiNU.magnitude
-        else:
-            psiNU = psi
+        # Convert to NU, call _findPhetaNU, return result as a Quantity in the
+        # desired units.
+        psiNU = psi.to("NUMagnetic_flux").magnitude
 
-        # Calculate currents. B not needed so theta value doesnt matter
-        _, iNU, gNU = self.bfield.bigNU(psiNU, 0)
-        psipNU = self.qfactor.psipNU(psiNU)
+        PthetaNU = self._findPthetaNU(psiNU)
 
-        rhoNU = (self.PzetaNU.m + psipNU) / gNU
-        PthetaNU = psiNU + rhoNU * iNU
-
-        # Quantify, convert to input units and return
-        if isinstance(psi, pint.Quantity):
-            PthetaNU = self.Q(PthetaNU, "NUCanonical_momentum")
-            return PthetaNU.to(units)
-        else:
-            return PthetaNU
+        return self.Q(PthetaNU, "NUCanonical_momentum").to(units)
 
     def findEnergy(
         self, psi: Quantity, theta: float, units: str, potential: bool = True
@@ -285,125 +270,51 @@ class Profile:
         Quantity
             The calculated Energy Quantity in the specified units.
         """
-        # Do all operations in NU floats, and Quantify at the end.
-        if isinstance(psi, pint.Quantity):
-            psiNU = psi.to("NUMagnetic_flux")
-            psiNU = psiNU.magnitude
-        else:
-            psiNU = psi
 
-        # Calculate currents. B not needed so theta value doesnt matter
-        bNU, iNU, gNU = self.bfield.bigNU(psiNU, theta)
-        psipNU = self.qfactor.psipNU(psiNU)
+        # Convert to NU, call _findEnergyNU, return result as a Quantity in the
+        # desired units.
+        psiNU = psi.to("NUMagnetic_flux").magnitude
 
-        rhoNU = (self.PzetaNU.m + psipNU) / gNU
+        EnergyNU = self._findEnergyNU(psiNU, theta, potential)
 
-        EnergyNU = (
-            1 / 2
-        ) * rhoNU**2 * bNU**2 + self.muNU.m * bNU  # Without potential
+        return self.Q(EnergyNU, "NUJoule").to(units)
 
-        if potential:
-            PhiNU = self.efield.PhiNU(psiNU, theta)
-            EnergyNU += PhiNU
-
-        # Quantify, convert to input units and return
-        if isinstance(psi, pint.Quantity):
-            EnergyNU = self.Q(EnergyNU, "NUJoule")
-            return EnergyNU.to(units)
-        else:
-            return EnergyNU
-
-    def findPzeta(
-        self, psi: Quantity, theta: float, units: str, potential: bool = True
-    ):
-        r"""Calculates the "Pzeta" of a particle characterized by a (psi,
-        theta) pair. Both `Energy` and `mu` must be defined.
-
-        Parameters
-        ----------
-        psi : Quantity
-            The particle's psi Quantity.
-        theta : float | np.ndarray
-            The particle's :math:`\theta` angle.
-        units : str
-            The returned Pzeta units.
-        potential : bool, optional
-            Whether or not to add the electric potential term in the
-            calculation. Defaults to True.
-
-        Returns
-        -------
-        Quantity
-            The calculated Pzeta Quantity in the specified units.
-
+    def _findPthetaNU(self, psi: float | np.ndarray) -> float | np.ndarray:
+        r"""Calculates Pθ(ψ). Input and output are pure numbers in NU and have
+        the same shape.
         """
-        # Do all operations in NU floats, and Quantify at the end.
-        psiNU = psi.to("NUMagnetic_flux")
-        psiNU = psiNU.magnitude
 
-        # Calculate currents. B not needed so theta value doesnt matter
-        bNU, iNU, gNU = self.bfield.bigNU(psiNU, theta)
-        psipNU = self.qfactor.psipNU(psiNU)
-        psipNU = self.qfactor.psipNU(psiNU)
+        # B not needed so theta value doesnt matter
+        _, i, g = self.bfield.bigNU(psi, 0)
+        psip = self.qfactor.psipNU(psi)
 
-        if potential:
-            PhiNU = self.efield.PhiNU(psiNU, theta)
-        else:
-            PhiNU = 0 * psiNU  # Keep psi's shape
+        rho = (self.PzetaNU.m + psip) / g
+        Ptheta = psi + rho * i
 
-        PzetaNU = (
-            (2 * gNU**2 / bNU**2) * (self.ENU.m - self.muNU.m * bNU - PhiNU)
-        ) ** (1 / 2) - psipNU
+        return Ptheta
 
-        # Quantify, convert to input units and return
-        PzetaNU = self.Q(PzetaNU, "NUCanonical_momentum")
-        return PzetaNU.to(units)
-
-    def findmu(
-        self, psi: Quantity, theta: float, units: str, potential: bool = True
-    ):
-        r"""Calculates the "mu " of a particle characterized by a (psi, theta)
-        pair. Both `Energy` and `Pzeta` must be defined.
-
-        Parameters
-        ----------
-        psi : Quantity
-            The particle's psi Quantity.
-        theta : float
-            The particle's :math:`\theta` angle.
-        units : str
-            The returned mu units.
-        potential : bool, optional
-            Whether or not to add the electric potential term in the
-            calculation. Defaults to True.
-
-        Returns
-        -------
-        Quantity
-            The calculated mu Quantity in the specified units.
+    def _findEnergyNU(
+        self,
+        psi: float | np.ndarray,
+        theta: float | np.ndarray,
+        potential: bool,
+    ) -> float | np.ndarray:
+        r"""Calculates E(ψ, θ). Input and output are pure numbers in NU and
+        have the same shape.
         """
-        # Do all operations in NU floats, and Quantify at the end.
-        psiNU = psi.to("NUMagnetic_flux")
-        psiNU = psiNU.magnitude
 
-        # Calculate currents. B not needed so theta value doesnt matter
-        bNU, iNU, gNU = self.bfield.bigNU(psiNU, theta)
-        psipNU = self.qfactor.psipNU(psiNU)
-        psipNU = self.qfactor.psipNU(psiNU)
+        b, i, g = self.bfield.bigNU(psi, theta)
+        psip = self.qfactor.psipNU(psi)
+
+        rho = (self.PzetaNU.m + psip) / g
+
+        Energy = 1 / 2 * rho**2 * b**2 + self.muNU.m * b  # Without potential
 
         if potential:
-            PhiNU = self.efield.PhiNU(psiNU, theta)
-        else:
-            PhiNU = 0 * psiNU  # Keep psi's shape
+            Phi = self.efield.PhiNU(psi, theta)
+            Energy += Phi
 
-        rhoNU = (self.PzetaNU.m + psipNU) / gNU
-
-        # UNSURE: Can μ be negative?
-        muNU = (self.ENU.m - PhiNU) / bNU - rhoNU**2 * bNU
-
-        # Quantify, convert to input units and return
-        muNU = self.Q(muNU, "NUMagnetic_moment")
-        return muNU.to(units)
+        return Energy
 
     def _rhosign(self, psiNU: np.ndarray) -> np.ndarray:
         r"""Calculates the sign of rho from a given psi[NU].
