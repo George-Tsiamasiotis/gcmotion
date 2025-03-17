@@ -1,5 +1,5 @@
-r"""Simplpe script that draws the resonance range diagram, (:math:`\omega_\theta` and :math:`\omega_\zeta`
-max at O point) for each :math:`\mu` or :math:`P_{\zeta}`."""
+r"""Simplpe script that draws the resonance range diagram, (:math:`\omega_\theta`
+and :math:`\omega_\zeta` max at O point) for each :math:`\mu` or :math:`P_{\zeta}`."""
 
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -16,8 +16,8 @@ from gcmotion.configuration.plot_parameters import ResRangePlotConfig
 
 
 def res_range_plot(profile: Profile, COM_values: list | deque, **kwargs):
-    r"""Draws the resonance range diagram, (omega max at O point) for
-    each :math:`\mu` or :math:`P_{\zeta}`.
+    r"""Draws the resonance range diagram, (:math:`\omega_\theta`
+    and :math:`\omega_\zeta` max max at O point) for each :math:`\mu` or :math:`P_{\zeta}`.
 
     :meta public:
 
@@ -127,6 +127,8 @@ def res_range_plot(profile: Profile, COM_values: list | deque, **kwargs):
 
     # -----------------OMEGA THETA AX--------------------------
 
+    # ax_theta.set_xscale("log")
+
     ax_theta.scatter(
         COM_plot,
         omegas_theta_plot,
@@ -152,6 +154,8 @@ def res_range_plot(profile: Profile, COM_values: list | deque, **kwargs):
     ax_theta.ticklabel_format(style="sci", axis="y", scilimits=(0, 0))
 
     # -----------------OMEGA ZETA AX--------------------------
+
+    # ax_zeta.set_xscale("log")
 
     ax_zeta.scatter(
         COM_plot,

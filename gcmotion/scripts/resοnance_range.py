@@ -1,5 +1,5 @@
-r"""Script that calculates the frequency at an O point (center ) for
-multiple :math:`P_{\zeta}`'s or :math:`\mu`'s"""
+r"""Script that calculates the frequencies :math:`\omega_\theta` and :math:`\omega_\zeta`
+at an O point (center ) for multiple :math:`P_{\zeta}`'s or :math:`\mu`'s"""
 
 from tqdm import tqdm
 import numpy as np
@@ -79,7 +79,7 @@ def omegas_max(
 
         Returns
         -------
-        List, array, deque of all the omegas at the O points for the different :math:`P_{\zeta}`'s or :math:`\mu`'s
+        Deque of all the omegas at the O points for the different :math:`P_{\zeta}`'s or :math:`\mu`'s
     """
     # Unpack parameters
     config = ResRangeConfig()
@@ -156,10 +156,10 @@ def _omegas_maxNU(
 ) -> tuple:
     r"""
     Function that calculates the frequencies :math:`\omega_\theta` and :math:`\omega_\zeta`
-    at an O Point. This frequency will be the maximum frequency of the family of orbits
+    at an O Point. These frequencies will be the maximum frequency of the family of orbits
     occupying this "island" of the phase space. Therefore, (because the frequancy is 0
-    at the separatrix) this function provides the frequancy range for the entire family
-    of orbits inside this "island".
+    at the separatrix) this function provides the :math:`\omega_\theta` and :math:`\omega_\zeta`
+    frequency range for the entire family of orbits inside this "island".
 
     Parameters
     ----------
@@ -219,7 +219,7 @@ def _omegas_maxNU(
 
 
 def _dpsi_dPtheta(profile: Profile, theta: float, psi: float) -> float:
-    """Simple function that calculates the quantiti 'dpsi_dPtheta'"""
+    """Simple function that calculates the quantity 'dpsi_dPtheta'"""
     # Tokamak profile
     qfactor = profile.qfactor
     bfield = profile.bfield
@@ -254,6 +254,8 @@ def _dpsi_dPtheta(profile: Profile, theta: float, psi: float) -> float:
 
 
 def _zeta_dot(profile: Profile, theta: float, psi: float) -> float:
+    """Simple function that calculates the quantiti 'dz/dt' at a
+    apecific point"""
     # Tokamak profile
     qfactor = profile.qfactor
     bfield = profile.bfield
