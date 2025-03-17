@@ -42,6 +42,7 @@ dependencies = [
   "xarray",
   "netcdf4",
   "tqdm",
+  "numba",
   "pyqt6", # Default matplotlib backend, causes annoying warnings in wayland
   #but works
   # "pygobject", # Needed for matplotlib's gtk3agg backend, but requires
