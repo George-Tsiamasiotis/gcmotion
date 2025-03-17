@@ -58,7 +58,7 @@ def efield_profile(entity: Tokamak | Profile | Particle, **kwargs):
     # Calculate values
     psi = psi_wallNU * np.linspace(config.span[0], config.span[1], config.points)
     logger.trace(psi)
-    _el_field = efield.Er(psi.m)
+    _el_field = efield.Er(psi.m, theta=0)
     _el_potential = efield.PhiNU(psi.m, 0)
     logger.trace(_el_field.shape)
     logger.trace(_el_potential.shape)

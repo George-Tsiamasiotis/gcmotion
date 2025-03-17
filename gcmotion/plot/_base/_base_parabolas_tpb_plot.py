@@ -2,7 +2,6 @@ import numpy as np
 from collections import deque
 from gcmotion.utils.logger_setup import logger
 
-from gcmotion.entities.tokamak import Tokamak
 from gcmotion.entities.profile import Profile
 from gcmotion.scripts.fixed_points_bif.bif_values_setup import set_up_bif_plot_values
 
@@ -10,7 +9,7 @@ from gcmotion.configuration.plot_parameters import ParabolasPlotConfig
 
 
 def _plot_parabolas_tpb(
-    profile: list,
+    profile: Profile,
     X_energies: list | deque,
     O_energies: list | deque,
     x_TPB: np.ndarray,
@@ -22,6 +21,8 @@ def _plot_parabolas_tpb(
 
     Parameters
     ----------
+    profile : Profile
+        Profile object containing Tokamak information.
     X_energies : deque, list
         The values of the Energies of the X points for each Pzeta value.
     O_energies : deque, list
@@ -125,41 +126,3 @@ def _plot_parabolas_tpb(
 
     # In case the Pzeta limits are very close to zero
     ax.set_xlim([1.1 * config.Pzetalim[0], 1.1 * abs(config.Pzetalim[1])])
-
-
-def _create_profiles_list(profile: Profile, x_TPB: list | tuple, TPB_density: int) -> list:
-    r"""
-    Simple function that takes in a profile object and creates a list of profiles with
-    different Pzeta values, but all other attributes remain the same.
-    """
-    tokamak = Tokamak(
-        R=profile.R,
-        a=profile.a,
-        qfactor=profile.qfactor,
-        bfield=profile.bfield,
-        efield=profile.efield,
-    )
-
-    psip_wallNU = profile.psip_wallNU.m
-
-    # Pzetalim is given in PzetaNU/psip_walNU so we need to multiply bu psip_wallNU
-    Pzetamin, Pzetamax = min(x_TPB), max(x_TPB)  # PzetaNU/psip_wallNU
-    Pzetamin *= psip_wallNU  # Pzeta in NUcanmom
-    Pzetamax *= psip_wallNU  # Pzeta in NUcanmom
-
-    PzetasNU = np.linspace(Pzetamin, Pzetamax, TPB_density)
-
-    profiles = deque([])
-
-    for PzetaNU in PzetasNU:
-
-        current_profile = Profile(
-            tokamak=tokamak,
-            species=profile.species,
-            mu=profile.muNU,
-            Pzeta=profile.Q(PzetaNU, "NUCanonical_momentum"),
-        )
-
-        profiles.append(current_profile)
-
-    return list(profiles)

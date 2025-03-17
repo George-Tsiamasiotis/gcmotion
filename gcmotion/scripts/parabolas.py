@@ -99,7 +99,7 @@ def calc_parabolas_tpb(
 
     # Currents are poloidally symmetrical --> independent of theta. Calculate g.
     _, _, g_psipwNU = bfield.bigNU(psip_wallNU, 0)
-    _, _, g0NU = bfield.bigNU(0, 0)
+    _, _, g0NU = bfield.bigNU(0.0, 0)
 
     logger.info(f"Upacked parabolas g values with g(psip_wall)={g_psipwNU}, g(0)={g0NU}")
 
