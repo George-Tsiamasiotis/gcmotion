@@ -1,5 +1,5 @@
-r"""Simplpe script that draws the resonance range diagram, (omega max at O point) for
-each :math:`\mu` or :math:`P_{\zeta}`."""
+r"""Simplpe script that draws the resonance range diagram, (:math:`\omega_\theta` and :math:`\omega_\zeta`
+max at O point) for each :math:`\mu` or :math:`P_{\zeta}`."""
 
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -88,14 +88,18 @@ def res_range_plot(profile: Profile, COM_values: list | deque, **kwargs):
 
     start = time()
 
-    omegas = omegas_max(profile=profile, COM_values=COM_values, **kwargs)
+    omegas_theta, omegas_zeta = omegas_max(profile=profile, COM_values=COM_values, **kwargs)
 
     print(f"OMEGAS MAX RUN IN {(time() - start)/60:.1f} mins")
 
     # Here which_COM is always Pzeta because it has to do with how the values are handled
     # inside set_up_bif_plot_values
-    COM_plot, omegas_plot = set_up_bif_plot_values(
-        profile=profile, COM_values=COM_values, y_values=omegas, which_COM="Pzeta"
+    COM_plot, omegas_theta_plot = set_up_bif_plot_values(
+        profile=profile, COM_values=COM_values, y_values=omegas_theta, which_COM="Pzeta"
+    )
+
+    COM_plot, omegas_zeta_plot = set_up_bif_plot_values(
+        profile=profile, COM_values=COM_values, y_values=omegas_zeta, which_COM="Pzeta"
     )
 
     # Create figure
@@ -106,42 +110,79 @@ def res_range_plot(profile: Profile, COM_values: list | deque, **kwargs):
         "facecolor": config.facecolor,
     }
 
-    fig, ax = plt.subplots(1, 1, **fig_kw)
+    fig, ax = plt.subplots(1, 2, **fig_kw)
+
+    ax_theta = ax[0]
+    ax_zeta = ax[1]
 
     selected_COMNU_str = config.which_COM + "NU"
     selected_COM_Q = getattr(profile, selected_COMNU_str, "PzetaNU")
     selected_COM_units = selected_COM_Q.units
 
-    ax.set_title(
+    fig.suptitle(
         f"{profile.bfield.plain_name}",
         fontsize=config.titlesize,
         color=config.titlecolor,
     )
 
-    ax.scatter(
+    # -----------------OMEGA THETA AX--------------------------
+
+    ax_theta.scatter(
         COM_plot,
-        omegas_plot,
-        marker=config.marker_style,
-        color=config.marker_color,
-        s=config.marker_size,
-        label="Tzimopoulos Fixed Point Method",
+        omegas_theta_plot,
+        marker=config.marker_style_theta,
+        color=config.marker_color_theta,
+        s=config.marker_size_theta,
     )
 
     xlabel_COM = _set_xlabel(which_COM=config.which_COM)
-    ax.set_xlabel(
+    ax_theta.set_xlabel(
         f"{xlabel_COM} [{selected_COM_units}]",
         fontsize=config.xlabel_fontsize,
         rotation=config.xlabel_rotation,
     )
 
-    ax.set_ylabel(
-        r"$\omega_\theta^{O Point}$" + f" [{config.freq_units}]",
+    ax_theta.set_ylabel(
+        r"$\omega_\theta^{O Point}$" + f" [{config.freq_units_theta}]",
         fontsize=config.ylabel_fontsize,
         rotation=config.ylabel_rotation,
     )
 
-    ax.ticklabel_format(style="sci", axis="x", scilimits=(0, 0))
-    ax.ticklabel_format(style="sci", axis="y", scilimits=(0, 0))
+    ax_theta.ticklabel_format(style="sci", axis="x", scilimits=(0, 0))
+    ax_theta.ticklabel_format(style="sci", axis="y", scilimits=(0, 0))
+
+    # -----------------OMEGA ZETA AX--------------------------
+
+    ax_zeta.scatter(
+        COM_plot,
+        omegas_zeta_plot,
+        marker=config.marker_style_zeta,
+        color=config.marker_color_zeta,
+        s=config.marker_size_zeta,
+    )
+
+    ax_zeta.set_xlabel(
+        f"{xlabel_COM} [{selected_COM_units}]",
+        fontsize=config.xlabel_fontsize,
+        rotation=config.xlabel_rotation,
+    )
+
+    ax_zeta.set_ylabel(
+        r"$\omega_\zeta^{O Point}$" + f" [{config.freq_units_zeta}]",
+        fontsize=config.ylabel_fontsize,
+        rotation=config.ylabel_rotation,
+    )
+
+    ax_zeta.ticklabel_format(style="sci", axis="x", scilimits=(0, 0))
+    ax_zeta.ticklabel_format(style="sci", axis="y", scilimits=(0, 0))
+
+    plt.ion()
+    plt.show(block=True)
+
+
+def _set_xlabel(which_COM: str) -> str:
+
+    return r"$P_{\zeta}$" if which_COM == "Pzeta" else r"$\mu$"
 
     # df = pd.read_pickle(r"C:\Users\georg\Downloads\max_omega_theta_per_Pzeta_trapped")
     # ax.scatter(
@@ -158,11 +199,3 @@ def res_range_plot(profile: Profile, COM_values: list | deque, **kwargs):
     #     print("SUCCESS")
     # else:
     #     print("FAILED")
-
-    plt.ion()
-    plt.show(block=True)
-
-
-def _set_xlabel(which_COM: str) -> str:
-
-    return r"$P_{\zeta}$" if which_COM == "Pzeta" else r"$\mu$"

@@ -22,8 +22,8 @@ def omegas_max(
     **kwargs,
 ) -> deque:
     r"""
-    Function that calculates :math:`\omega_{\theta}`s at a O Points for multiple
-    :math:`P_{\zeta}`'s or :math:`\mu`'s.
+    Function that calculates :math:`\omega_\theta` and :math:`\omega_\zeta`s at
+      O Points for multiple :math:`P_{\zeta}`'s or :math:`\mu`'s.
 
         Parameters
         ----------
@@ -93,7 +93,8 @@ def omegas_max(
     elif config.which_COM == "mu":
         COM_NU_units = "NUmagnetic_moment"
 
-    Omegas_max = deque()
+    Omega_thetas_max = deque()
+    Omega_zetas_max = deque()
 
     logger.info(
         f"Starting omega_max calculation with hessian_deltas:{config.hessian_dtheta=} and {config.hessian_dpsi=}"
@@ -101,7 +102,8 @@ def omegas_max(
 
     for COM_valueNU in tqdm(COM_values, desc="Processing"):
 
-        current_omegas_max = deque()
+        current_omega_thetas_max = deque()
+        current_omega_zetas_max = deque()
 
         setattr(profile, selected_COMNU_str, profile.Q(COM_valueNU, COM_NU_units))
 
@@ -125,33 +127,39 @@ def omegas_max(
         )
 
         for O_Point in current_O_points:
-            omega_maxNU = _omega_maxNU(
+            omega_theta_maxNU, omega_zeta_maxNU = _omegas_maxNU(
                 profile=profile,
                 O_Point=O_Point,
                 dtheta=config.hessian_dtheta,
                 dpsi=config.hessian_dpsi,
             )
 
-            current_omegas_max.append(profile.Q(omega_maxNU, "NUw0").to(config.freq_units).m)
+            current_omega_thetas_max.append(
+                profile.Q(omega_theta_maxNU, "NUw0").to(config.freq_units_theta).m
+            )
+            current_omega_zetas_max.append(
+                profile.Q(omega_zeta_maxNU, "NUw0").to(config.freq_units_zeta).m
+            )
 
-        Omegas_max.append(current_omegas_max)
+        Omega_thetas_max.append(current_omega_thetas_max)
+        Omega_zetas_max.append(current_omega_zetas_max)
 
         logger.info(
             f"Calculated omegas_max ['{config.freq_units}'] of O points for res_range script with {selected_COMNU_str}={current_COMNU}"
         )
 
-    return Omegas_max
+    return Omega_thetas_max, Omega_zetas_max
 
 
-def _omega_maxNU(
+def _omegas_maxNU(
     profile: Profile, O_Point: tuple, dtheta: float = 1e-5, dpsi: float = 1e-5
-) -> float:
+) -> tuple:
     r"""
-    Function that calculates the frequency :math:`\omega_{\theta}` at an O Point. This
-    frequency will be the maximum frequency of the family of orbits occupying this
-    "island" of the phase space. Therefore, (because the frequancy is 0 at the separatrix)
-    this function provides the frequancy range for the entire family of orbits
-    inside this "island".
+    Function that calculates the frequencies :math:`\omega_\theta` and :math:`\omega_\zeta`
+    at an O Point. This frequency will be the maximum frequency of the family of orbits
+    occupying this "island" of the phase space. Therefore, (because the frequancy is 0
+    at the separatrix) this function provides the frequancy range for the entire family
+    of orbits inside this "island".
 
     Parameters
     ----------
@@ -170,7 +178,7 @@ def _omega_maxNU(
 
     Returns
     -------
-    The frequency at the O Point.
+    The :math:`\omega_\theta` and :math:`\omega_\zeta` frequency at the O Point.
 
     """
     theta_O_fixed, psi_O_fixed = O_Point
@@ -202,10 +210,12 @@ def _omega_maxNU(
     eigA = np.linalg.eigvals(A)
     logger.info(f"Calculated A matrix eigenvalues: {eigA=}")
 
-    omega_max = eigA.imag[0]
-    logger.info(f"Got imaginary part of eigenvalues-->{omega_max=}")
+    omega_theta_max = eigA.imag[0]
+    logger.info(f"Got imaginary part of eigenvalues-->{omega_theta_max=}")
 
-    return omega_max
+    omega_zeta_max = _zeta_dot(profile=profile, theta=theta_O_fixed, psi=psi_O_fixed)
+
+    return omega_theta_max, omega_zeta_max
 
 
 def _dpsi_dPtheta(profile: Profile, theta: float, psi: float) -> float:
@@ -241,3 +251,45 @@ def _dpsi_dPtheta(profile: Profile, theta: float, psi: float) -> float:
     dPtheta_dpsi = term1 + term2 + term3
 
     return 1 / dPtheta_dpsi
+
+
+def _zeta_dot(profile: Profile, theta: float, psi: float) -> float:
+    # Tokamak profile
+    qfactor = profile.qfactor
+    bfield = profile.bfield
+    efield = profile.efield
+
+    # Define quantites for the solver for clarity
+    solverqNU = qfactor.solverqNU
+    psipNU = qfactor.psipNU
+    solverbNU = bfield.solverbNU
+    solverPhiderNU = efield.solverPhiderNU
+
+    # Parameters ()
+    mu = profile.muNU.m
+    Pzeta0 = profile.PzetaNU.m
+    Pzeta = Pzeta0
+
+    # Object methods calls
+    q = solverqNU(psi)
+    psi_p = psipNU(psi)
+    b, b_der, currents, currents_der = solverbNU(psi, theta)
+    phi_der_psi, _ = solverPhiderNU(psi, theta)
+
+    # Unpack
+    b_der_psi, _ = b_der
+    i, g = currents
+    i_der, g_der = currents_der
+    # Multiply current derivatives by q to get their derivatives with
+    # respect to psi instead of psip
+    i_der, g_der = q * i_der, q * g_der
+
+    # Intermediate values
+    rho = (Pzeta + psi_p) / g
+    par = mu + rho**2 * b
+    bracket1 = par * b_der_psi + phi_der_psi
+    D = g * q + i + rho * (g * i_der - i * g_der)
+
+    z_dot = (q + rho * i_der) / D * rho * b**2 - q * i / D * bracket1
+
+    return z_dot

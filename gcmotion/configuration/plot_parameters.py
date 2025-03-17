@@ -302,11 +302,15 @@ class ResRangePlotConfig:
     titlesize: float = 20
     titlecolor: str = "black"
     # Scatter kw
-    marker_size: float = 3
-    marker_color: str = "green"
-    marker_style: str = "o"
+    marker_size_theta: float = 3
+    marker_color_theta: str = "green"
+    marker_style_theta: str = "o"
+    marker_size_zeta: float = 3
+    marker_color_zeta: str = "red"
+    marker_style_zeta: str = "o"
     # Omegas Script Keywords
-    freq_units: str = "NUw0"
+    freq_units_theta: str = "NUw0"
+    freq_units_zeta: str = "NUw0"
     which_COM: str = "Pzeta"
     hessian_dtheta: float = 1e-5
     hessian_dpsi: float = 1e-5
