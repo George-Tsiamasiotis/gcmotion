@@ -33,7 +33,9 @@ class MagneticField(ABC):
         """
 
     @abstractmethod
-    def bigNU(self, phi: float | np.ndarray, theta: float | np.ndarray) -> float | np.ndarray:
+    def bigNU(
+        self, phi: float | np.ndarray, theta: float | np.ndarray
+    ) -> float | np.ndarray:
         r"""Calculates :math:`B(\psi, \theta), I(\psi, \theta), g(\psi,\
         \theta)`. Input and output must be both floats or np.ndarrays, in
         [NU].
@@ -205,7 +207,9 @@ class NumericalMagneticField(MagneticField):
         duration = Q(end - start, "seconds")
         logger.info(f"Numerical bfield extremum search took {duration:.4g~#P}")
 
-    def bigNU(self, psi: float | np.ndarray, theta: float | np.ndarray) -> tuple:
+    def bigNU(
+        self, psi: float | np.ndarray, theta: float | np.ndarray
+    ) -> tuple:
         theta = theta % (2 * np.pi)
         b = self.b_spline(x=theta, y=psi, grid=False)
         i = self.i_spline(x=psi)
@@ -291,7 +295,9 @@ class LAR(MagneticField):
         self.Bmin = Q(_BminNU, "NUTesla").to("Tesla")
         self.Bmax = Q(_BmaxNU, "NUTesla").to("Tesla")
 
-    def bigNU(self, psi: float | np.ndarray, theta: float | np.ndarray) -> tuple[float]:
+    def bigNU(
+        self, psi: float | np.ndarray, theta: float | np.ndarray
+    ) -> tuple[float]:
 
         if isinstance(psi, float):
             b = 1 - sqrt(2 * psi) * cos(theta)
@@ -328,7 +334,8 @@ class LAR(MagneticField):
 
     def __repr__(self):
         return (
-            colored("LAR", "light_blue") + f": B0={self.B0:.4g~}, I={self.i:.4g~}, g={self.g:.4g~}."
+            colored("LAR", "light_blue")
+            + f": B0={self.B0:.4g~}, I={self.i:.4g~}, g={self.g:.4g~}."
         )
 
 
@@ -348,7 +355,9 @@ class SmartPositive(NumericalMagneticField):
         self.plain_name = "Smart - Positive"
 
     def __repr__(self):
-        return colored("Smart - Positive", "light_blue") + f": B0={self.B0:.4g~}."
+        return (
+            colored("Smart - Positive", "light_blue") + f": B0={self.B0:.4g~}."
+        )
 
 
 class SmartNegative(NumericalMagneticField):
@@ -367,7 +376,9 @@ class SmartNegative(NumericalMagneticField):
         self.plain_name = "Smart - Negative"
 
     def __repr__(self):
-        return colored("Smart - Negative", "light_blue") + f": B0={self.B0:.4g~}."
+        return (
+            colored("Smart - Negative", "light_blue") + f": B0={self.B0:.4g~}."
+        )
 
 
 class SmartNegative2(NumericalMagneticField):
@@ -386,7 +397,10 @@ class SmartNegative2(NumericalMagneticField):
         self.plain_name = "Smart - Negative 2"
 
     def __repr__(self):
-        return colored("Smart - Negative 2", "light_blue") + f": B0={self.B0:.4g~}."
+        return (
+            colored("Smart - Negative 2", "light_blue")
+            + f": B0={self.B0:.4g~}."
+        )
 
 
 class DTTPositive(NumericalMagneticField):
@@ -405,7 +419,9 @@ class DTTPositive(NumericalMagneticField):
         self.plain_name = "DTT - Positive"
 
     def __repr__(self):
-        return colored("Smart - Negative", "light_blue") + f": B0={self.B0:.4g~}."
+        return (
+            colored("Smart - Negative", "light_blue") + f": B0={self.B0:.4g~}."
+        )
 
 
 class SmartNegative2(NumericalMagneticField):
@@ -424,7 +440,10 @@ class SmartNegative2(NumericalMagneticField):
         self.plain_name = "Smart - Negative 2"
 
     def __repr__(self):
-        return colored("Smart - Negative 2", "light_blue") + f": B0={self.B0:.4g~}."
+        return (
+            colored("Smart - Negative 2", "light_blue")
+            + f": B0={self.B0:.4g~}."
+        )
 
 
 class DTTPositive(NumericalMagneticField):
@@ -443,7 +462,9 @@ class DTTPositive(NumericalMagneticField):
         self.plain_name = "DTT - Positive"
 
     def __repr__(self):
-        return colored("DTT - Positive", "light_blue") + f": B0={self.B0:.4g~}."
+        return (
+            colored("DTT - Positive", "light_blue") + f": B0={self.B0:.4g~}."
+        )
 
 
 class DTTNegative(NumericalMagneticField):
@@ -462,4 +483,6 @@ class DTTNegative(NumericalMagneticField):
         self.plain_name = "DTT - Negative"
 
     def __repr__(self):
-        return colored("DTT - Negative", "light_blue") + f": B0={self.B0:.4g~}."
+        return (
+            colored("DTT - Negative", "light_blue") + f": B0={self.B0:.4g~}."
+        )

@@ -1,6 +1,7 @@
 r"""Script that calculates the frequencies :math:`\omega_\theta` and :math:`\omega_\zeta`
 at an O point (center ) for multiple :math:`P_{\zeta}`'s or :math:`\mu`'s"""
 
+import pandas as pd
 from tqdm import tqdm
 import numpy as np
 from collections import deque
@@ -105,7 +106,9 @@ def omegas_max(
         current_omega_thetas_max = deque()
         current_omega_zetas_max = deque()
 
-        setattr(profile, selected_COMNU_str, profile.Q(COM_valueNU, COM_NU_units))
+        setattr(
+            profile, selected_COMNU_str, profile.Q(COM_valueNU, COM_NU_units)
+        )
 
         current_COMNU = COM_valueNU
 
@@ -135,10 +138,14 @@ def omegas_max(
             )
 
             current_omega_thetas_max.append(
-                profile.Q(omega_theta_maxNU, "NUw0").to(config.freq_units_theta).m
+                profile.Q(omega_theta_maxNU, "NUw0")
+                .to(config.freq_units_theta)
+                .m
             )
             current_omega_zetas_max.append(
-                profile.Q(omega_zeta_maxNU, "NUw0").to(config.freq_units_zeta).m
+                profile.Q(omega_zeta_maxNU, "NUw0")
+                .to(config.freq_units_zeta)
+                .m
             )
 
         Omega_thetas_max.append(current_omega_thetas_max)
@@ -147,6 +154,17 @@ def omegas_max(
         logger.info(
             f"Calculated omegas_max ['{config.freq_units}'] of O points for res_range script with {selected_COMNU_str}={current_COMNU}"
         )
+
+    # # Convert Omega_zetas_max: Extract the float from the inner deque
+    # Omega_zetas_max_values = [dq[0] for dq in Omega_zetas_max]
+
+    # # Create DataFrame
+    # df = pd.DataFrame(
+    #     {"Omega_zetas_max": Omega_zetas_max_values, "COM_values": COM_values}
+    # )
+
+    # # Export to pickle
+    # df.to_pickle(f"LAR_mu{profile.muNU.m},Pz=-0.028,-0.005,500.pkl")
 
     return Omega_thetas_max, Omega_zetas_max
 
@@ -190,22 +208,37 @@ def _omegas_maxNU(
         )  # Should become small for Pzetas close to 0 because psi-->0
 
         W = profile.findEnergy(
-            psi=profile.Q(psi, "NUMagnetic_flux"), theta=theta, units="NUJoule", potential=True
+            psi=profile.Q(psi, "NUMagnetic_flux"),
+            theta=theta,
+            units="NUJoule",
+            potential=True,
         )
 
         return W.m
 
-    Hessian = hessian(WNU=_WNU, theta=theta_O_fixed, psi=psi_O_fixed, dtheta=dtheta, dpsi=dpsi)
+    Hessian = hessian(
+        WNU=_WNU,
+        theta=theta_O_fixed,
+        psi=psi_O_fixed,
+        dtheta=dtheta,
+        dpsi=dpsi,
+    )
 
     d2W_dtheta2 = Hessian[0][0]
     d2W_dpsi2 = Hessian[1][1]
     d2W_dtheta_dpsi = Hessian[0][1]
-    logger.info(f"Calculated the Hessian values: {d2W_dpsi2=}, {d2W_dtheta2=}, {d2W_dtheta_dpsi=}")
+    logger.info(
+        f"Calculated the Hessian values: {d2W_dpsi2=}, {d2W_dtheta2=}, {d2W_dtheta_dpsi=}"
+    )
 
-    dpsi_dPtheta = _dpsi_dPtheta(profile=profile, theta=theta_O_fixed, psi=psi_O_fixed)
+    dpsi_dPtheta = _dpsi_dPtheta(
+        profile=profile, theta=theta_O_fixed, psi=psi_O_fixed
+    )
     logger.info(f"Calculated {dpsi_dPtheta=}")
 
-    A = dpsi_dPtheta * np.array([[d2W_dtheta_dpsi, d2W_dpsi2], [-d2W_dtheta2, -d2W_dtheta_dpsi]])
+    A = dpsi_dPtheta * np.array(
+        [[d2W_dtheta_dpsi, d2W_dpsi2], [-d2W_dtheta2, -d2W_dtheta_dpsi]]
+    )
 
     eigA = np.linalg.eigvals(A)
     logger.info(f"Calculated A matrix eigenvalues: {eigA=}")
@@ -213,7 +246,9 @@ def _omegas_maxNU(
     omega_theta_max = eigA.imag[0]
     logger.info(f"Got imaginary part of eigenvalues-->{omega_theta_max=}")
 
-    omega_zeta_max = _zeta_dot(profile=profile, theta=theta_O_fixed, psi=psi_O_fixed)
+    omega_zeta_max = _zeta_dot(
+        profile=profile, theta=theta_O_fixed, psi=psi_O_fixed
+    )
 
     return omega_theta_max, omega_zeta_max
 

@@ -1,5 +1,6 @@
 r"""Simplpe script that draws the resonance range diagram, (:math:`\omega_\theta`
-and :math:`\omega_\zeta` max at O point) for each :math:`\mu` or :math:`P_{\zeta}`."""
+and :math:`\omega_\zeta` max at O point) for each :math:`\mu` or :math:`P_{\zeta}`.
+"""
 
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -9,8 +10,10 @@ from collections import deque
 from gcmotion.utils.logger_setup import logger
 from gcmotion.entities.profile import Profile
 
-from gcmotion.scripts.resοnance_range import omegas_max
-from gcmotion.scripts.fixed_points_bif.bif_values_setup import set_up_bif_plot_values
+from gcmotion.scripts.resonance_range import omegas_max
+from gcmotion.scripts.fixed_points_bif.bif_values_setup import (
+    set_up_bif_plot_values,
+)
 
 from gcmotion.configuration.plot_parameters import ResRangePlotConfig
 
@@ -79,7 +82,9 @@ def res_range_plot(profile: Profile, COM_values: list | deque, **kwargs):
             Defaults to 'NUw0'.
 
     """
-    logger.info("\t==> Plotting Base Number of distinct Fixed Points Bifurcation Diagram...")
+    logger.info(
+        "\t==> Plotting Base Number of distinct Fixed Points Bifurcation Diagram..."
+    )
 
     # Unpack parameters
     config = ResRangePlotConfig()
@@ -88,18 +93,26 @@ def res_range_plot(profile: Profile, COM_values: list | deque, **kwargs):
 
     start = time()
 
-    omegas_theta, omegas_zeta = omegas_max(profile=profile, COM_values=COM_values, **kwargs)
+    omegas_theta, omegas_zeta = omegas_max(
+        profile=profile, COM_values=COM_values, **kwargs
+    )
 
     print(f"OMEGAS MAX RUN IN {(time() - start)/60:.1f} mins")
 
     # Here which_COM is always Pzeta because it has to do with how the values are handled
     # inside set_up_bif_plot_values
     COM_plot, omegas_theta_plot = set_up_bif_plot_values(
-        profile=profile, COM_values=COM_values, y_values=omegas_theta, which_COM="Pzeta"
+        profile=profile,
+        COM_values=COM_values,
+        y_values=omegas_theta,
+        which_COM="Pzeta",
     )
 
     COM_plot, omegas_zeta_plot = set_up_bif_plot_values(
-        profile=profile, COM_values=COM_values, y_values=omegas_zeta, which_COM="Pzeta"
+        profile=profile,
+        COM_values=COM_values,
+        y_values=omegas_zeta,
+        which_COM="Pzeta",
     )
 
     # Create figure
