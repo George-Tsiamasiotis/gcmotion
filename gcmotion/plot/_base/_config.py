@@ -66,3 +66,40 @@ class _ParticlePoloidalDrift:
     init_s: float = 30
     init_color: str = "k"
     init_marker: str = "."
+
+
+@dataclass
+class _MachineCoordsContourConfig:
+    # Figure keywords
+    figsize: tuple = (6, 8)
+    dpi: int = 100
+    layout: str = "constrained"
+    facecolor: str = "white"
+    # Contour keywords
+    cmap: str = "managua"  # "BrBG, viridis, managua"
+    levels: int = 25
+    mode: str = None
+    units: str = "NUmf"
+    which_Q: str = "flux"
+    # Locator keywords
+    log_base: float = 1.0001
+    locator: str = "linear"
+    # Boundary keywords
+    black_boundary: bool = True
+    boundary_linewidth: int = 1
+    # Stationary curves keywords
+    plot_stationary_curves: bool = True
+    stat_curves_color: str = "black"
+    stat_curves_linewidth: float = 1
+    stat_curves_linestyle: str = "dashed"
+    # Labels - Title keywords
+    xlabel_fontsize: float = 15
+    ylabel_fontsize: float = 15
+    title_fontsize: float = 15
+    # Colorbar keywords
+    cbarlabel_fontsize: float = 10
+    cbar_ticks: int = 10
+    # Numerical keywords
+    parametric_density: int = 500
+    xmargin_perc: float = 0.1
+    ymargin_perc: float = 0.1

@@ -8,13 +8,19 @@ from gcmotion.plot.particle_evolution import particle_evolution
 
 # Profile related plots
 from gcmotion.plot.qfactor_profile import qfactor_profile
+from gcmotion.plot.efield_profile import efield_profile
 from gcmotion.plot.magnetic_profile import magnetic_profile
 from gcmotion.plot.particle_poloidal_drift import particle_poloidal_drift
+from gcmotion.plot.machine_coords_profile import (
+    machine_coords_profile,
+)
 
 __all__ = [
     "qfactor_profile",
+    "efield_profile",
     "magnetic_profile",
     "profile_energy_contour",
     "particle_evolution",
     "particle_poloidal_drift",
+    "machine_coords_profile",
 ]

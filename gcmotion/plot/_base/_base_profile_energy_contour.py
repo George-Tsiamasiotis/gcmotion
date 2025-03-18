@@ -2,7 +2,7 @@ import numpy as np
 from matplotlib import ticker
 from matplotlib.patches import Rectangle
 from matplotlib.axes import Axes
-from scipy.interpolate import SmoothBivariateSpline
+from scipy.interpolate import RectBivariateSpline
 
 from gcmotion.utils.logger_setup import logger
 
@@ -202,7 +202,7 @@ def _base_profile_energy_contour(profile: Profile, ax: Axes, **kwargs):
         cursorx = data["theta"][:, 0]
         cursory = data["ycoord"][0]
         cursorz = data["Energy"]
-        values = SmoothBivariateSpline(cursorx, cursory, cursorz)
+        values = RectBivariateSpline(cursorx, cursory, cursorz)
         ycoord_label = f"{ycoordgrid.units:~P}"
 
     # Always add the main axes cursor, but the twin ax cursor is added only if

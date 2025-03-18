@@ -1,21 +1,13 @@
 r"""
-==================
-Frequency Analysis
-==================
+=================
+FrequencyAnalysis
+=================
 
-The FrequencyAnalysis class iterates through (μ, Pζ, Ε) values upon a given
-Profile, and finds the ωθ, ωζ frequencies and their ratio qkinetic by searching
-for contours.
+Class for calculating the frequencies of (μ, Ρζ, E) triplets inside a specific
+Tokamak.
 
-Each contour represents a specific family of orbits represented by the same 3
-Constants of Motion, and differing only in their initial conditions. By
-exploiting the fact that our poloidal angle is in fact Boozer theta, the area
-contained within the contour is equal to 2π*Jθ, where Jθ the corresponding
-action variable. We then use the definitions:
+See documentation for a description of the algortighm.
 
-ωθ = dE/dJθ
-
-qkin = -dJθ/dJζ = -dJθ/dPζ
 """
 
 import warnings
@@ -26,14 +18,16 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 from time import time
 from copy import deepcopy
+from termcolor import colored
 from collections import deque
-from dataclasses import asdict
 
-from numpy.typing import ArrayLike
 from matplotlib.patches import Patch
 from gcmotion.entities.profile import Profile
 
-from .profile_analysis import profile_analysis
+from . import triplet_analysis
+from .triplet_analysis import (
+    profile_triplet_analysis,
+)
 from .contour_generators import main_contour
 from gcmotion.utils.logger_setup import logger
 
@@ -54,44 +48,18 @@ class FrequencyAnalysis:
     ----------
     profile : Profile
         The Profile to perform the analysis upon.
-    psilim : tuple
+    psilim : tuple(float, float)
         The :math:`\psi` limit to restrict the search for contours, relative to
         :math:`\psi_{wall}`.
-    muspan : np.ndarray
-        The :math:`\mu` span. See Notes section for definitions.
-    Pzetaspan : np.ndarray
-        The :math:`P_\zeta` span. See Notes section for definitions.
-    Espan : np.ndarray
-        The Energy span. See Notes section for definitions.
-
-    Notes
-    -----
-    The algorithm supports 3 modes:
-
-    1. Cartesian Mode: Activated by passing 3 1D arrays.
-        The algorithm takes all combinations (cartesian product) of every array
-        entry. If you want to iterate through only 1 COM value, use
-        np.array([<value>]).
-
-    2. Matrix Mode: Activated by passing 3 2D arrays, **with the same shape**
-        The algorithm creates triplets of COMs by stacking the 3 arrays. Each
-        triplet is defined as (muspan[i,j], Pzetaspan[i,j], Espan[i,j]), where
-        0<=i<nrows and 0<=j<ncols. Useful when the grid is not orthogonal, for
-        example when analysing a certain :math:`P_\zeta - E` domain of the
-        parabolas.
-
-    3. Dynamic minimum energy Mode: Activated by only passing muspan and
-        Pzetspan as 1D arrays. The algorithm finds the minimum vaule of the
-        energy grid for every (mu, Pzeta) pair, which is always found at an
-        O-point, and slowly increments it until it finds 1 trapped orbit. This
-        orbit's frequency is (very close to) the O-point frequency, which is
-        always the highest frequency of this specific family of trapped orbits.
-        This frequency defines the maximum frequency with which the particles
-        resonate, with 0 being the slowest (separatrix). This mode can only
-        find the O-point frequency on the total minumum energy. If more
-        O-points are present, then we must use method 4.
-
-    4. Dynamic O-point minimum energy Mode: To be implemented
+    muspan : numpy.ndarray
+        The :math:`\mu` span. Can be either 1D or 2D. See documentation for
+        definitions
+    Pzetaspan : numpy.ndarray
+        The :math:`P_\zeta` span. Can be either 1D or 2D. See documentation for
+        definitions
+    Espan : numpy.ndarray
+        The Energy span. Can be either 1D or 2D. See documentation for
+        definitions
 
     """
 
@@ -99,20 +67,19 @@ class FrequencyAnalysis:
         self,
         profile: Profile,
         psilim: tuple,
-        muspan: ArrayLike,
-        Pzetaspan: ArrayLike,
-        Espan: ArrayLike = None,
+        muspan: np.ndarray,
+        Pzetaspan: np.ndarray,
+        Espan: np.ndarray = None,
         **kwargs,
     ):
-        logger.info("==> Setting Frequency Analysis")
+        logger.info("==> Setting up Frequency Analysis...")
 
         # Unpack kwargs
-        self.config = FrequencyAnalysisConfig()
+        self.config = config = FrequencyAnalysisConfig()
         for key, value in kwargs.items():
             setattr(self.config, key, value)
 
         self.psilim = profile.Q(psilim, "psi_wall").to("NUMagnetic_flux").m
-        logger.debug(f"\tpsilim = {self.psilim}")
 
         self.profile = profile
         # COM values must be explicitly defined
@@ -122,12 +89,24 @@ class FrequencyAnalysis:
             warnings.warn(msg)
 
         self._process_arguements(muspan, Pzetaspan, Espan)
+        self.analysis_completed = False
+
+        logger.debug(f"\tpsilim = {self.psilim}")
+        logger.debug(f"\tqkinetic_cutoff = {config.qkinetic_cutoff}")
+        logger.debug(f"\tcocu_classification = {config.cocu_classification}")
+        logger.debug(f"\tcalculate_qkin = {config.calculate_qkinetic}")
+        logger.debug(
+            f"\tcalculate_omega_theta = {config.calculate_omega_theta}"
+        )
+        logger.debug(
+            f"\tmethod_switch_threshold = {config.min_vertices_method_switch}"
+        )
 
     def _process_arguements(
         self,
-        muspan: ArrayLike,
-        Pzetaspan: ArrayLike,
-        Espan: ArrayLike,
+        muspan: np.ndarray,
+        Pzetaspan: np.ndarray,
+        Espan: np.ndarray,
     ):
         r"""
         Cartesian Mode
@@ -160,18 +139,42 @@ class FrequencyAnalysis:
                 self.muspan.ndim == self.Pzetaspan.ndim == self.Espan.ndim == 1
             ):
                 self.mode = "cartesian"
+                self.triplets_num = (
+                    self.muspan.shape[0]
+                    * self.Pzetaspan.shape[0]
+                    * self.Espan.shape[0]
+                )
+                logger.debug(
+                    f"\tmain_grid_density = {self.config.main_grid_density}"
+                )
+                logger.debug(
+                    f"\tlocal_grid_density = {self.config.local_grid_density}"
+                )
+
             case np.ndarray(), np.ndarray(), np.ndarray() if (
                 self.muspan.shape == self.Pzetaspan.shape == self.Espan.shape
             ):
                 self.mode = "matrix"
+                self.triplets_num = self.muspan.size  # Same for all 3
             case np.ndarray(), np.ndarray(), None if (
                 self.muspan.ndim == self.Pzetaspan.ndim == 1
             ):
                 self.mode = "dynamicEmin"
+                self.triplets_num = (
+                    self.muspan.shape[0] * self.Pzetaspan.shape[0]
+                )
+
+                logger.debug(f"\tlogspace_len = {self.config.logspace_len}")
+                logger.debug(
+                    "\trelative_upper_E_factor = "
+                    f"{self.config.relative_upper_E_factor}"
+                )
             case _:
                 raise ValueError("Illegal Input")
 
         logger.info(f"\tMode: {self.mode}")
+        logger.debug(f"\tskip_trapped = {self.config.skip_trapped}")
+        logger.debug(f"\tskip_passing = {self.config.skip_passing}")
 
     def start(self, pbar: bool = True):
         r"""Calculates the frequencies
@@ -195,6 +198,7 @@ class FrequencyAnalysis:
 
         duration = self.profile.Q(time() - start, "seconds")
         logger.info(f"--> Frequency Analysis Complete. Took {duration:.4g~#P}")
+        self.analysis_completed = True
 
     def _start_cartesian(self, pbar: bool):
         r"""Cartesian Method: Used if all input arrays are 1D."""
@@ -217,23 +221,19 @@ class FrequencyAnalysis:
                 energy_pbar.reset()
                 profile.PzetaNU = profile.Q(Pzeta, "NUCanonical_momentum")
 
-                MainContour = main_contour(profile, self.psilim)
-                # Emin = MainContour["zmin"]
-                # self.Espan = np.logspace(
-                #     np.log10(Emin), np.log10(Emin * 1.1), 50
-                # )
+                MainContour = main_contour(profile, self.psilim, self.config)
 
                 for E in self.Espan:
                     profile.ENU = profile.Q(E, "NUJoule")
 
                     # =========================================================
                     # Profile Analysis returs either a list with found orbits,
-                    # or None
-                    found_orbits = profile_analysis(
+                    # or an empty list.
+                    found_orbits = profile_triplet_analysis(
                         main_contour=MainContour,
                         profile=profile,
                         psilim=self.psilim,
-                        **asdict(self.config),
+                        config=self.config,
                     )
 
                     # Avoid floating point precision errors
@@ -251,6 +251,10 @@ class FrequencyAnalysis:
         # Refresh them
         for pbar in (mu_pbar, pzeta_pbar, energy_pbar):
             pbar.refresh()
+
+        self.single_contour_orbits, self.double_contour_orbits = (
+            log_contour_method()
+        )
 
     def _start_matrix(self, pbar: bool):
         r"""Cartesian Method: Used if all input arrays are 2D and of the same
@@ -272,7 +276,8 @@ class FrequencyAnalysis:
 
         # Even though its slower, we have to generate the main contour again
         # for every (mu, Pzeta, E) triplet, since we don't know if the Pzeta-E
-        # grid is orthogonal (it usually is not).
+        # grid is orthogonal (it usually is not). If they are, it's better to
+        # use cartesian mode.
         for mu, Pzeta, E in grid:
             profile.muNU = profile.Q(mu, "NUMagnetic_moment")
             profile.PzetaNU = profile.Q(Pzeta, "NUCanonical_momentum")
@@ -280,11 +285,11 @@ class FrequencyAnalysis:
 
             MainContour = main_contour(profile, self.psilim)
 
-            found_orbits = profile_analysis(
+            found_orbits = profile_triplet_analysis(
                 main_contour=MainContour,
                 profile=profile,
                 psilim=self.psilim,
-                **asdict(self.config),
+                config=self.config,
             )
             # Avoid floating point precision errors
             for orb in found_orbits:
@@ -295,25 +300,25 @@ class FrequencyAnalysis:
 
             matrix_pbar.update()
 
-        matrix_pbar.refresh()
+        self.single_contour_orbits, self.double_contour_orbits = (
+            log_contour_method()
+        )
 
     def _start_dynamicEmin(self, pbar: bool):
         r"""Cartesian Method: Used if all input arrays are 1D."""
 
         if self.config.skip_trapped:
-            msg = (
-                "'skip_trapped' option must be False when using "
-                + "'dynamic Emin' method. "
-            )
-            logger.error(msg)
-            raise RuntimeError(msg)
-
-        profile = deepcopy(self.profile)
-        self.orbits = deque()
+            self.config.skip_trapped = False
+            msg = "Ignoring 'skip_trapped' option set to True"
+            warnings.warn(msg)
+            logger.warning(msg)
 
         pbars = _ProgressBars(pbar=pbar)
         mu_pbar = pbars.mu_pbar(total=len(self.muspan))
         pzeta_pbar = pbars.pzeta_pbar(total=len(self.Pzetaspan))
+
+        profile = deepcopy(self.profile)
+        self.orbits = deque()
 
         # This loop runs through all given parameters and returns all contour
         # orbits that managed to calculate their frequencies
@@ -340,11 +345,11 @@ class FrequencyAnalysis:
 
                     # Profile Analysis returs either a list with found orbits,
                     # or None
-                    found_orbits = profile_analysis(
+                    found_orbits = profile_triplet_analysis(
                         main_contour=MainContour,
                         profile=profile,
                         psilim=self.psilim,
-                        **asdict(self.config),
+                        config=self.config,
                     )
 
                     # Avoid floating point precision errors
@@ -365,11 +370,11 @@ class FrequencyAnalysis:
         for pbar in (mu_pbar, pzeta_pbar):
             pbar.refresh()
 
-    def _start_dynamicEmin_opoints(self, pbar: bool):
-        # TODO:
-        pass
+        self.single_contour_orbits, self.double_contour_orbits = (
+            log_contour_method()
+        )
 
-    def results(self):
+    def _start_dynamicEmin_opoints(self, pbar: bool):
         # TODO:
         pass
 
@@ -395,18 +400,27 @@ class FrequencyAnalysis:
                 "area": pd.Series([orb.area for orb in self.orbits]),
                 "Jtheta": pd.Series([orb.Jtheta for orb in self.orbits]),
                 "Jzeta": pd.Series([orb.Jzeta for orb in self.orbits]),
-                "edge": pd.Series([orb.edge_orbit for orb in self.orbits]),
                 "color": pd.Series([orb.color for orb in self.orbits]),
             }
 
         self.df = pd.DataFrame(d)
         return self.df
 
-    def scatter(self, x: str, y: str, **kwargs):
+    def scatter(self, x: str, y: str, scatter_kw: dict):
+        r"""Draws a scatter plot of the calculated frequencies.
+
+        Parameters
+        ----------
+
+        x: {"mu", "Pzeta", "E", "qkinetic", "omega_theta", "omega_zeta"}
+            The x coordinate, as a column name of the Dataframe.
+        y: {"mu", "Pzeta", "E", "qkinetic", "omega_theta", "omega_zeta"}
+            The y coordinate, as a column name of the Dataframe.
+        scatter_kw: dict, optional
+            Further arguements to be passed to matplotlib's scatter method.
+        """
 
         config = FrequencyAnalysisPlotConfig()
-        for key, value in kwargs.items():
-            setattr(config, key, value)
 
         # Manual lengend entries patches
         trapped = Patch(color=config.trapped_color, label="Trapped")
@@ -428,24 +442,14 @@ class FrequencyAnalysis:
         # Overwrite defaults and pass all kwargs to scatter
         scatter_kw = {
             "s": config.scatter_size,
-        }
+        } | scatter_kw
         ax.scatter(xs, ys, c=colors, **scatter_kw)
         ax.set_xlabel(_scatter_labels(x), size=12)
         ax.set_ylabel(_scatter_labels(y), size=12)
         ax.tick_params(axis="both", size=15)
+        ax.set_title(ax.get_xlabel() + " - " + ax.get_ylabel(), size=15)
         ax.legend(handles=[trapped, copassing, cupassing, undefined])
         ax.grid(True)
-
-        # Add a second legend with the value of the COM that doesn't change, if
-        # it exists:
-        annotation = ""
-        for com in ("mu", "Pzeta", "Energy"):
-            value = self.df[com].unique()
-            if len(value) == 1:
-                annotation += f", Fixed {com} = {value}"
-        ax.set_title(
-            ax.get_xlabel() + " - " + ax.get_ylabel() + annotation, size=15
-        )
 
         # Add a horizontal line to y=0
         if config.add_hline:
@@ -453,9 +457,70 @@ class FrequencyAnalysis:
 
         plt.show()
 
-    def dump(self):
+    def hexbin():
         # TODO:
         pass
+
+    def __str__(self):
+        r""""""
+
+        # Parameters availiable before run().
+        string = ""
+        if self.config.print_tokamak:
+            string += "\n" + self.profile.tokamak.__str__()
+
+        string += colored("\nFrequency Analysis\n", "green")
+        string += (
+            f"{"Mode":>28} : {colored(self.mode.capitalize(), "light_blue")}\n"
+            f"{"Particle species":>28} : "
+            f"{colored(self.profile.species_name, "light_blue"):<16}\n"
+            f"{"Triplets number":>28} : {self.triplets_num}\n"
+        )
+
+        if not self.analysis_completed:
+            return string
+
+        self.trapped_orbits_num = len(
+            [orb for orb in self.orbits if orb.trapped]
+        )
+        self.passing_orbits_num = len(
+            [orb for orb in self.orbits if orb.passing]
+        )
+        self.copassing_orbits_num = len(
+            [orb for orb in self.orbits if orb.copassing]
+        )
+        self.cupassing_orbits_num = len(
+            [orb for orb in self.orbits if orb.cupassing]
+        )
+
+        string += (
+            f"{"Total Orbits Found":>28} : {len(self.orbits):<16}\n"
+            f"{"Trapped/Passing Orbits Found":>28} : "
+            + "".join(
+                (
+                    f"trapped: {self.trapped_orbits_num}",
+                    " / ",
+                    f"passing: {self.passing_orbits_num:<16}\n",
+                )
+            )
+            + f"{"Co/Cu-Passing Orbits Found":>28} : "
+            + "".join(
+                (
+                    f"CoPassing: {self.copassing_orbits_num}",
+                    " / ",
+                    f"CuPassing: {self.cupassing_orbits_num:<16}\n",
+                )
+            )
+            + f"{"Single/Double Contour Orbits":>28} : "
+            + "".join(
+                (
+                    f"Single: {self.single_contour_orbits}",
+                    " / ",
+                    f"Double: {self.double_contour_orbits:<16}\n",
+                )
+            )
+        )
+        return string
 
 
 # =============================================================================
@@ -522,3 +587,29 @@ def _scatter_labels(index: str):
         "omega_zeta": r"$\omega_\zeta [\omega_0]$",
     }
     return titles[index]
+
+
+def log_contour_method():
+    r"""Logs the module-level variables that keep track of for how many orbits
+    each method was called.
+    """
+    logger.info(
+        "\tFrequencies calculated with single contouring: "
+        f"{triplet_analysis.single_contour_orbits}"
+    )
+    logger.info(
+        "\tFrequencies calculated with double contouring: "
+        f"{triplet_analysis.double_contour_orbits}"
+    )
+
+    return_tuple = (
+        triplet_analysis.single_contour_orbits,
+        triplet_analysis.double_contour_orbits,
+    )
+
+    # Reset them to allow many frequency analysis to run without restarting the
+    # interpreter
+    triplet_analysis.single_contour_orbits = 0
+    triplet_analysis.double_contour_orbits = 0
+
+    return return_tuple
