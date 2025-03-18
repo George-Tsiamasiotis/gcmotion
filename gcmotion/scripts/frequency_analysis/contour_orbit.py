@@ -26,7 +26,8 @@ class ContourOrbit:
     bbox: tuple[tuple[float, float], tuple[float, float]] = None
 
     valid: bool = None
-    edge_orbit: bool = None
+    segment_closed: bool = False
+    ptheta_converted: bool = False
     passing: bool = None
     trapped: bool = None
     copassing: bool = None
@@ -89,7 +90,7 @@ class ContourOrbit:
         Also append the first point to the end to close the orbit, even though
         it doesn't affect the shoelace algorithm.
         """
-        if self.trapped:
+        if self.trapped or self.segment_closed:
             return
 
         left_to_right = is_left_to_right(self)
@@ -102,9 +103,14 @@ class ContourOrbit:
             extra = [[-tau, 0], [tau, 0]] + closeoff_point
             self.vertices = np.append(self.vertices, extra, axis=0)
 
+        self.segment_closed = True
+
     def convert_to_ptheta(self, findPtheta: Profile, Q):
         r"""Converts all ycoords of the vertices from ψ to Pθ."""
         # Could not find a better way, but this isn't as slow as I thought.
+        if self.ptheta_converted:
+            return
+
         self.vertices = np.vstack(
             (
                 self.vertices.T[0],  # Thetas as they were
@@ -114,6 +120,7 @@ class ContourOrbit:
                 ).magnitude,
             )
         ).T
+        self.ptheta_converted = True
 
     def calculate_Jtheta(self):
         r"""Calculates the action J."""

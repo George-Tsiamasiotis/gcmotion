@@ -9,13 +9,19 @@ for contours.
 
 Each contour represents a specific family of orbits represented by the same 3
 Constants of Motion, and differing only in their initial conditions. By
-exploiting the fact that our poloidal angle is in fact Boozer theta, the area
-contained within the contour is equal to 2π*Jθ, where Jθ the corresponding
+exploiting the fact that our poloidal angle is in fact the boozer theta, the
+area contained within the contour is equal to 2π*Jθ, where Jθ the corresponding
 action variable. We then use the definitions:
 
 ωθ = dE/dJθ
 
 qkin = -dJθ/dJζ = -dJθ/dPζ
+
+The algorithm follows these steps, regardless of the "scanning" method
+(cartesian, matrix, dymanic energy minimum, ...), since the only thing they
+change is the way the triplets (μ, Ε, Ρζ) are created:
+
+1.
 """
 
 import warnings

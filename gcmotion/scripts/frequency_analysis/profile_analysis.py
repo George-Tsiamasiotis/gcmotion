@@ -1,6 +1,6 @@
 r"""
 Analyses a single *slice* of a Profile and tries to find all valid segments to
-ccalculate their frequencies and qkinetics.
+calculate their frequencies and qkinetics.
 
 A slice is a contour graph over the ω-Ρθ space, with fixed μ and Ρζ.
 Valid orbits consist of isoenergy lines that are fully contained inside the
@@ -8,29 +8,44 @@ graph, without getting cuttoff by its edges.
 
 Functions
 ---------
+profile_analysis():
+    Top level function: Generates the main θ-Ρθ-E contour for a given triplet
+    and returns all the valid found orbits.
+calculate_frequencies():
+    For a single orbit: Calculates its bounding box, classifies it as
+    trapped-passing, and calls the functions that calculate the frequencies and
+    qkinetic. Depending on the configuration, it can skip the calculations of
+    the frequencies, or skip all trapped or passing orbits.
+calculate_omega_theta():
+    C
+
 """
 
-import numpy as np
-
 from collections import deque
-
+from typing import Callable
 from gcmotion.entities.profile import Profile
-import gcmotion.scripts.frequency_analysis.lines_processing as lp
-from gcmotion.scripts.frequency_analysis.contour_orbit import ContourOrbit
+
+from .contour_orbit import ContourOrbit
+from .lines_processing import generate_valid_contour_orbits
+from .frequency_calculations import (
+    calculate_orbit_omegatheta_single,
+    calculate_orbit_omegatheta_double,
+    calculate_orbit_qkinetic_single,
+    calculate_orbit_qkinetic_double,
+    calculate_omegazeta,
+)
+
+
 from gcmotion.configuration.scripts_configuration import (
     FrequencyAnalysisConfig,
-)
-from .plots import debug_plot_valid_orbits
-from gcmotion.scripts.frequency_analysis.contour_generators import (
-    local_contour,
 )
 
 
 def profile_analysis(
     main_contour: dict, profile: Profile, psilim=tuple, **kwargs
 ) -> list[ContourOrbit]:
-    r"""Generates orbits that successfully calculated their frequency and
-    finalizes them for analysis.
+    r"""Top level function: Generates the main θ-Ρθ-E contour for a given
+    triplet and returns all the valid found orbits.
 
     Parameters
     ----------
@@ -45,7 +60,7 @@ def profile_analysis(
     for key, value in kwargs.items():
         setattr(config, key, value)
 
-    valid_orbits = lp.generate_valid_contour_orbits(
+    valid_orbits = generate_valid_contour_orbits(
         main_contour=main_contour,
         level=profile.ENU.magnitude,
         config=config,
@@ -82,31 +97,45 @@ def calculate_frequencies(
     main_contour: dict,
     config: FrequencyAnalysisConfig,
 ):
-    r"""Calculates omega_theta, qkinetic and finally omega_zeta for a given
-    orbit.
+    r"""Calculates all frequencies for a given (validated) orbit.
+
+    For a single orbit: Calculates its bounding box, classifies it as
+    trapped-passing, and calls the functions that calculate the frequencies and
+    qkinetic. Depending on the configuration, it can skip the calculations of
+    the frequencies, or skip all trapped or passing orbits.
 
     Returns None when one of the calculations fails, and the orbit should be
     discarded.
     """
 
-    # Step 3: Calculating frequencies for every contour orbit.
+    # Calculating frequencies for every contour orbit.
     main_orbit.mu = profile.muNU.m
     main_orbit.Pzeta = profile.PzetaNU.m
 
     # Calculate orbits bounding box and t/p classification
+    # co/cu classification must be done before closing the segment
     main_orbit.calculate_bbox()
     main_orbit.classify_as_tp()
+    if config.cocu_classification and main_orbit.passing:
+        main_orbit.classify_as_cocu(profile=profile)
 
     if main_orbit.trapped and config.skip_trapped:
         return None
     if main_orbit.passing and config.skip_passing:
         return None
 
+    if main_orbit.vertices.shape[0] < config.min_vertices_method_switch:
+        omega_theta_method: Callable = calculate_orbit_omegatheta_double
+        qkinetic_method: Callable = calculate_orbit_qkinetic_double
+    else:
+        omega_theta_method: Callable = calculate_orbit_omegatheta_single
+        qkinetic_method: Callable = calculate_orbit_qkinetic_single
+
     # Omega_theta seems to be the fastest of the two, so try this one first
     # and abort if no omega is found.
     if config.calculate_omega_theta:
-        main_orbit.omega_theta = calculate_orbit_omegatheta(
-            orbit=main_orbit,
+        main_orbit.omega_theta = omega_theta_method(
+            main_orbit=main_orbit,
             main_contour=main_contour,
             profile=profile,
             config=config,
@@ -115,7 +144,7 @@ def calculate_frequencies(
             return None
 
     if config.calculate_qkinetic:
-        main_orbit.qkinetic = calculate_orbit_qkin(
+        main_orbit.qkinetic = qkinetic_method(
             main_orbit=main_orbit, profile=profile, config=config
         )
         if main_orbit.qkinetic is None:
@@ -127,150 +156,6 @@ def calculate_frequencies(
     return main_orbit
 
 
-def calculate_orbit_omegatheta(
-    orbit: ContourOrbit,
-    main_contour: dict,
-    profile: Profile,
-    config: FrequencyAnalysisConfig,
-) -> float:
-    r"""Calculates omega_theta by evaluating the derivative dE/dJθ localy upon
-    the orbit.
-
-    Returns
-    -------
-    float or None
-        The calculated omega_theta, if valid adjacent contours are found.
-    """
-
-    E = orbit.E
-    Eupper = E * (1 + config.energy_rtol)
-    Elower = E * (1 - config.energy_rtol)
-
-    # Generate lower and upper orbits
-    lower_orbits = lp.generate_valid_contour_orbits(
-        main_contour=main_contour, level=Elower, config=config
-    )
-    upper_orbits = lp.generate_valid_contour_orbits(
-        main_contour=main_contour, level=Eupper, config=config
-    )
-
-    # Return if orbit is about to disappear
-    if len(lower_orbits) == 0 or len(upper_orbits) == 0:
-        orbit.edge_orbit = True
-        return
-    else:
-        orbit.edge_orbit = False
-
-    lower_distances = [
-        orbit.distance_from(lower_orbit.bbox) for lower_orbit in lower_orbits
-    ]
-    upper_distances = [
-        orbit.distance_from(upper_orbit.bbox) for upper_orbit in upper_orbits
-    ]
-
-    lower_orbit = lower_orbits[np.argmin(lower_distances)]
-    upper_orbit = upper_orbits[np.argmin(upper_distances)]
-
-    # Calculate omega_theta
-    for adjecent_orbit in [lower_orbit, upper_orbit]:
-        adjecent_orbit.classify_as_tp()
-        adjecent_orbit.close_segment()
-        adjecent_orbit.convert_to_ptheta(profile.findPtheta, profile.Q)
-        adjecent_orbit.calculate_Jtheta()
-
-    dE = Eupper - Elower
-
-    dJtheta = upper_orbit.Jtheta - lower_orbit.Jtheta
-
-    omega_theta = dE / dJtheta
-    return omega_theta
-
-
-def calculate_orbit_qkin(
-    main_orbit: ContourOrbit, profile: Profile, config: FrequencyAnalysisConfig
-) -> float:
-    r"""Step 2: For each contour orbit found, calculate qkinetic.
-
-    Returns
-    -------
-    float or None
-        The calculated qkinetic, if valid adjacent contours are found.
-    """
-
-    # Create 2 local contours, 1 from each adjacent profile.
-    Pzeta = profile.PzetaNU
-    PzetaLower = Pzeta * (1 - config.pzeta_rtol)
-    PzetaUpper = Pzeta * (1 + config.pzeta_rtol)
-
-    profile.Pzeta = PzetaLower
-    LowerContour = local_contour(profile=profile, orbit=main_orbit)
-    profile.Pzeta = PzetaUpper
-    UpperContour = local_contour(profile=profile, orbit=main_orbit)
-
-    profile.Pzeta = Pzeta
-
-    # Try to find contour lines with the same E in each Contour
-    lower_orbits = lp.generate_valid_contour_orbits(
-        main_contour=LowerContour, level=profile.ENU.m, config=config
-    )
-    upper_orbits = lp.generate_valid_contour_orbits(
-        main_contour=UpperContour, level=profile.ENU.m, config=config
-    )
-
-    # Return if orbit is about to disappear
-    if len(lower_orbits) == 0 or len(upper_orbits) == 0:
-        main_orbit.edge_orbit = True
-        return
-    else:
-        main_orbit.edge_orbit = False
-
-    # Validate orbits, and calculate
-    for orbit in lower_orbits:
-        orbit.validate(LowerContour["psilim"])
-        orbit.calculate_bbox()
-    for orbit in upper_orbits:
-        orbit.validate(UpperContour["psilim"])
-        orbit.calculate_bbox()
-
-    # Pick closest adjacent orbits
-    lower_distances = [
-        orbit.distance_from(lower_orbit.bbox) for lower_orbit in lower_orbits
-    ]
-    upper_distances = [
-        orbit.distance_from(upper_orbit.bbox) for upper_orbit in upper_orbits
-    ]
-
-    lower_orbit = lower_orbits[np.argmin(lower_distances)]
-    upper_orbit = upper_orbits[np.argmin(upper_distances)]
-
-    # Classsify the 2 adjacent orbits as trapped/passing and and base points if
-    # needed, convert psis to pthetas and calculate Jtheta.
-    for orbit in (lower_orbit, upper_orbit):
-        orbit.classify_as_tp()
-        orbit.close_segment()
-        orbit.convert_to_ptheta(profile.findPtheta, profile.Q)
-        orbit.calculate_Jtheta()
-
-    # Calculate qkinetic
-    dJtheta = upper_orbit.Jtheta - lower_orbit.Jtheta
-    dPzeta = PzetaUpper.m - PzetaLower.m
-
-    # print(f"{upper_distances=}, {lower_distances=}")
-    # print(f"{upper_orbit.xmin=}, {upper_orbit.xmax=}")
-    # debug_plot_valid_orbits(profile, (lower_orbit, main_orbit, upper_orbit))
-    # print(f"{main_orbit.E=}")
-
-    qkinetic = -dJtheta / dPzeta
-    if abs(qkinetic) < config.qkinetic_cutoff:
-        return qkinetic
-
-
-def calculate_omegazeta(orbit: ContourOrbit):
-
-    omegazeta = orbit.qkinetic * orbit.omega_theta
-    return omegazeta
-
-
 def finalize_orbits(
     calculated_orbits: list[ContourOrbit],
     main_profile: Profile,
@@ -279,8 +164,6 @@ def finalize_orbits(
 
     finalized_orbits = deque()
     for orbit in calculated_orbits:
-        if config.cocu_classification and orbit.passing:
-            orbit.classify_as_cocu(profile=main_profile)
         orbit.pick_color()
         orbit.str_dump()
         finalized_orbits.append(orbit)

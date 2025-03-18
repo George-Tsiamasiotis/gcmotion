@@ -58,12 +58,14 @@ class FrequencyAnalysisPbarConfig(ProgressBarStyle):
     tqdm_pzeta_unit: str = f"{'Pzetas':^10}"
     tqdm_energy_unit: str = f"{'Energies':^10}"
     # Matrix Mode
-    tqdm_mu_Pzeta_desc: str = f"{'Iterating through mus/Pzetas':^28}"
+    tqdm_matrix_desc: str = f"{'Iterating through triplets':^28}"
+    tqdm_matrix_unit: str = f"{'triplets':^8}"
 
 
 @dataclass
 class FrequencyAnalysisConfig:
     qkinetic_cutoff: float = 10
+    pzeta_atol: float = 1e-4
     pzeta_rtol: float = 1e-3  # 1e-3 seems to work best
     energy_rtol: float = 1e-3  # 1e-3 seems to work best
     cocu_classification: bool = True
@@ -71,6 +73,8 @@ class FrequencyAnalysisConfig:
     calculate_qkinetic: bool = True
     skip_trapped: bool = False
     skip_passing: bool = False
+    # Minimum number of main orbit vertices, to switch to double contour method
+    min_vertices_method_switch: int = 40
     # dynamic minimum energy
     relative_upper_E_factor: float = 1.1
     logspace_len: int = 50
@@ -80,8 +84,7 @@ class FrequencyAnalysisConfig:
 @dataclass
 class ContourGeneratorConfig:
     main_grid_density: int = 1200  # Diminishing results after 1800
-    local_grid_density: int = 100
-    centered_grid_density: int = 100
+    local_grid_density: int = 200
     theta_expansion: float = 1.2
     psi_expansion: float = 1.2
 
