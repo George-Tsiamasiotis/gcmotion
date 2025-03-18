@@ -103,7 +103,7 @@ def QuantityConstructor(
     )
     ureg.define(
         "NUMagnetic_flux = "
-        "Proton_mass * NUw0 * NUmeter^2 / Proton_charge = NUmf"
+        f"{M/Z}Proton_mass * NUw0 * NUmeter^2 / Proton_charge = NUmf"
     )
 
     # Also define psi_wall as a unit of Magnetic_flux, to assign psi

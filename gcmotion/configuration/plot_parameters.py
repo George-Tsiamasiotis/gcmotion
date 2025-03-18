@@ -93,9 +93,11 @@ class EfieldProfileConfig:
     wall_color: str = "red"
     labelsize: float = 10
     ax_title_size: float = 20
+    linewidths: float = 2
+    wall_linewidth: float = 1.5
     # Units options
-    field_units: str = "kV/m"
-    potential_units: str = "kV"
+    field_units: str = "kiloVolt/meters"
+    potential_units: str = "kiloVolt"
 
 
 @dataclass
