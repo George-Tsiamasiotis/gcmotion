@@ -33,7 +33,6 @@ from tqdm import tqdm
 from time import time
 from copy import deepcopy
 from collections import deque
-from dataclasses import asdict
 
 from numpy.typing import ArrayLike
 from matplotlib.patches import Patch
@@ -113,9 +112,8 @@ class FrequencyAnalysis:
         logger.info("==> Setting Frequency Analysis")
 
         # Unpack kwargs
-        self.config = FrequencyAnalysisConfig()
-        for key, value in kwargs.items():
-            setattr(self.config, key, value)
+        self.config = vars(FrequencyAnalysisConfig())
+        self.config |= kwargs
 
         self.psilim = profile.Q(psilim, "psi_wall").to("NUMagnetic_flux").m
         logger.debug(f"\tpsilim = {self.psilim}")
@@ -223,11 +221,7 @@ class FrequencyAnalysis:
                 energy_pbar.reset()
                 profile.PzetaNU = profile.Q(Pzeta, "NUCanonical_momentum")
 
-                MainContour = main_contour(profile, self.psilim)
-                # Emin = MainContour["zmin"]
-                # self.Espan = np.logspace(
-                #     np.log10(Emin), np.log10(Emin * 1.1), 50
-                # )
+                MainContour = main_contour(profile, self.psilim, **self.config)
 
                 for E in self.Espan:
                     profile.ENU = profile.Q(E, "NUJoule")
@@ -239,7 +233,7 @@ class FrequencyAnalysis:
                         main_contour=MainContour,
                         profile=profile,
                         psilim=self.psilim,
-                        **asdict(self.config),
+                        **self.config,
                     )
 
                     # Avoid floating point precision errors
@@ -290,7 +284,7 @@ class FrequencyAnalysis:
                 main_contour=MainContour,
                 profile=profile,
                 psilim=self.psilim,
-                **asdict(self.config),
+                **self.config,
             )
             # Avoid floating point precision errors
             for orb in found_orbits:
@@ -350,7 +344,7 @@ class FrequencyAnalysis:
                         main_contour=MainContour,
                         profile=profile,
                         psilim=self.psilim,
-                        **asdict(self.config),
+                        **self.config,
                     )
 
                     # Avoid floating point precision errors

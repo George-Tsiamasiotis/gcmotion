@@ -57,8 +57,7 @@ def profile_analysis(
 
     # Unpack Parameters
     config = FrequencyAnalysisConfig()
-    for key, value in kwargs.items():
-        setattr(config, key, value)
+    config.__dict__ |= kwargs
 
     valid_orbits = generate_valid_contour_orbits(
         main_contour=main_contour,

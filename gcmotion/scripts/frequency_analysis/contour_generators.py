@@ -22,8 +22,7 @@ def main_contour(profile: Profile, psilim: tuple, **kwargs):
 
     # Unpack parameters
     config = ContourGeneratorConfig()
-    for key, value in kwargs.items():
-        setattr(config, key, value)
+    config.__dict__ |= kwargs
 
     psi_grid, theta_grid = np.meshgrid(
         np.linspace(psilim[0], psilim[1], config.main_grid_density),
