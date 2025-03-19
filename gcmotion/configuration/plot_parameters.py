@@ -160,3 +160,43 @@ class ParticlePoloidalDrift:
 class AutoYspan:
     zoomout: float = 0.75
     hardylim: float = 3  # times psi_wall
+
+
+@dataclass
+class MachineCoordsContoursConfig:
+    # Figure keywords
+    figsize_B: tuple = (17, 8)
+    figsize_E_flux: tuple = (11, 8)
+    figsize_I: tuple = (11, 8)
+    figsize_g: tuple = (11, 8)
+    figsize_fp: tuple = (11, 8)
+    dpi: int = dpi
+    layout: str = "constrained"
+    facecolor: str = "white"
+    # Plots kwywords
+    which: str = "fp E b i g"
+    # E, flux figure keywords
+    E_flux_suptitle_fontsize: float = 15
+    E_flux_suptitle_color: str = "black"
+    flux_units: str = "NUmf"
+    E_units: str = "keV"
+    # B figure keywords
+    B_suptitle_fontsize: float = 15
+    B_suptitle_color: str = "black"
+    B_units: str = "Tesla"
+    # I figure keywords
+    I_suptitle_fontsize: float = 15
+    I_suptitle_color: str = "black"
+    I_units: str = "NUpc"
+    # g figure keywords
+    g_suptitle_fontsize: float = 15
+    g_suptitle_color: str = "black"
+    g_units: str = "NUpc"
+    # Fixed Points figure keywords
+    fp_suptitle_fontsize: float = 15
+    fp_suptitle_color: str = "black"
+    E_fp_units: str = "keV"
+    # Numerical keywords
+    parametric_density: int = 500
+    # Contours keywords
+    levels: int = 20

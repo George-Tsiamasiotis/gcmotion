@@ -56,3 +56,15 @@ gplt.particle_poloidal_drift(
     E_units="keV",
     projection="polar",
 )
+
+gplt.machine_coords_profile(
+    entity=particle.profile,
+    which="e b i g",
+    parametric_density=250,
+    mode="filled",
+    flux_units="Tesla * m^2",
+    E_units="keV",
+    B_units="Tesla",
+    I_units="NUpc",
+    g_units="NUpc",
+)
