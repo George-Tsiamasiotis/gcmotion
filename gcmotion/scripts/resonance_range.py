@@ -152,7 +152,11 @@ def omegas_max(
         Omega_zetas_max.append(current_omega_zetas_max)
 
         logger.info(
-            f"Calculated omegas_max ['{config.freq_units}'] of O points for res_range script with {selected_COMNU_str}={current_COMNU}"
+            f"Calculated omegas_theta_max ['{config.freq_units_theta}'] of O points for res_range script with {selected_COMNU_str}={current_COMNU}"
+        )
+
+        logger.info(
+            f"Calculated omegas_zeta_max ['{config.freq_units_zeta}'] of O points for res_range script with {selected_COMNU_str}={current_COMNU}"
         )
 
     # # Convert Omega_zetas_max: Extract the float from the inner deque

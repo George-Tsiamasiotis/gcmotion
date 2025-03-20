@@ -201,16 +201,17 @@ def _set_xlabel(which_COM: str) -> str:
 
     return r"$P_{\zeta}$" if which_COM == "Pzeta" else r"$\mu$"
 
-    # df = pd.read_pickle(r"C:\Users\georg\Downloads\max_omega_theta_per_Pzeta_trapped")
-    # ax.scatter(
-    #     df.Pzeta,
-    #     df.max_omega_theta,
+    # df = pd.read_pickle(r"C:\Users\georg\Downloads\lar_fixed_pzeta.pkl")
+    # ax_zeta.scatter(
+    #     df.mu,
+    #     df.omega_zeta,
     #     marker="x",
     #     color="b",
+    #     alpha=0.2,
     #     label="Tsiamasiotis Contours Shoelace Method",
     # )
 
-    # ax.legend()
+    # ax_zeta.legend()
 
     # if all(a < b for a, b in zip(df.max_omega_theta, omegas_plot)):
     #     print("SUCCESS")
