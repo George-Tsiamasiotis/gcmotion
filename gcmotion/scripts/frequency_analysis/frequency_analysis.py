@@ -33,12 +33,16 @@ from tqdm import tqdm
 from time import time
 from copy import deepcopy
 from collections import deque
+from dataclasses import asdict
 
 from numpy.typing import ArrayLike
 from matplotlib.patches import Patch
 from gcmotion.entities.profile import Profile
 
-from .profile_analysis import profile_analysis
+from . import triplet_analysis
+from .triplet_analysis import (
+    profile_triplet_analysis,
+)
 from .contour_generators import main_contour
 from gcmotion.utils.logger_setup import logger
 
@@ -109,11 +113,12 @@ class FrequencyAnalysis:
         Espan: ArrayLike = None,
         **kwargs,
     ):
-        logger.info("==> Setting Frequency Analysis")
+        logger.info("==> Setting up Frequency Analysis...")
 
         # Unpack kwargs
-        self.config = vars(FrequencyAnalysisConfig())
-        self.config |= kwargs
+        self.config = FrequencyAnalysisConfig()
+        for key, value in kwargs.items():
+            setattr(self.config, key, value)
 
         self.psilim = profile.Q(psilim, "psi_wall").to("NUMagnetic_flux").m
         logger.debug(f"\tpsilim = {self.psilim}")
@@ -221,7 +226,7 @@ class FrequencyAnalysis:
                 energy_pbar.reset()
                 profile.PzetaNU = profile.Q(Pzeta, "NUCanonical_momentum")
 
-                MainContour = main_contour(profile, self.psilim, **self.config)
+                MainContour = main_contour(profile, self.psilim, self.config)
 
                 for E in self.Espan:
                     profile.ENU = profile.Q(E, "NUJoule")
@@ -229,11 +234,11 @@ class FrequencyAnalysis:
                     # =========================================================
                     # Profile Analysis returs either a list with found orbits,
                     # or None
-                    found_orbits = profile_analysis(
+                    found_orbits = profile_triplet_analysis(
                         main_contour=MainContour,
                         profile=profile,
                         psilim=self.psilim,
-                        **self.config,
+                        config=self.config,
                     )
 
                     # Avoid floating point precision errors
@@ -251,6 +256,8 @@ class FrequencyAnalysis:
         # Refresh them
         for pbar in (mu_pbar, pzeta_pbar, energy_pbar):
             pbar.refresh()
+
+        log_contour_method()
 
     def _start_matrix(self, pbar: bool):
         r"""Cartesian Method: Used if all input arrays are 2D and of the same
@@ -280,11 +287,11 @@ class FrequencyAnalysis:
 
             MainContour = main_contour(profile, self.psilim)
 
-            found_orbits = profile_analysis(
+            found_orbits = profile_triplet_analysis(
                 main_contour=MainContour,
                 profile=profile,
                 psilim=self.psilim,
-                **self.config,
+                config=self.config,
             )
             # Avoid floating point precision errors
             for orb in found_orbits:
@@ -340,11 +347,11 @@ class FrequencyAnalysis:
 
                     # Profile Analysis returs either a list with found orbits,
                     # or None
-                    found_orbits = profile_analysis(
+                    found_orbits = profile_triplet_analysis(
                         main_contour=MainContour,
                         profile=profile,
                         psilim=self.psilim,
-                        **self.config,
+                        config=self.config,
                     )
 
                     # Avoid floating point precision errors
@@ -522,3 +529,20 @@ def _scatter_labels(index: str):
         "omega_zeta": r"$\omega_\zeta [\omega_0]$",
     }
     return titles[index]
+
+
+def log_contour_method():
+    r"""Logs the module-level variables that keep track of for how many orbits
+    each method was called.
+    """
+    logger.info(
+        "\tFrequencies calculated with single contouring: "
+        f"{triplet_analysis.single_contour_orbits}"
+    )
+    logger.info(
+        "\tFrequencies calculated with double contouring: "
+        f"{triplet_analysis.double_contour_orbits}"
+    )
+
+    triplet_analysis.single_contour_orbits = 0
+    triplet_analysis.double_contour_orbits = 0

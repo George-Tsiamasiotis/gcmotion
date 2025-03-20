@@ -9,10 +9,7 @@ from gcmotion.configuration.scripts_configuration import (
 
 
 def calculate_orbit_omegatheta_single(
-    main_orbit: ContourOrbit,
-    main_contour: dict,
-    profile: Profile,
-    config: FrequencyAnalysisConfig,
+    main_orbit: ContourOrbit, main_contour: dict, profile: Profile, **config
 ) -> float:
     r"""Calculates omega_theta by evaluating the derivative dE/dJθ localy upon
     the orbit, **using only the upper adjacent orbit**.
@@ -29,7 +26,7 @@ def calculate_orbit_omegatheta_single(
 
     # Generate upper orbits
     upper_orbits = generate_valid_contour_orbits(
-        main_contour=main_contour, level=Eupper, config=config
+        main_contour=main_contour, level=Eupper
     )
 
     upper_distances = [
@@ -79,10 +76,10 @@ def calculate_orbit_omegatheta_double(
 
     # Generate upper orbits only
     upper_orbits = generate_valid_contour_orbits(
-        main_contour=main_contour, level=Eupper, config=config
+        main_contour=main_contour, level=Eupper
     )
     lower_orbits = generate_valid_contour_orbits(
-        main_contour=main_contour, level=Elower, config=config
+        main_contour=main_contour, level=Elower
     )
 
     upper_distances = [
@@ -127,19 +124,27 @@ def calculate_orbit_qkinetic_single(
         The calculated qkinetic, if valid adjacent contours are found.
     """
 
+    if main_orbit.passing:
+        rtol = config.passing_pzeta_rtol
+    else:
+        rtol = config.trapped_pzeta_rtol
+
     # Create 2 local contours, 1 from each adjacent profile.
     Pzeta = profile.PzetaNU
     atol = np.sign(Pzeta.m) * config.pzeta_atol * Pzeta.units
-    PzetaUpper = atol + Pzeta * (1 + config.pzeta_rtol)
+    PzetaUpper = atol + Pzeta * (1 + rtol)
+    # logger.trace(f"{Pzeta=}, {PzetaUpper=}")
 
     profile.Pzeta = PzetaUpper
-    UpperContour = local_contour(profile=profile, orbit=main_orbit)
+    UpperContour = local_contour(
+        profile=profile, orbit=main_orbit, config=config
+    )
 
     profile.Pzeta = Pzeta
 
     # Try to find contour lines with the same E in each Contour
     upper_orbits = generate_valid_contour_orbits(
-        main_contour=UpperContour, level=profile.ENU.m, config=config
+        main_contour=UpperContour, level=profile.ENU.m
     )
 
     # Validate orbits, and calculate
@@ -187,24 +192,37 @@ def calculate_orbit_qkinetic_double(
         The calculated qkinetic, if valid adjacent contours are found.
     """
 
+    if main_orbit.passing:
+        rtol = config.passing_pzeta_rtol
+    else:
+        rtol = config.trapped_pzeta_rtol
+
     # Create 2 local contours, 1 from each adjacent profile.
     Pzeta = profile.PzetaNU
-    PzetaLower = Pzeta * (1 - config.pzeta_rtol)
-    PzetaUpper = Pzeta * (1 + config.pzeta_rtol)
+    # PzetaLower = Pzeta * (1 - config.pzeta_rtol)
+    # PzetaUpper = Pzeta * (1 + config.pzeta_rtol)
+    atol = np.sign(Pzeta.m) * config.pzeta_atol * Pzeta.units
+    PzetaLower = atol + Pzeta * (1 - rtol)
+    PzetaUpper = atol + Pzeta * (1 + rtol)
+    # logger.trace(f"{PzetaLower.m=}, {PzetaUpper.m=}")
 
     profile.Pzeta = PzetaLower
-    LowerContour = local_contour(profile=profile, orbit=main_orbit)
+    LowerContour = local_contour(
+        profile=profile, orbit=main_orbit, config=config
+    )
     profile.Pzeta = PzetaUpper
-    UpperContour = local_contour(profile=profile, orbit=main_orbit)
+    UpperContour = local_contour(
+        profile=profile, orbit=main_orbit, config=config
+    )
 
     profile.Pzeta = Pzeta
 
     # Try to find contour lines with the same E in each Contour
     lower_orbits = generate_valid_contour_orbits(
-        main_contour=LowerContour, level=profile.ENU.m, config=config
+        main_contour=LowerContour, level=profile.ENU.m
     )
     upper_orbits = generate_valid_contour_orbits(
-        main_contour=UpperContour, level=profile.ENU.m, config=config
+        main_contour=UpperContour, level=profile.ENU.m
     )
 
     # Validate orbits, and calculate

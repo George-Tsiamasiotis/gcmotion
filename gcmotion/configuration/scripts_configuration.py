@@ -66,7 +66,8 @@ class FrequencyAnalysisPbarConfig(ProgressBarStyle):
 class FrequencyAnalysisConfig:
     qkinetic_cutoff: float = 10
     pzeta_atol: float = 1e-4
-    pzeta_rtol: float = 1e-3  # 1e-3 seems to work best
+    passing_pzeta_rtol: float = 1e-3  # 1e-3 seems to work best
+    trapped_pzeta_rtol: float = 1e-3  # 1e-3 seems to work best
     energy_rtol: float = 1e-3  # 1e-3 seems to work best
     cocu_classification: bool = True
     calculate_omega_theta: bool = True
@@ -79,10 +80,7 @@ class FrequencyAnalysisConfig:
     relative_upper_E_factor: float = 1.1
     logspace_len: int = 50
     trapped_min_num: int = 1
-
-
-@dataclass
-class ContourGeneratorConfig:
+    # Contour Generation
     main_grid_density: int = 1200  # Diminishing results after 1800
     local_grid_density: int = 200
     theta_expansion: float = 1.2

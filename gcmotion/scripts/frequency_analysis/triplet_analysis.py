@@ -40,29 +40,28 @@ from gcmotion.configuration.scripts_configuration import (
     FrequencyAnalysisConfig,
 )
 
+# from gcmotion.utils.logger_setup import logger
 
-def profile_analysis(
-    main_contour: dict, profile: Profile, psilim=tuple, **kwargs
+single_contour_orbits = 0
+double_contour_orbits = 0
+
+
+def profile_triplet_analysis(
+    main_contour: dict,
+    profile: Profile,
+    psilim: tuple,
+    config: FrequencyAnalysisConfig,
 ) -> list[ContourOrbit]:
     r"""Top level function: Generates the main θ-Ρθ-E contour for a given
     triplet and returns all the valid found orbits.
 
-    Parameters
-    ----------
-    profile: Profile
-        The profile to analyse. Both μ and Pζ must be defined.
-    psilim: 2-tuple
-        The area on which to search for orbits, relative to ψ_wall.
+    Returns a list of 0 up to multiple ContourOrbit objects, depending on the
+    valid contours it found.
     """
-
-    # Unpack Parameters
-    config = FrequencyAnalysisConfig()
-    config.__dict__ |= kwargs
 
     valid_orbits = generate_valid_contour_orbits(
         main_contour=main_contour,
         level=profile.ENU.magnitude,
-        config=config,
     )
 
     # For all the valid orbits, attempt to calculate their frequencies. Failed
@@ -106,6 +105,8 @@ def calculate_frequencies(
     Returns None when one of the calculations fails, and the orbit should be
     discarded.
     """
+    global single_contour_orbits
+    global double_contour_orbits
 
     # Calculating frequencies for every contour orbit.
     main_orbit.mu = profile.muNU.m
@@ -126,9 +127,11 @@ def calculate_frequencies(
     if main_orbit.vertices.shape[0] < config.min_vertices_method_switch:
         omega_theta_method: Callable = calculate_orbit_omegatheta_double
         qkinetic_method: Callable = calculate_orbit_qkinetic_double
+        double_contour_orbits += 1
     else:
         omega_theta_method: Callable = calculate_orbit_omegatheta_single
         qkinetic_method: Callable = calculate_orbit_qkinetic_single
+        single_contour_orbits += 1
 
     # Omega_theta seems to be the fastest of the two, so try this one first
     # and abort if no omega is found.

@@ -5,7 +5,7 @@ from gcmotion.scripts.frequency_analysis.contour_orbit import (
 )
 
 
-def generate_valid_contour_orbits(main_contour: dict, level: float, config):
+def generate_valid_contour_orbits(main_contour: dict, level: float):
     r"""[Steps 1-1e] Creates the contour lines from contourpy's
     ContourGenerator for a *specific* level. Then creates a ContourObrit object
     out of every segment, calculates their bounding boxes, validates them, and
