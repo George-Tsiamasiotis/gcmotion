@@ -125,9 +125,15 @@ def QuantityConstructor(
     set_application_registry(ureg)
     Q = ureg.Quantity
 
-    Q.species = species
-    Q.B0 = B0
-    Q.R = R
-    Q.a = a
+    # Add arguements as its attributes for easy access
+    args = {
+        "species": species,
+        "B0": B0,
+        "R": R,
+        "a": a,
+        "_psi_wallNU": _psi_wallNU,
+    }
+
+    setattr(Q, "args", args)
 
     return Q
