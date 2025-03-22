@@ -1,3 +1,12 @@
+r"""
+======================
+Frequency Calculations
+======================
+
+Methods for calculating ωθ and qkinetic, for single-contour and double-contour
+modes.
+"""
+
 import numpy as np
 from .contour_orbit import ContourOrbit
 from gcmotion.entities.profile import Profile
@@ -6,6 +15,7 @@ from .lines_processing import generate_valid_contour_orbits
 from gcmotion.configuration.scripts_configuration import (
     FrequencyAnalysisConfig,
 )
+from gcmotion.utils.logger_setup import logger
 
 
 def calculate_orbit_omegatheta_single(
@@ -19,10 +29,12 @@ def calculate_orbit_omegatheta_single(
     float or None
         The calculated omega_theta, if valid adjacent contours are found, else
         None.
+
     """
 
     E = main_orbit.E
-    Eupper = E * (1 + config.energy_rtol)
+    # Multiply by 2 to use the same tolerance with double contour method
+    Eupper = E * (1 + 2 * config.energy_rtol)
 
     # Generate upper orbits
     upper_orbits = generate_valid_contour_orbits(
@@ -130,10 +142,15 @@ def calculate_orbit_qkinetic_single(
         rtol = config.trapped_pzeta_rtol
 
     # Create 2 local contours, 1 from each adjacent profile.
+    # Multiply by 2 to use the same tolerance with double contour method
     Pzeta = profile.PzetaNU
     atol = np.sign(Pzeta.m) * config.pzeta_atol * Pzeta.units
     PzetaUpper = atol + Pzeta * (1 + rtol)
-    # logger.trace(f"{Pzeta=}, {PzetaUpper=}")
+    if Pzeta.m > -0.003:
+        logger.trace(
+            f"atol = {atol.m}, Pzeta = {Pzeta.m}, PzetaUpper = {PzetaUpper.m}"
+        )
+        logger.trace(f"Diff = {PzetaUpper.m - Pzeta.m}")
 
     profile.Pzeta = PzetaUpper
     UpperContour = local_contour(
@@ -199,12 +216,14 @@ def calculate_orbit_qkinetic_double(
 
     # Create 2 local contours, 1 from each adjacent profile.
     Pzeta = profile.PzetaNU
-    # PzetaLower = Pzeta * (1 - config.pzeta_rtol)
-    # PzetaUpper = Pzeta * (1 + config.pzeta_rtol)
     atol = np.sign(Pzeta.m) * config.pzeta_atol * Pzeta.units
     PzetaLower = atol + Pzeta * (1 - rtol)
     PzetaUpper = atol + Pzeta * (1 + rtol)
-    # logger.trace(f"{PzetaLower.m=}, {PzetaUpper.m=}")
+    if Pzeta.m > -0.003:
+        logger.trace(
+            f"atol = {atol.m}, Pzeta = {Pzeta.m}, PzetaUpper = {PzetaUpper.m}, PzetaLower = {PzetaLower.m}"
+        )
+        logger.trace(f"Diff = {PzetaUpper.m - Pzeta.m}")
 
     profile.Pzeta = PzetaLower
     LowerContour = local_contour(

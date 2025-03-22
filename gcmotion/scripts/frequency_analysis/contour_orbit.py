@@ -58,7 +58,7 @@ class ContourOrbit:
         reason to extend it.
         """
         self.xmin, self.ymin, self.xmax, self.ymax = (
-            *_calculate_bbox(*self.vertices.T),
+            *calculate_bbox(*self.vertices.T),
         )
 
         # (bottom left point, top right point)
@@ -131,6 +131,9 @@ class ContourOrbit:
 
     def classify_as_cocu(self, profile: Profile):
         r"""Classifies orbit as co-/counter-passing."""
+        if self.trapped:
+            return
+
         self.undefined, self.copassing, self.cupassing = cocu_classify(
             self, profile
         )
@@ -188,7 +191,7 @@ def is_cutoff_trapped(orbit: ContourOrbit) -> bool:
 
 # Evidently the transpose of an np.array is non-contiguous
 @njit(" UniTuple(float64, 4) (float64[:], float64[:])", fastmath=True)
-def _calculate_bbox(x: np.ndarray, y: np.ndarray) -> np.ndarray:
+def calculate_bbox(x: np.ndarray, y: np.ndarray) -> np.ndarray:
     xmin = x.min()
     xmax = x.max()
     ymin = y.min()

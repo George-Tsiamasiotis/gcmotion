@@ -111,10 +111,10 @@ def calculate_frequencies(
     # Calculating frequencies for every contour orbit.
     main_orbit.mu = profile.muNU.m
     main_orbit.Pzeta = profile.PzetaNU.m
+    main_orbit.Jzeta = main_orbit.Pzeta
 
     # Calculate orbits bounding box and t/p classification
     # co/cu classification must be done before closing the segment
-    main_orbit.calculate_bbox()
     main_orbit.classify_as_tp()
     if config.cocu_classification and main_orbit.passing:
         main_orbit.classify_as_cocu(profile=profile)
@@ -124,7 +124,10 @@ def calculate_frequencies(
     if main_orbit.passing and config.skip_passing:
         return None
 
-    if main_orbit.vertices.shape[0] < config.min_vertices_method_switch:
+    if (
+        main_orbit.vertices.shape[0] < config.min_vertices_method_switch
+        or abs(main_orbit.Pzeta) < config.max_pzeta_method_switch
+    ):
         omega_theta_method: Callable = calculate_orbit_omegatheta_double
         qkinetic_method: Callable = calculate_orbit_qkinetic_double
         double_contour_orbits += 1

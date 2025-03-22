@@ -63,3 +63,4 @@ Scripts
    :maxdepth: 1
 
    events
+   frequency_analysis
