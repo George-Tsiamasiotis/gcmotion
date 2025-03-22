@@ -123,4 +123,17 @@ def QuantityConstructor(
     # definition if this function is called many times with the different
     # parameters inside the same session
     set_application_registry(ureg)
-    return ureg.Quantity
+    Q = ureg.Quantity
+
+    # Add arguements as its attributes for easy access
+    args = {
+        "species": species,
+        "B0": B0,
+        "R": R,
+        "a": a,
+        "_psi_wallNU": _psi_wallNU,
+    }
+
+    setattr(Q, "args", args)
+
+    return Q
