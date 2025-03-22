@@ -41,12 +41,13 @@ del config.file_prefix, config.module_prefix, config.name_prefix
 if config.format in ["timedelta", ""]:
 
     def fmt(record):
+        hrs = record["elapsed"].seconds // 3600
         mins = record["elapsed"].seconds // 60
         secs = record["elapsed"].seconds % 60
         msecs = int(record["elapsed"].microseconds / 1000)
         return (
             f"{fmt_prefix}"
-            f"<green>T+{mins}:{secs}:{msecs:04d}</>"
+            f"<green>T+{hrs}:{mins}:{secs}:{msecs:04d}</>"
             " |{level: ^7}| {message}\n"
         )
 
