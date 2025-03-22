@@ -123,4 +123,11 @@ def QuantityConstructor(
     # definition if this function is called many times with the different
     # parameters inside the same session
     set_application_registry(ureg)
-    return ureg.Quantity
+    Q = ureg.Quantity
+
+    Q.species = species
+    Q.B0 = B0
+    Q.R = R
+    Q.a = a
+
+    return Q
