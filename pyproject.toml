@@ -90,9 +90,9 @@ filterwarnings = [
 
 
 [project.urls]
-Homepage = "https://github.com/PlasmaPhy/gcmotion"
-Issues = "https://github.com/PlasmaPhy/gcmotion/issues"
-Documentation = "https://plasmaphy.github.io/gcmotion/"
+Homepage = "https://github.com/George-Tsiamasiotis/gcmotion"
+Issues = "https://github.com/George-Tsiamasiotis/gcmotion/issues"
+Documentation = "https://george-tsiamasiotis.github.io/gcmotion/"
 
 # U2FsdGVkX1/bMVdPSKQ6YUP8rVMA3fHifjdVxGbvMFFeaJp9pzzW6YPYTzDaIeOi
 # e3gEiFseNABMpPpntDoOSfxykQVi+NoCBCABrNpjXjfkSwlKl5BU2OkD/2DwuS6J
