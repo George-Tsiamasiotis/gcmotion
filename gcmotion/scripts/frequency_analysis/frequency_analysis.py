@@ -6,7 +6,7 @@ FrequencyAnalysis
 Class for calculating the frequencies of (μ, Ρζ, E) triplets inside a specific
 Tokamak.
 
-See documentation for a description of the algortighm.
+See documentation for a description of the algorithm.
 
 """
 
@@ -22,6 +22,7 @@ from termcolor import colored
 from collections import deque
 
 from matplotlib.patches import Patch
+from gcmotion.entities.tokamak import Tokamak
 from gcmotion.entities.profile import Profile
 
 from . import triplet_analysis
@@ -39,15 +40,34 @@ from gcmotion.configuration.plot_parameters import (
     FrequencyAnalysisPlotConfig,
 )
 
+messages = {
+    0: """
+ERROR: Illegal input arrays' dimensions. One of the following restrictions must
+be satisfied:
+    - All 3 arrays are 1-dimensional (cartesian mode)
+    - All 3 arrays are 2-dimensional with the same shape (matrix mode)
+    - "muspan" and "Pzetaspan" are both 1-dimensional and "Espan" is None
+      (dynamic minimum energy mode)
+""",
+    1: """
+Input arrays seem to be orthogonal. Consider using only a single row/column
+from each to activate cartesian mode, for significant perforance improvement.
+""",
+    2: """
+WARNING: "skip_trapped" option is forced to True in dynamic energy minimum
+mode.
+""",
+}
+
 
 class FrequencyAnalysis:
-    r"""Performs a Frequency Analysis on a given Profile, by calculating
-    closed contours.
+    r"""Performs a Frequency Analysis on a given Tokamak, by calculating
+    contours.
 
     Parameters
     ----------
-    profile : Profile
-        The Profile to perform the analysis upon.
+    tokamak: Tokamak
+        The tokamak to perform the analysis upon.
     psilim : tuple(float, float)
         The :math:`\psi` limit to restrict the search for contours, relative to
         :math:`\psi_{wall}`.
@@ -61,11 +81,75 @@ class FrequencyAnalysis:
         The Energy span. Can be either 1D or 2D. See documentation for
         definitions
 
+    Other Parameters
+    ----------------
+    main_grid_density: int, optional
+        The Main Contour's' grid density. For analytical equilibria, a minimum
+        of 500 is recommended, while numerical equilibria require at least
+        1000. This option mostly affects trapped orbits around O-points.
+        Diminishing results are observed after 1800. Defaults to 1000.
+    local_grid_density: int, optional
+        The local contours' grid density. 100 seems to work best for almost all
+        cases. Defaults to 100.
+    theta_expansion, psi_expansion: float, optional
+        The bounding box expansion factor around which to create the local
+        contour. Note that the expanded bounding box is still limited by the
+        Main Contour's limits. Default to 1.2.
+    pzeta_min_step: float, optional
+        The minimum :math:`P_\zeta` step allowed. This step is usually smaller
+        than the relative minimum step, but takes over for :math:`P_\zeta
+        \approx 0`. Defaults to 2e-4.
+    passing_pzeta_rstep: float, optional
+        The relative :math:`P_\zeta` step size for passing orbits. Defaults to
+        1e-3.
+    trapped_pzeta_rstep: float, optional
+        The relative :math:`P_\zeta` step size for trapped orbits. Defaults to
+        1e-3.
+    energy_rstep: float, optional
+        The relative E step size. Defaults to 1e-3.
+    skip_trapped: bool, optional
+        Whether or not to skip calculations of trapped orbits. Defaults to
+        False.
+    skip_passing: bool, optional
+        Whether or not to skip calculations of passing orbits. Defaults to
+        False.
+    skip_copassing: bool, optional
+        Whether or not to skip calculations of co-passing orbits. Defaults to
+        False.
+    skip_cupassing: bool, optional
+        Whether or not to skip calculations of cu-passing orbits. Defaults to
+        False.
+    calculate_omega_theta: bool, optional
+        Whether or not to calculate each orbit's :math:`\omega_\theta`.
+        Defaults to True.
+    calculate_qkinetic: bool, optional
+        Whether or not to calculate each orbit's :math:`q_{kinetic}`. Defaults
+        to True.
+    cocu_classification: bool, optional
+        Whether or not to further classify passing orbits as Co-/Cu-passing.
+        Defaults to True.
+    min_vertices_method_switch: int, optional
+        Minimum number of vertices below which the frequency calculations
+        switch to double contour mode. Defaults to 40.
+    max_pzeta_method_switch: float, optional
+        Maximum :math:`P_\zeta` (absolute) value, below which the frequency
+        calculations switch to double contour mode. Defaults to 0.
+    relative_upper_E_factor: float, optional
+        Used only in dynamic minimum energy mode. Defines the upper Espan limit
+        to search for trapped orbits, relative to the total minimum Energy.
+        Defaults to 1.1.
+    logspace_len: int, optional
+        Used only in dynamic minimum energy mode. The number of Energies for
+        which to search trapped orbits, up until ``relative_upper_E_factor``.
+        Defaults to 50.
+    trapped_min_num: int, optional
+        Used only in dynamic minimum energy mode. Defines the minimum number of
+        trapped orbits, after which calculation stops. Defaults to 1.
     """
 
     def __init__(
         self,
-        profile: Profile,
+        tokamak: Tokamak,
         psilim: tuple,
         muspan: np.ndarray,
         Pzetaspan: np.ndarray,
@@ -75,32 +159,19 @@ class FrequencyAnalysis:
         logger.info("==> Setting up Frequency Analysis...")
 
         # Unpack kwargs
-        self.config = config = FrequencyAnalysisConfig()
+        self.config = FrequencyAnalysisConfig()
         for key, value in kwargs.items():
             setattr(self.config, key, value)
 
-        self.psilim = profile.Q(psilim, "psi_wall").to("NUMagnetic_flux").m
-
-        self.profile = profile
-        # COM values must be explicitly defined
-        if not (profile.mu is profile.Pzeta is profile.E is None):
-            msg = "Warning: Profile initial COMs are ignored."
-            logger.warning(msg)
-            warnings.warn(msg)
+        self.profile = Profile(
+            tokamak=tokamak,
+            species=tokamak.Q.args["species"],
+        )
+        self.psilim = self.profile.Q(psilim, "psi_wall").to("NUmf").m
 
         self._process_arguements(muspan, Pzetaspan, Espan)
         self.analysis_completed = False
-
-        logger.debug(f"\tpsilim = {self.psilim}")
-        logger.debug(f"\tqkinetic_cutoff = {config.qkinetic_cutoff}")
-        logger.debug(f"\tcocu_classification = {config.cocu_classification}")
-        logger.debug(f"\tcalculate_qkin = {config.calculate_qkinetic}")
-        logger.debug(
-            f"\tcalculate_omega_theta = {config.calculate_omega_theta}"
-        )
-        logger.debug(
-            f"\tmethod_switch_threshold = {config.min_vertices_method_switch}"
-        )
+        log_init(self.config)
 
     def _process_arguements(
         self,
@@ -109,6 +180,8 @@ class FrequencyAnalysis:
         Espan: np.ndarray,
     ):
         r"""
+        Decides the iteration mode depending on the shape of the input arrays.
+
         Cartesian Mode
         --------------
         If all 3 spans are 1d arrays, iterate through their cartesian product.
@@ -144,18 +217,19 @@ class FrequencyAnalysis:
                     * self.Pzetaspan.shape[0]
                     * self.Espan.shape[0]
                 )
-                logger.debug(
-                    f"\tmain_grid_density = {self.config.main_grid_density}"
-                )
-                logger.debug(
-                    f"\tlocal_grid_density = {self.config.local_grid_density}"
-                )
-
             case np.ndarray(), np.ndarray(), np.ndarray() if (
                 self.muspan.shape == self.Pzetaspan.shape == self.Espan.shape
             ):
                 self.mode = "matrix"
                 self.triplets_num = self.muspan.size  # Same for all 3
+                # if (
+                #     np.linalg.det(self.muspan)
+                #     == np.linalg.det(self.Espan)
+                #     == np.linalg.det(self.Pzetaspan)
+                #     == 0.0
+                # ):
+                #     logger.warning(messages[1])
+                #     warnings.warn(messages[1])
             case np.ndarray(), np.ndarray(), None if (
                 self.muspan.ndim == self.Pzetaspan.ndim == 1
             ):
@@ -163,21 +237,15 @@ class FrequencyAnalysis:
                 self.triplets_num = (
                     self.muspan.shape[0] * self.Pzetaspan.shape[0]
                 )
-
-                logger.debug(f"\tlogspace_len = {self.config.logspace_len}")
-                logger.debug(
-                    "\trelative_upper_E_factor = "
-                    f"{self.config.relative_upper_E_factor}"
-                )
             case _:
-                raise ValueError("Illegal Input")
+                logger.error(messages[0])
+                raise ValueError(messages[0])
 
-        logger.info(f"\tMode: {self.mode}")
-        logger.debug(f"\tskip_trapped = {self.config.skip_trapped}")
-        logger.debug(f"\tskip_passing = {self.config.skip_passing}")
+        log_method_selection(self.mode, self.config)
 
     def start(self, pbar: bool = True):
-        r"""Calculates the frequencies
+        r"""Iterates through the triplets and finds the frequencies of the
+        resulting found contours.
 
         Parameters
         ----------
@@ -257,7 +325,7 @@ class FrequencyAnalysis:
         )
 
     def _start_matrix(self, pbar: bool):
-        r"""Cartesian Method: Used if all input arrays are 2D and of the same
+        r"""Matrix Method: Used if all input arrays are 2D and of the same
         shape."""
 
         assert self.muspan.shape == self.Pzetaspan.shape == self.Espan.shape
@@ -283,7 +351,7 @@ class FrequencyAnalysis:
             profile.PzetaNU = profile.Q(Pzeta, "NUCanonical_momentum")
             profile.ENU = profile.Q(E, "NUJoule")
 
-            MainContour = main_contour(profile, self.psilim)
+            MainContour = main_contour(profile, self.psilim, self.config)
 
             found_orbits = profile_triplet_analysis(
                 main_contour=MainContour,
@@ -305,13 +373,13 @@ class FrequencyAnalysis:
         )
 
     def _start_dynamicEmin(self, pbar: bool):
-        r"""Cartesian Method: Used if all input arrays are 1D."""
+        r"""Dynamic minimum energy Method: Used if muspan and Pzetaspan are 1D
+        and Espan is None."""
 
         if self.config.skip_trapped:
             self.config.skip_trapped = False
-            msg = "Ignoring 'skip_trapped' option set to True"
-            warnings.warn(msg)
-            logger.warning(msg)
+            logger.warning(messages[2])
+            warnings.warn(messages[2])
 
         pbars = _ProgressBars(pbar=pbar)
         mu_pbar = pbars.mu_pbar(total=len(self.muspan))
@@ -461,9 +529,11 @@ class FrequencyAnalysis:
         # TODO:
         pass
 
-    def __str__(self):
-        r""""""
+    def alpha_tricontour():
+        # TODO:
+        pass
 
+    def __str__(self):
         # Parameters availiable before run().
         string = ""
         if self.config.print_tokamak:
@@ -587,6 +657,40 @@ def _scatter_labels(index: str):
         "omega_zeta": r"$\omega_\zeta [\omega_0]$",
     }
     return titles[index]
+
+
+def log_init(config: FrequencyAnalysisConfig):
+    r"""Logs Frequency Analysis options after passed by the user."""
+    logger.debug(f"\tpzeta_atol = {config.pzeta_atol}")
+    logger.debug(f"\tpassing_pzeta_rtol = {config.passing_pzeta_rtol}")
+    logger.debug(f"\ttrapped_pzeta_rtol = {config.trapped_pzeta_rtol}")
+    logger.debug(f"\tenergy_rtol = {config.energy_rtol}")
+    logger.debug(f"\tpzeta_atol = {config.pzeta_atol}")
+    logger.debug(f"\tqkinetic_cutoff = {config.qkinetic_cutoff}")
+    logger.debug(f"\tskip_trapped = {config.skip_trapped}")
+    logger.debug(f"\tskip_passing = {config.skip_passing}")
+    logger.debug(f"\tcocu_classification = {config.cocu_classification}")
+    logger.debug(f"\tcalculate_qkin = {config.calculate_qkinetic}")
+    logger.debug(f"\tcalculate_omega_theta = {config.calculate_omega_theta}")
+    logger.debug(
+        f"\tmethod_switch_threshold = {config.min_vertices_method_switch}"
+    )
+
+
+def log_method_selection(mode: str, config: FrequencyAnalysisConfig):
+    logger.info(f"\tMode: {mode}")
+    match mode:
+        case "cartesian":
+            logger.debug(f"\tmain_grid_density = {config.main_grid_density}")
+            logger.debug(f"\tlocal_grid_density = {config.local_grid_density}")
+        case "dynamicEmin":
+            logger.debug(f"\tlogspace_len = {config.logspace_len}")
+            logger.debug(
+                "\trelative_upper_E_factor = "
+                f"{config.relative_upper_E_factor}"
+            )
+        case _:
+            pass
 
 
 def log_contour_method():

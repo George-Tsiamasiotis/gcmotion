@@ -5,7 +5,7 @@ gcmotion.FrequencyAnalysis
 ==========================
 
 The FrequencyAnalysis class iterates through (μ, Pζ, Ε) values upon a given
-Profile, and finds the ωθ, ωζ frequencies and their ratio qkinetic by searching
+Tokamak, and finds the ωθ, ωζ frequencies and their ratio qkinetic by searching
 for contours.
 
 .. autoclass:: FrequencyAnalysis
@@ -33,20 +33,22 @@ the input arrays:
     parabolas.
 
     Note:
-    If we know that our grid is orthogonal, it's much faster to use a row from each span array and use cartesian mode, since its significantly faster.
+    If we know that our grid is orthogonal, it's much faster to use a row from each span array and use cartesian mode, since its significantly faster, especially when iterating through a lot of energies.
 
 3. Dynamic minimum energy Mode: Activated by only passing muspan and Pzetspan as 1D arrays. 
-    The algorithm finds the minimum vaule of the
-    energy grid for every (mu, Pzeta) pair, which is always found at an
-    O-point, and slowly increments it until it finds 1 trapped orbit. This
-    orbit's frequency is (very close to) the O-point frequency, which is
-    always the highest frequency of this specific family of trapped orbits.
-    This frequency defines the maximum frequency with which the particles
-    resonate, with 0 being the slowest (separatrix). This mode can only
-    find the O-point frequency on the total minumum energy. If more
-    O-points are present, then we must use method 4.
+    The algorithm finds the minimum vaule of the energy grid for every
+    (:math:`\mu`, :math:`P_\zeta`) pair, which is always found at an O-point,
+    and slowly increments it until it finds 1 trapped orbit. This orbit's
+    frequency is (very close to) the O-point frequency, which is always the
+    highest frequency of this specific family of trapped orbits. This frequency
+    defines the maximum frequency with which the particles resonate, with 0
+    being the minimum (separatrix). This mode can only find the O-point
+    frequency on the total minumum energy. If more O-points are present, then
+    we must use method 4.
 
-4. Dynamic O-point minimum energy Mode: To be implemented
+.. todo::
+
+    4. Dynamic O-point minimum energy Mode:
 
 Algorithm
 ---------
@@ -55,18 +57,20 @@ Each contour represents a specific family of orbits represented by the same 3
 Constants of Motion, and differing only in their initial conditions (however, a
 single triplet may correspond to more that 1 contour). By exploiting the fact
 that our poloidal angle is in fact the boozer theta, the area contained within
-the contour is equal to 2π*Jθ, where Jθ the corresponding action variable. We
-then use the definitions:
+the contour is equal to :math:`2πJ_\theta`, where :math:`J_\theta` the corresponding 
+action variable. We then use the definitions:
 
 .. math::
 
-    \omega_\theta = \dfrac{dE}{dJ_\theta}
-    q_{kin} = - \dfrac{dJ_\theta}{dJ_\zeta} = -\dfrac{dJ_\theta}{dP_\zeta}
-    \omega_\zeta = q_{kin} * \omega_\theta
+    \omega_\theta = \dfrac{dE}{dJ_\theta} \\
+    q_{kin} = - \dfrac{dJ_\theta}{dJ_\zeta} = -\dfrac{dJ_\theta}{dP_\zeta} \\
+    \omega_\zeta = q_{kin} * \omega_\theta \\
 
 The algorithm follows these steps, regardless of the "scanning" method
 (cartesian, matrix, dymanic energy minimum, ...), since the only thing they
 change is the way the triplets (μ, Ε, Ρζ) are created:
+
+The area is found using the `shoelace formula <https://en.wikipedia.org/wiki/Shoelace_formula>`_
 
 1. For a triplet, iterate first through all the energies, then Ρζ and then μ:
 
@@ -89,6 +93,9 @@ change is the way the triplets (μ, Ε, Ρζ) are created:
     calculating the same thing two times, but the performance impact is not
     worth the added complexity needed to avoid it...
 
+    For matrix mode, we must create the main contour for *every* energy as
+    well, since the grid is generally not orthogonal.
+
     Note that we do not use matplotlib's contour methods, but contourpy's
     ContourGenerator. Not only this is much faster and more memory efficient,
     but it also gives more control when extracting contour lines.
@@ -106,19 +113,19 @@ the orbit type, and also stores all calculated quantities and frequencies.
 4. We calculate the bounding box of the orbit (e.g. the smallest rectangle
 fully containing the orbit who's sides are parallel to the x and y axes).
 
-5. We classify the orbit as trapped or passing. This is immediately calculating
+5. We classify the orbit as trapped or passing. This is immediately calculated
 by checking whether the bounding box touches both left and right walls
 (passing) or not (trapped).
 
-    - If the orbit is passing, we further classify it as co- or cu-passing. For
-      this we use the approximation that if rho>0 on all vertices then the
-      orbit is co-passing, else co-passing.
+If the orbit is passing, we further classify it as co- or cu-passing. For this 
+we use the approximation that if rho>0 on all vertices then the orbit is 
+co-passing, else cu-passing.
 
 5. We validate the orbit, by checking 2 things:
 
     - The orbit is fully contained within the contour limits and doesn't get
-      cutoff. This is True if its bounding box does not touch any of the
-      contour walls.
+      cutoff. This is True if its bounding box does not touch any of the upper 
+      or lower contour walls.
 
     - The orbit is not cutoff-trapped, e.g. a trapped orbit that gets cut off
       by the left and right contour walls. The orbit is cutoff-trapped if its
@@ -145,10 +152,25 @@ these values. This is basically calculating the derivative locally.
       comparable to the contour's grid spacing, making the contour line jagged.
       By creating 2 adjacent local contours we circumvent this problem, since
       the orbit in the adjacent contour has much more vertices, and the main
-      orbit's Jθ is not even calculated..
+      orbit's Jθ is not calculated at all.
 
     - If at any point of the calculation an invalid contour line is found, the
-      calculation is aborted..
+      calculation is aborted. The number of orbits lost by this restriction
+      however is negligible.
+
+Advantages
+----------
+
+1. The algorithm is very close to the theoretical formulation of the Action-Angle 
+theory, and uses a purely geometrical way of calculating frequencies, without the 
+need for particle tracking.
+
+2. There is no restriction as to how close or how far the array spans need to be 
+spaced, since each triplet's frequencies are calculated independently. This makes 
+it possible to hold one or two of the COMs constant and iterate through a range of 
+the the third COM. Moreover, we can use a more dense array for areas we expect 
+more trapped orbits and a less dense one for areas with more passing orbits,
+since the Hamiltonian tends to be "flatter" in areas around O-points.
 
 Caveats
 -------
@@ -160,9 +182,10 @@ cannot be classified this way. Those orbits have the flag "undefined".
 
 2. When calculating the Jθ for a passing orbit, we must add the points [-2π, 0]
 and [0, 2π] to its vertices. Since the order (left-to-right or right-to-left)
-of the vertices returned by the ContourGenerator is effectively random, we must
-first check their direction and then add the points in the right order. We must
-also divide by 2, since the contour is calculated in [-2π, 2π].
+of the vertices returned by the ContourGenerator is effectively random (but is
+always one of the two), we must first check their direction and then add the 
+points in the right order. We must also divide by 2, since the contour is 
+calculated in [-2π, 2π].
 
 3. When calculating same-level orbits in the adjacent contours, the
 ContourGenerator may return more than 1 orbits, in a random order. This happens
@@ -173,3 +196,4 @@ distances of the orbits' bounding boxes (which are already calculated at this
 point) from the main orbit's bounding box, and picking the closest one.
 Specifically, we compare the distances of the bottom left corner.
 
+4. Does not work under the presence of perturbations.
