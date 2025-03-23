@@ -84,8 +84,8 @@ addopts = """
 --benchmark-name=short
 """
 console_output_style = "progress-even-when-capture-no"
-filterwarnings = [
-  "ignore::DeprecationWarning:jupyter_client.*",
+markers = [
+  "slow: mark test as slow",
 ]
 
 
