@@ -197,3 +197,26 @@ point) from the main orbit's bounding box, and picking the closest one.
 Specifically, we compare the distances of the bottom left corner.
 
 4. Does not work under the presence of perturbations.
+
+ContourOrbit Object
+-------------------
+
+.. currentmodule:: gcmotion.scripts.frequency_analysis.contour_orbit
+
+.. autoclass:: ContourOrbit
+   :exclude-members: validate, calculate_bbox, distance_from, classify_as_tp, close_segment, convert_to_ptheta, calculate_Jtheta, classify_as_cocu, pick_color, str_dump, E, Jtheta, Jzeta, area, bbox, copassing, cupassing, omega_theta, omega_zeta, passing, qkinetic, trapped, undefined, valid, vertices, xmax, xmin, ymax, ymin, 
+
+.. rubric:: Methods
+
+.. autosummary::
+
+    ContourOrbit.validate
+    ContourOrbit.calculate_bbox
+    ContourOrbit.distance_from
+    ContourOrbit.classify_as_tp
+    ContourOrbit.close_segment
+    ContourOrbit.convert_to_ptheta
+    ContourOrbit.calculate_Jtheta
+    ContourOrbit.classify_as_cocu
+    ContourOrbit.pick_color
+    ContourOrbit.str_dump
