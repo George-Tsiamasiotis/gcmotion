@@ -66,17 +66,19 @@ class FrequencyAnalysisPbarConfig(ProgressBarStyle):
 class FrequencyAnalysisConfig:
     print_tokamak: bool = True
     qkinetic_cutoff: float = 10
-    pzeta_atol: float = 2e-4
-    passing_pzeta_rtol: float = 1e-3  # 1e-3 seems to work best
-    trapped_pzeta_rtol: float = 1e-3  # 1e-3 seems to work best
-    energy_rtol: float = 1e-3  # 1e-3 seems to work best
+    pzeta_min_step: float = 2e-4
+    passing_pzeta_rstep: float = 1e-3  # 1e-3 seems to work best
+    trapped_pzeta_rstep: float = 1e-3  # 1e-3 seems to work best
+    energy_rstep: float = 1e-3  # 1e-3 seems to work best
     cocu_classification: bool = True
     calculate_omega_theta: bool = True
     calculate_qkinetic: bool = True
     skip_trapped: bool = False
     skip_passing: bool = False
+    skip_copassing: bool = False
+    skip_cupassing: bool = False
     # Minimum number of main orbit vertices, to switch to double contour method
-    min_vertices_method_switch: int = 40
+    max_vertices_method_switch: int = 40
     # Maximum abs(Pzeta value, below which to switch to double contour method
     max_pzeta_method_switch: float = 0.000
     # dynamic minimum energy
@@ -84,7 +86,7 @@ class FrequencyAnalysisConfig:
     logspace_len: int = 50
     trapped_min_num: int = 1
     # Contour Generation
-    main_grid_density: int = 1200  # Diminishing results after 1800
+    main_grid_density: int = 1000  # Diminishing results after 1800
     local_grid_density: int = 100
     theta_expansion: float = 1.2
     psi_expansion: float = 1.2

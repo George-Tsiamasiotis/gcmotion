@@ -1,3 +1,12 @@
+r"""
+==================
+Contour Generators
+==================
+
+Functions that generate the Main and local Contours.
+
+"""
+
 import contourpy
 import numpy as np
 
@@ -16,7 +25,7 @@ def main_contour(
     config: FrequencyAnalysisConfig,
     calculate_min: bool = False,
 ):
-    r"""[Step 1] Generate the main Profile Contour.
+    r"""Generate the main Profile Contour.
 
     Psi limits are the full span, as called from FrequencyAnalysis.
 
@@ -51,7 +60,7 @@ def main_contour(
         "C": C,
         "psilim": psilim,
     }
-    if getattr(config, "calculate_min", False):
+    if calculate_min:
         MainContour |= {"zmin": energy_grid.min()}
 
     return MainContour

@@ -70,7 +70,9 @@ class FrequencyAnalysis:
         The tokamak to perform the analysis upon.
     psilim : tuple(float, float)
         The :math:`\psi` limit to restrict the search for contours, relative to
-        :math:`\psi_{wall}`.
+        :math:`\psi_{wall}`. Avoid setting the lower limit exactly 0, but set
+        it at a very low value (e.g. 1e-7) to avoid RuntimeWarnings when ψ
+        becomes negative due to rounding errors.
     muspan : numpy.ndarray
         The :math:`\mu` span. Can be either 1D or 2D. See documentation for
         definitions
@@ -145,6 +147,49 @@ class FrequencyAnalysis:
     trapped_min_num: int, optional
         Used only in dynamic minimum energy mode. Defines the minimum number of
         trapped orbits, after which calculation stops. Defaults to 1.
+
+    Examples
+    --------
+
+    >>> import numpy as np
+    >>> import gcmotion as gcm
+    >>>
+    >>> Rnum = 1.65
+    >>> anum = 0.5
+    >>> B0num = 1
+    >>> species = "p"
+    >>> Q = gcm.QuantityConstructor(R=Rnum, a=anum, B0=B0num, species=species)
+    >>>
+    >>> B0 = Q(B0num, "Tesla")
+    >>> i = Q(0, "NUPlasma_current")
+    >>> g = Q(1, "NUPlasma_current")
+    >>>
+    >>> tokamak = gcm.Tokamak(
+    ...     R=Q(Rnum, "meters"),
+    ...     a=Q(anum, "meters"),
+    ...     qfactor=gcm.qfactor.Unity(),
+    ...     bfield=gcm.bfield.LAR(B0=B0, i=i, g=g),
+    ...     efield=gcm.efield.Nofield(),
+    ... )
+    >>>
+    >>> # Cartesian mode span
+    >>> muspan = np.array([1e-5])
+    >>> Pzetaspan = np.linspace(-0.04, -0.005, 10)
+    >>> Espan = np.logspace(7.8e-6, 4e-5, 20)
+    >>>
+    >>> freq = gcm.FrequencyAnalysis(
+    ...     tokamak=tokamak,
+    ...     psilim=(1e-7, 1.2),
+    ...     muspan=muspan,
+    ...     Pzetaspan=Pzetaspan,
+    ...     Espan=Espan,
+    ...     main_contour_density=800,
+    ... )
+    >>>
+    >>> freq.start()
+    >>> print(freq)  # doctest: +SKIP
+    >>> freq.scatter(x="Pzeta", y="qkinetic")  # doctest: +SKIP
+    >>> df = freq.to_dataframe()
     """
 
     def __init__(
@@ -255,6 +300,7 @@ class FrequencyAnalysis:
         """
         logger.info("==> Beginning Frequency Analysis.")
         start = time()
+        self.orbits = []
 
         match self.mode:
             case "cartesian":
@@ -264,8 +310,26 @@ class FrequencyAnalysis:
             case "dynamicEmin":
                 self._start_dynamicEmin(pbar=pbar)
 
+        self.trapped_orbits_num = len(
+            [orb for orb in self.orbits if orb.trapped]
+        )
+        self.passing_orbits_num = len(
+            [orb for orb in self.orbits if orb.passing]
+        )
+        self.copassing_orbits_num = len(
+            [orb for orb in self.orbits if orb.copassing]
+        )
+        self.cupassing_orbits_num = len(
+            [orb for orb in self.orbits if orb.cupassing]
+        )
+        logger.info(f"\tFound {self.trapped_orbits_num} trapped orbits.")
+        logger.info(f"\tFound {self.passing_orbits_num} passing orbits.")
+        logger.info(f"\tFound {self.copassing_orbits_num} copassing orbits.")
+        logger.info(f"\tFound {self.cupassing_orbits_num} cupassing orbits.")
+
         duration = self.profile.Q(time() - start, "seconds")
         logger.info(f"--> Frequency Analysis Complete. Took {duration:.4g~#P}")
+
         self.analysis_completed = True
 
     def _start_cartesian(self, pbar: bool):
@@ -398,7 +462,10 @@ class FrequencyAnalysis:
                 profile.PzetaNU = profile.Q(Pzeta, "NUCanonical_momentum")
 
                 MainContour = main_contour(
-                    profile, self.psilim, calculate_min=True
+                    profile,
+                    self.psilim,
+                    calculate_min=True,
+                    config=self.config,
                 )
                 Emin = MainContour["zmin"]
                 self.Espan = np.logspace(
@@ -474,7 +541,7 @@ class FrequencyAnalysis:
         self.df = pd.DataFrame(d)
         return self.df
 
-    def scatter(self, x: str, y: str, scatter_kw: dict):
+    def scatter(self, x: str, y: str, scatter_kw: dict = {}):
         r"""Draws a scatter plot of the calculated frequencies.
 
         Parameters
@@ -486,7 +553,11 @@ class FrequencyAnalysis:
             The y coordinate, as a column name of the Dataframe.
         scatter_kw: dict, optional
             Further arguements to be passed to matplotlib's scatter method.
+            Defaults to {}.
         """
+
+        if not hasattr(self, "df"):
+            self.to_dataframe()
 
         config = FrequencyAnalysisPlotConfig()
 
@@ -549,19 +620,6 @@ class FrequencyAnalysis:
 
         if not self.analysis_completed:
             return string
-
-        self.trapped_orbits_num = len(
-            [orb for orb in self.orbits if orb.trapped]
-        )
-        self.passing_orbits_num = len(
-            [orb for orb in self.orbits if orb.passing]
-        )
-        self.copassing_orbits_num = len(
-            [orb for orb in self.orbits if orb.copassing]
-        )
-        self.cupassing_orbits_num = len(
-            [orb for orb in self.orbits if orb.cupassing]
-        )
 
         string += (
             f"{"Total Orbits Found":>28} : {len(self.orbits):<16}\n"
@@ -661,11 +719,10 @@ def _scatter_labels(index: str):
 
 def log_init(config: FrequencyAnalysisConfig):
     r"""Logs Frequency Analysis options after passed by the user."""
-    logger.debug(f"\tpzeta_atol = {config.pzeta_atol}")
-    logger.debug(f"\tpassing_pzeta_rtol = {config.passing_pzeta_rtol}")
-    logger.debug(f"\ttrapped_pzeta_rtol = {config.trapped_pzeta_rtol}")
-    logger.debug(f"\tenergy_rtol = {config.energy_rtol}")
-    logger.debug(f"\tpzeta_atol = {config.pzeta_atol}")
+    logger.debug(f"\tpzeta_min_step = {config.pzeta_min_step}")
+    logger.debug(f"\tpassing_pzeta_rtol = {config.passing_pzeta_rstep}")
+    logger.debug(f"\ttrapped_pzeta_rtol = {config.passing_pzeta_rstep}")
+    logger.debug(f"\tenergy_rstep= {config.energy_rstep}")
     logger.debug(f"\tqkinetic_cutoff = {config.qkinetic_cutoff}")
     logger.debug(f"\tskip_trapped = {config.skip_trapped}")
     logger.debug(f"\tskip_passing = {config.skip_passing}")
@@ -673,7 +730,7 @@ def log_init(config: FrequencyAnalysisConfig):
     logger.debug(f"\tcalculate_qkin = {config.calculate_qkinetic}")
     logger.debug(f"\tcalculate_omega_theta = {config.calculate_omega_theta}")
     logger.debug(
-        f"\tmethod_switch_threshold = {config.min_vertices_method_switch}"
+        f"\tmethod_switch_threshold = {config.max_vertices_method_switch}"
     )
 
 

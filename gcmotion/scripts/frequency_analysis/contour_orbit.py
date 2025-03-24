@@ -1,3 +1,12 @@
+r"""
+============
+ContourOrbit
+============
+
+Definition of the ContourOrbit object and its methods.
+
+"""
+
 import numpy as np
 from math import isclose
 from numba import njit
@@ -10,11 +19,11 @@ tau = 2 * np.pi
 
 
 class ContourOrbit:
-    r"""Path-like object containing the vertices as well as flags and the
-    methods needed to classify the orbit.
+    r"""Path-like object containing the vertices as well as calculated
+    frequencies, flags and methods needed to classify the orbit.
 
     The methods should be called in a specific order, which is done inside
-    profile_analysis() since some extra parameters are needed
+    profile_triplet_analysis() since some extra parameters are needed.
     """
 
     vertices: np.ndarray = None
@@ -152,6 +161,7 @@ class ContourOrbit:
             self.color = config.cupassing_color
 
     def str_dump(self):
+        r"""Generates a small string corresponding to the orbit's type."""
 
         # Use bool() to default to False if None
         if self.undefined:

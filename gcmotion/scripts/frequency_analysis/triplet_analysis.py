@@ -3,21 +3,27 @@ Analyses a single *slice* of a Profile and tries to find all valid segments to
 calculate their frequencies and qkinetics.
 
 A slice is a contour graph over the ω-Ρθ space, with fixed μ and Ρζ.
-Valid orbits consist of isoenergy lines that are fully contained inside the
-graph, without getting cuttoff by its edges.
 
 Functions
 ---------
-profile_analysis():
+profile_triplet_analysis():
     Top level function: Generates the main θ-Ρθ-E contour for a given triplet
-    and returns all the valid found orbits.
+    and returns all the valid found orbits, with all frequencies calculated.
 calculate_frequencies():
     For a single orbit: Calculates its bounding box, classifies it as
     trapped-passing, and calls the functions that calculate the frequencies and
     qkinetic. Depending on the configuration, it can skip the calculations of
     the frequencies, or skip all trapped or passing orbits.
-calculate_omega_theta():
-    C
+finalize_orbits():
+    Calculates final labels for every orbit that succesfully calculated its
+    frequencies.
+
+Module-level variables
+----------------------
+
+single_contour_orbits, double_contour_orbits:
+    Used to track the number of calls to each contouring method.
+
 
 """
 
@@ -40,8 +46,8 @@ from gcmotion.configuration.scripts_configuration import (
     FrequencyAnalysisConfig,
 )
 
-# from gcmotion.utils.logger_setup import logger
-
+# Module-level variables used for tracking the calls of each method. Their
+# values are handled and reset in the FrequencyAnalysis Class.
 single_contour_orbits = 0
 double_contour_orbits = 0
 
@@ -97,10 +103,10 @@ def calculate_frequencies(
 ):
     r"""Calculates all frequencies for a given (validated) orbit.
 
-    For a single orbit: Calculates its bounding box, classifies it as
-    trapped-passing, and calls the functions that calculate the frequencies and
-    qkinetic. Depending on the configuration, it can skip the calculations of
-    the frequencies, or skip all trapped or passing orbits.
+    For a single orbit: Cclassifies it as trapped-passing, and calls the
+    functions that calculate the frequencies and qkinetic. Depending on the
+    configuration, it can skip the calculations of the frequencies, or skip all
+    trapped or passing orbits.
 
     Returns None when one of the calculations fails, and the orbit should be
     discarded.
@@ -123,9 +129,14 @@ def calculate_frequencies(
         return None
     if main_orbit.passing and config.skip_passing:
         return None
+    if main_orbit.copassing and config.skip_copassing:
+        return None
+    if main_orbit.cupassing and config.skip_cupassing:
+        return None
 
+    # Decide Method
     if (
-        main_orbit.vertices.shape[0] < config.min_vertices_method_switch
+        main_orbit.vertices.shape[0] < config.max_vertices_method_switch
         or abs(main_orbit.Pzeta) < config.max_pzeta_method_switch
     ):
         omega_theta_method: Callable = calculate_orbit_omegatheta_double
@@ -166,6 +177,7 @@ def finalize_orbits(
     main_profile: Profile,
     config: FrequencyAnalysisConfig,
 ) -> list[ContourOrbit]:
+    r"""Calculates label attributes for each orbit."""
 
     finalized_orbits = deque()
     for orbit in calculated_orbits:
