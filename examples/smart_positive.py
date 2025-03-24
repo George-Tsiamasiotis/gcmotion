@@ -33,16 +33,23 @@ init = gcm.InitialConditions(
 
 # Create the particle and calculate its obrit
 particle = gcm.Particle(tokamak=tokamak, init=init)
-particle.run()
+event = gcm.events.when_psi(init.psi0NU.m, terminal=30)
+particle.run(events=[event])
 print(particle)
-
-# B Derivatives plots
-# ds = particle.bfield.dataset
-# ds.db_dtheta_norm.plot.contourf(subplot_kws={"projection": "polar"}, levels=30)
-# plt.show()
 
 # Some Plots
 gplt.qfactor_profile(particle.profile)
+gplt.machine_coords_profile(
+    entity=particle.profile,
+    which="b i g",
+    parametric_density=250,
+    mode="filled",
+    flux_units="Tesla * m^2",
+    E_units="keV",
+    B_units="Tesla",
+    I_units="NUpc",
+    g_units="NUpc",
+)
 gplt.magnetic_profile(particle.profile, coord="rho")
 gplt.particle_evolution(particle, units="NU")
 gplt.particle_poloidal_drift(
