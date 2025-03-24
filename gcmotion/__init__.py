@@ -40,12 +40,6 @@ from gcmotion.scripts.frequency_analysis.frequency_analysis import (
     FrequencyAnalysis,
 )
 
-# TEMP
-from gcmotion.scripts.frequency_analysis.frequency_analysis import (
-    frequency_analysis,
-)
-
-
 # main namespace
 __all__ = [
     "logger_setup",
@@ -67,5 +61,5 @@ __all__ = [
     "Particle",
     # Scripts
     "events",
-    "frequency_analysis",
+    "FrequencyAnalysis",
 ]
