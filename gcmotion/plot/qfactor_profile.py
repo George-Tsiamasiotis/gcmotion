@@ -65,11 +65,8 @@ def qfactor_profile(entity: Tokamak | Profile | Particle, **kwargs):
     psi = psi_wallNU * np.linspace(
         config.span[0], config.span[1], config.points
     )
-    logger.trace(psi)
     q = qfactor.solverqNU(psi.m)
     psip = qfactor.psipNU(psi.m)
-    logger.trace(q.shape)
-    logger.trace(psi_wallNU)
 
     # Plot
     axq.plot(psi / psi_wallNU, q)

@@ -84,11 +84,9 @@ def particle_poloidal_drift(particle: Particle, **kwargs):
     # Set up ylim now to pass to contour as well
     psi_wall = particle.profile.psi_wall.to("psi_wall")
     if config.psilim == "auto":
-        logger.trace(f"psilim passed: {config.psilim}")
         config.psilim = particle.Q(
             _auto_yspan(psi.to("psi_wall").m, psi_wall.m)
         ).m
-        logger.trace(f"Auto psilim: {config.psilim}")
 
     # ==============
     # Energy Contour
