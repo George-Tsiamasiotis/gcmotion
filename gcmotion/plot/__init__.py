@@ -1,24 +1,20 @@
-# Profile related plots
-from gcmotion.plot.profile_contour import (
-    profile_energy_contour,
-)
-
 # Particle related plots
-from gcmotion.plot.particle_evolution import particle_evolution
+from .particle_evolution import particle_evolution
+from .particle_poloidal_drift import particle_poloidal_drift
 
 # Profile related plots
-from gcmotion.plot.qfactor_profile import qfactor_profile
-from gcmotion.plot.efield_profile import efield_profile
-from gcmotion.plot.magnetic_profile import magnetic_profile
-from gcmotion.plot.particle_poloidal_drift import particle_poloidal_drift
-from gcmotion.plot.machine_coords_profile import (
-    machine_coords_profile,
-)
+from .qfactor_profile import qfactor_profile
+from .efield_profile import efield_profile
+from .magnetic_profile import magnetic_profile
+from .psi_ptheta_plot import psi_ptheta_plot
+from .machine_coords_profile import machine_coords_profile
+from .profile_contour import profile_energy_contour
 
 __all__ = [
     "qfactor_profile",
     "efield_profile",
     "magnetic_profile",
+    "psi_ptheta_plot",
     "profile_energy_contour",
     "particle_evolution",
     "particle_poloidal_drift",

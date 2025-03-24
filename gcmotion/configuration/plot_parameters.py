@@ -112,6 +112,28 @@ class MagneticProfileConfig:
     ax_title_pad: float = 25
 
 
+@dataclass
+class PsiPthetaConfig:
+    # Figure keywords
+    figsize: tuple = (6, 5)
+    dpi: int = dpi
+    layout: str = "constrained"
+    facecolor: str = facecolor
+    titlesize: float = 20
+    titlecolor: str = "blue"
+    # Default parameter values
+    flux_units: str = "NUMagnetic_flux"
+    Ptheta_units: str = "NUCanonical_momentum"
+    show: bool = True
+    # Plot options
+    linewidth: float = 3
+    points: int = 600
+    wall_color: str = "red"
+    wall_style: str = "--"
+    labelsize: float = 15
+    ax_title_size: float = 15
+
+
 @dataclass()
 class ParticleEvolutionConfig:
     # Figure keywords
