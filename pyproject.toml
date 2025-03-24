@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "GCMotion"
-version = "0.0.1"   # Also update version at docs:conf.py
+version = "0.0.2"   # Also update version at docs:conf.py
 authors = [
   { name="George Tsiamasiotis", email="gtsiamasiotis@gmail.com" },
 ]
