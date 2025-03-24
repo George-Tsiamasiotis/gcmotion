@@ -14,6 +14,7 @@ Availiable plotters:
    magnetic_profile
    machine_coords_profile
    efield_profile
+   psi_ptheta_plot
    profile_energy_contour
    particle_evolution
    particle_poloidal_drift
