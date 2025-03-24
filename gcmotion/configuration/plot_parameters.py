@@ -1,3 +1,5 @@
+from gcmotion.configuration.scripts_configuration import ContourOrbitConfig
+
 from dataclasses import dataclass
 from numpy import pi
 
@@ -200,3 +202,11 @@ class MachineCoordsContoursConfig:
     parametric_density: int = 500
     # Contours keywords
     levels: int = 20
+
+
+@dataclass
+class FrequencyAnalysisPlotConfig(ContourOrbitConfig):
+    scatter_figsize: tuple = figsize
+    scatter_dpi: int = dpi
+    scatter_size: float = 7
+    add_hline: bool = True

@@ -6,6 +6,7 @@ from gcmotion.entities import (
     profile,
     particle,
 )
+from gcmotion.scripts.frequency_analysis import frequency_analysis
 
 V = True  # Verbosity
 
@@ -32,4 +33,9 @@ def test_particle_docstring():
 
 def test_events_docstring():
     doctest_results = doctest.testmod(m=events, verbose=V)
+    assert doctest_results.failed == 0
+
+
+def test_frequency_analysis_docstring():
+    doctest_results = doctest.testmod(m=frequency_analysis, verbose=V)
     assert doctest_results.failed == 0

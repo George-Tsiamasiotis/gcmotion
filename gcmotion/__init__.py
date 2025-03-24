@@ -36,7 +36,9 @@ from gcmotion.entities.particle import Particle
 
 # Scripts
 from gcmotion.scripts import events
-
+from gcmotion.scripts.frequency_analysis.frequency_analysis import (
+    FrequencyAnalysis,
+)
 
 # main namespace
 __all__ = [
@@ -59,4 +61,5 @@ __all__ = [
     "Particle",
     # Scripts
     "events",
+    "FrequencyAnalysis",
 ]
