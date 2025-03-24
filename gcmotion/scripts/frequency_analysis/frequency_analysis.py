@@ -322,6 +322,9 @@ class FrequencyAnalysis:
         self.cupassing_orbits_num = len(
             [orb for orb in self.orbits if orb.cupassing]
         )
+        self.undefined_orbits_num = len(
+            [orb for orb in self.orbits if orb.undefined]
+        )
         logger.info(f"\tFound {self.trapped_orbits_num} trapped orbits.")
         logger.info(f"\tFound {self.passing_orbits_num} passing orbits.")
         logger.info(f"\tFound {self.copassing_orbits_num} copassing orbits.")
@@ -639,6 +642,8 @@ class FrequencyAnalysis:
                     f"CuPassing: {self.cupassing_orbits_num:<16}\n",
                 )
             )
+            + f"{"Undefined Orbits Found":>28} : "
+            + "".join((f"Undefined: {self.undefined_orbits_num:<16}\n",))
             + f"{"Single/Double Contour Orbits":>28} : "
             + "".join(
                 (
