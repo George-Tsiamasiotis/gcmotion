@@ -90,7 +90,6 @@ def profile_energy_contour(profile: Profile, **kwargs):
         logger.info("--> Energy contour successfully plotted.")
         plt.show()
     else:
-        return contourax
         logger.info("--> Energy contour returned without plotting")
         plt.clf()
         return contourax

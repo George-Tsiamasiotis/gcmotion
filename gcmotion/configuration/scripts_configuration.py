@@ -32,6 +32,13 @@ class SolverConfig:
 
 
 @dataclass
+class ParabolasConfig:
+    Pzetalim: tuple = (-1.5, 1)
+    Pzeta_density: int = 1000
+    TPB_density: int = 100
+
+
+@dataclass
 class NumericalDatasetsConfig:
     # Above 10-20 orbits seem to not conserve energy
     boozer_theta_downsampling_factor: int = 10
