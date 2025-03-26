@@ -12,11 +12,11 @@ from dataclasses import dataclass
 class _ThetasFixedPlotConfig:
     # Thetas of X points keywords
     thetas_X_marker: str = "."
-    thetas_X_markersize: float = 2
+    thetas_X_markersize: float = 8
     thetas_X_markercolor: str = "#E65100"
     # Thetas of O points keywords
     thetas_O_marker: str = "."
-    thetas_O_markersize: float = 2
+    thetas_O_markersize: float = 8
     thetas_O_markercolor: str = "#1f77b4"
     # Label keywords
     theta_ylabel_fontsize: float = 10
@@ -29,11 +29,11 @@ class _ThetasFixedPlotConfig:
 class _PsisFixedPlotConfig:
     # psis of X points keywords
     psis_X_marker: str = "."
-    psis_X_markersize: float = 2
+    psis_X_markersize: float = 8
     psis_X_markercolor: str = "#E65100"
     # psis of O points keywords
     psis_O_marker: str = "."
-    psis_O_markersize: float = 2
+    psis_O_markersize: float = 8
     psis_O_markercolor: str = "#1f77b4"
     # Label keywords
     psi_ylabel_rotation: int = 90
@@ -54,11 +54,11 @@ class _PsisFixedPlotConfig:
 class _NDFPlotConfig:
     # Number of X points keywords
     ndfp_X_marker: str = "."
-    ndfp_X_markersize: float = 2
+    ndfp_X_markersize: float = 8
     ndfp_X_markercolor: str = "#E65100"
     # Number of O points keywords
     ndfp_O_marker: str = "."
-    ndfp_O_markersize: float = 2
+    ndfp_O_markersize: float = 8
     ndfp_O_markercolor: str = "#1f77b4"
     # Label keywords
     ndfp_ylabel_fontsize: float = 10
@@ -76,11 +76,11 @@ class _TPBPlotConfig:
     facecolor: str = "white"
     # Energies of X points keywords
     tpb_X_marker: str = "."
-    tpb_X_markersize: float = 2
+    tpb_X_markersize: float = 8
     tpb_X_markercolor: str = "#E65100"
     # Energies of O points keywords
     tpb_O_marker: str = "."
-    tpb_O_markersize: float = 2
+    tpb_O_markersize: float = 8
     tpb_O_markercolor: str = "#1f77b4"
     # Title keywords
     tpb_title_fontsize: float = 15

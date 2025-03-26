@@ -146,7 +146,7 @@ def fixed_points_energy_contour(profile: Profile, **kwargs):
     _base_contour_colorbar(ax=cbar.ax, contour=Contour, numticks=10)
 
     contourax.set_ylim(
-        profile.Q(config.psilim, "NUpsi_wall").to(config.flux_units)
+        profile.Q(config.psilim, "psi_wall").to(config.flux_units).m
     )
 
     # Add the title on the cbar's ax

@@ -22,7 +22,7 @@ class ProfileEnergyContourConfig:
     psilim: tuple = (0, 1.2)  # times psi_wall
     levels: int = 30
     E_units: str = "keV"
-    flux_units: str = "Tesla * meter^2"
+    flux_units: str = "NUMagnetic_flux"
     canmon_units: str = "NUCanonical_momentum"
     potential: bool = True
     wall: bool = True

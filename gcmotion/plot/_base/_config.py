@@ -115,7 +115,7 @@ class _FixedPointsPlotConfig:
     projection: str | None = None  # None = default
     # Fixed points keywords
     fp_plot_init_cond: bool = False
-    flux_units: str = "Tesla * meter^2"
+    flux_units: str = "NUMagnetic_flux"
     X_color: str = "#80FF80"
     O_color: str = "yellow"
     X_size: float = 100
