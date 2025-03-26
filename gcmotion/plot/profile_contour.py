@@ -93,3 +93,4 @@ def profile_energy_contour(profile: Profile, **kwargs):
         return contourax
         logger.info("--> Energy contour returned without plotting")
         plt.clf()
+        return contourax

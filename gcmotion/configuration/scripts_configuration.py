@@ -1,5 +1,6 @@
 from pathlib import Path
 from dataclasses import dataclass
+import numpy as np
 
 
 @dataclass
@@ -8,7 +9,7 @@ class LoggerConfig:
     level: str = "TRACE"
     mode: str = "w"  # (w)rite / (a)ppend
     format: str = "timedelta"  # timedelta / default
-    colorize: bool = True
+    colorize: bool = False
     backtrace: bool = True
     # format prefixes
     module_prefix: bool = False
@@ -33,7 +34,7 @@ class SolverConfig:
 @dataclass
 class NumericalDatasetsConfig:
     # Above 10-20 orbits seem to not conserve energy
-    boozer_theta_downsampling_factor: int = 5
+    boozer_theta_downsampling_factor: int = 10
     currents_spline_order: int = 3
     qfactor_spline_order: int = 3
 
@@ -100,3 +101,32 @@ class ContourOrbitConfig:
     copassing_color: str = "xkcd:light purple"
     cupassing_color: str = "xkcd:navy blue"
     undefined_color: str = "xkcd:blue"
+
+
+# -------------- Fixed Points - Bifurcation Config ---------------------------
+
+
+@dataclass()
+class FixedPointsConfig:
+    thetalim: tuple = (-np.pi, np.pi)
+    psilim: tuple = (0, 1.8)
+    fp_method: str = "fsolve"
+    dist_tol: float = 1e-3
+    fp_ic_scan_tol: float = 5 * 1e-8
+    ic_fp_theta_grid_density: int = 500
+    ic_fp_psi_grid_density: int = 101
+    fp_ic_scaling_factor: float = 90
+    fp_random_init_cond: bool = False
+    fp_info: bool = False
+    fp_ic_info: bool = False
+    fp_only_confined: bool = False
+
+
+@dataclass()
+class BifurcationConfig:
+    bif_info: bool = False
+    calc_energies: bool = False
+    energy_units: str = "NUJoule"
+    flux_units: str = "NUmf"
+    energies_info: bool = False
+    which_COM: str = "Pzeta"

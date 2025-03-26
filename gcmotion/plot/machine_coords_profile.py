@@ -13,6 +13,10 @@ from gcmotion.configuration.plot_parameters import MachineCoordsContoursConfig
 from gcmotion.plot._base._base_machine_coords_profile_contour import (
     _base_machine_coords_profile_contour,
 )
+from gcmotion.plot._base._base_fixed_points_profile_contour import (
+    _base_fixed_points_plot,
+)
+
 from gcmotion.entities.profile import Profile
 from gcmotion.entities.tokamak import Tokamak
 
@@ -75,6 +79,14 @@ def machine_coords_profile(entity: Tokamak | Profile, **kwargs):
     # Check if Energy is requested but with Tokamak
     if "e" in config.which.lower() and isinstance(entity, Tokamak):
         print("Energy contour is available only if entity is of type Profile")
+        return
+
+    # Check if Fixed Points is requested but with Tokamak
+    if "fp" in config.which.lower() and isinstance(entity, Tokamak):
+        print(
+            """Fixed Points Analysis contour is available only if
+             entity is of type Profile"""
+        )
         return
 
     plain_name = entity.bfield.plain_name
@@ -311,5 +323,75 @@ def machine_coords_profile(entity: Tokamak | Profile, **kwargs):
         ax_gder.set_title(r"$\partial g / \partial \psi$")
 
         logger.info("Plotted g, dg_dpsi in RZ_contours")
+
+    # -----------------Fixed Points Figure--------------------
+
+    if "fp" in config.which.lower():
+        # Create figure
+        fig_kw = {
+            "figsize": config.figsize_fp,
+            "dpi": config.dpi,
+            "layout": config.layout,
+            "facecolor": config.facecolor,
+        }
+
+        fig_fp = plt.figure(**fig_kw)
+
+        tit_kw = {
+            "fontsize": config.fp_suptitle_fontsize,
+            "color": config.fp_suptitle_color,
+        }
+
+        fig_fp.suptitle(
+            f"Fixed Points Analysis in RZ Plain ({plain_name})", **tit_kw
+        )
+
+        fig_fp_E, fig_fp_dB = fig_fp.subfigures(1, 2)
+
+        ax_fp_E = fig_fp_E.subplots(1, 1)
+        ax_fp_dB = fig_fp_dB.subplots(1, 1)
+
+        # ------------Fixed Points on Energy contour--------------
+
+        _base_machine_coords_profile_contour(
+            entity=entity,
+            fig=fig_fp_E,
+            ax=ax_fp_E,
+            which_Q="E",
+            units=config.E_fp_units,
+            locator="log",
+            **kwargs,
+        )
+
+        _base_fixed_points_plot(
+            profile=entity,
+            ax=ax_fp_E,
+            RZ_coords=True,
+            **kwargs,
+        )
+
+        ax_fp_E.set_title("Fixed Points on Energy Contour", fontsize=11)
+
+        # ----------Fixed Points on Stationary Curves ----------------
+
+        _base_machine_coords_profile_contour(
+            entity=entity,
+            fig=fig_fp_dB,
+            ax=ax_fp_dB,
+            which_Q="dbdtheta",
+            units="",
+            **kwargs,
+        )
+
+        _base_fixed_points_plot(
+            profile=entity,
+            ax=ax_fp_dB,
+            RZ_coords=True,
+            **kwargs,
+        )
+
+        ax_fp_dB.set_title("Fixed Points on Stationary Curves", fontsize=11)
+
+        logger.info("Plotted Fixed Points in RZ_contours")
 
     plt.show()

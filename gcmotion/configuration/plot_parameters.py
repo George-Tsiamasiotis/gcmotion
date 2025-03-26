@@ -2,6 +2,7 @@ from gcmotion.configuration.scripts_configuration import ContourOrbitConfig
 
 from dataclasses import dataclass
 from numpy import pi
+import numpy as np
 
 figsize = 13, 7  # Global window size
 dpi = 100  # Global dpi
@@ -21,7 +22,7 @@ class ProfileEnergyContourConfig:
     psilim: tuple = (0, 1.2)  # times psi_wall
     levels: int = 30
     E_units: str = "keV"
-    flux_units: str = "Tesla * meter^2"
+    flux_units: str = "NUMagnetic_flux"
     canmon_units: str = "NUCanonical_momentum"
     potential: bool = True
     wall: bool = True
@@ -232,3 +233,66 @@ class FrequencyAnalysisPlotConfig(ContourOrbitConfig):
     scatter_dpi: int = dpi
     scatter_size: float = 7
     add_hline: bool = True
+
+
+@dataclass
+class ParabolasPlotConfig:
+    # Figure keywords
+    figsize: tuple = figsize
+    dpi: int = dpi
+    layout: str = "constrained"
+    facecolor: str = "white"
+    linewidth: int = 2
+    # Title keywords
+    title_fontsize: float = 15
+    title_color: str = "black"
+    # Labels keywords
+    xlabel_fontsize: float = 13
+    xlabel_rotation: int = 0
+    ylabel_fontsize: float = 13
+    ylabel_rotation: int = 0
+    # Legend keywords
+    parabolas_legend: bool = True
+    # Parabolas keywords
+    enlim: tuple = (0, 3)
+    Pzetalim: tuple = (-1, 1)  # result after division by psip_wall.m
+    Pzeta_density: int = 1000
+    TPB_density: int = 100
+    plot_TPB: bool = False
+    parabolas_color: str = "orange"
+    TPB_X_color: str = "#E65100"
+    TPB_O_color: str = "#1f77b4"
+    TPB_X_linestyle: str = "solid"
+    TPB_O_linestyle: str = "solid"
+    TPB_X_markersize: float = 2
+    TPB_O_markersize: float = 2
+    # Dashed line keywords
+    show_d_line: bool = True
+    d_line_color: str = "black"
+    d_linewidth: int = 1
+    d_line_alplha: float = 0.5
+
+
+@dataclass()
+class BifurcationPlotConfig:
+    # Figure keywords
+    figsize: tuple = figsize
+    dpi: int = dpi
+    layout: str = "constrained"
+    facecolor: str = "white"
+    sharex: bool = True
+    # x Label keywords
+    xlabel_fontsize: float = 10
+    # Suptitle keywords
+    suptitle_fontsize: float = 15
+    suptitle_color: str = "black"
+    # Bifurcation keywords
+    thetalim: tuple = (-np.pi, np.pi)
+    psilim: tuple = (0, 1.8)
+    plot_energy_bif: bool = True
+    plot_ndfp: bool = False
+    which_COM: str = "Pzeta"
+    # Units
+    energy_units: str = "NUJoule"
+    flux_units: str = "NUmf"
+    canmon_units: str = "NUcanmom"

@@ -103,3 +103,26 @@ class _MachineCoordsContourConfig:
     parametric_density: int = 500
     xmargin_perc: float = 0.1
     ymargin_perc: float = 0.1
+
+
+@dataclass()
+class _FixedPointsPlotConfig:
+    # Figure keywords
+    figsize: tuple = (13, 7)
+    dpi: int = 100
+    layout: str = "constrained"
+    facecolor: str = "white"
+    projection: str | None = None  # None = default
+    # Fixed points keywords
+    fp_plot_init_cond: bool = False
+    flux_units: str = "NUMagnetic_flux"
+    X_color: str = "#80FF80"
+    O_color: str = "yellow"
+    X_size: float = 100
+    O_size: float = 100
+    # IC Keywords
+    ic_marker: str = ">"
+    ic_markercolor: str = "red"
+    ic_markersize: float = 100
+    # RZ coords
+    RZ_coords: bool = False
