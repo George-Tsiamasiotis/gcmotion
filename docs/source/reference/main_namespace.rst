@@ -35,7 +35,6 @@ See also:
    :maxdepth: 1
 
    tokamak
-   initializers
 
 Essential Entities
 ==================
@@ -64,3 +63,5 @@ Scripts
 
    events
    frequency_analysis
+   bifurcation
+   fixed_points

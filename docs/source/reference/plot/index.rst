@@ -18,3 +18,6 @@ Availiable plotters:
    profile_energy_contour
    particle_evolution
    particle_poloidal_drift
+   fixed_points_energy_contour
+   bifurcation_plot
+   parabolas_diagram
