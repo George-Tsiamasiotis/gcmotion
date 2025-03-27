@@ -42,8 +42,8 @@ class ParabolasConfig:
 class SinglePeriodSolverConfig:
     max_step = np.inf
     vectorized: bool = False
-    atol: float = 1e-9  # Scipy's default is 1e-6
-    rtol: float = 1e-8  # Scipy's default is 1e-3
+    atol: float = 1e-12  # Scipy's default is 1e-6
+    rtol: float = 1e-12  # Scipy's default is 1e-3
 
 
 @dataclass
