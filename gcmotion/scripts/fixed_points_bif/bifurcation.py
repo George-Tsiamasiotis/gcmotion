@@ -18,7 +18,10 @@ from gcmotion.scripts.fixed_points_bif.XO_points_classification import (
     XO_points_classification as xoc,
 )
 from gcmotion.scripts.fixed_points_bif.fixed_points import fixed_points
-from gcmotion.configuration.scripts_configuration import BifurcationConfig
+from gcmotion.configuration.scripts_configuration import (
+    BifurcationConfig,
+    BifurcationPbarConfig,
+)
 
 
 def bifurcation(profile: Profile, COM_values: list, **kwargs) -> dict:
@@ -147,7 +150,24 @@ def bifurcation(profile: Profile, COM_values: list, **kwargs) -> dict:
     elif config.which_COM == "mu":
         COM_NU_units = "NUmagnetic_moment"
 
-    for idx, COM_valueNU in enumerate(tqdm(COM_values, desc="Processing")):
+    pbar_config = BifurcationPbarConfig()
+    global_pbar_kw = {
+        "ascii": pbar_config.tqdm_ascii,
+        "colour": pbar_config.tqdm_colour,
+        "smoothing": pbar_config.tqdm_smoothing,
+        "dynamic_ncols": pbar_config.tqdm_dynamic_ncols,
+        "disable": not pbar_config.tqdm_enable,
+    }
+    pbar_desc = f"{pbar_config.tqdm_desc} {config.which_COM}s"
+
+    for idx, COM_valueNU in enumerate(
+        tqdm(
+            iterable=COM_values,
+            desc=pbar_desc,
+            unit=pbar_config.tqdm_unit,
+            **global_pbar_kw,
+        )
+    ):
 
         setattr(
             profile, selected_COMNU_str, profile.Q(COM_valueNU, COM_NU_units)

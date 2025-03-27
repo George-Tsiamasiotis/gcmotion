@@ -113,6 +113,13 @@ class ContourOrbitConfig:
 # -------------- Fixed Points - Bifurcation Config ---------------------------
 
 
+@dataclass
+class BifurcationPbarConfig(ProgressBarStyle):
+    tqdm_enable: bool = True
+    tqdm_desc: str = "Iterating through"  # + COM
+    tqdm_unit: str = f"{'COM values':^12}"
+
+
 @dataclass()
 class FixedPointsConfig:
     thetalim: tuple = (-np.pi, np.pi)
