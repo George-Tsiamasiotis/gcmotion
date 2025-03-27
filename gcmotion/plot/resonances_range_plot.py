@@ -2,11 +2,9 @@ r"""Simplpe script that draws the resonance range diagram, (omega_theta and
 omega_zeta max at O point) for each mu or P_zeta.
 """
 
-import pandas as pd
 import matplotlib.pyplot as plt
 from time import time
 
-from collections import deque
 from gcmotion.utils.logger_setup import logger
 from gcmotion.entities.profile import Profile
 
@@ -18,7 +16,7 @@ from gcmotion.scripts.fixed_points_bif.bif_values_setup import (
 from gcmotion.configuration.plot_parameters import ResRangePlotConfig
 
 
-def res_range_plot(profile: Profile, COM_values: list | deque, **kwargs):
+def res_range_plot(profile: Profile, COM_values: list, **kwargs):
     r"""Draws the resonance range diagram, (:math:`\omega_\theta`
     and :math:`\omega_\zeta` max max at O point) for each :math:`\mu`
     or :math:`P_{\zeta}`.
@@ -27,7 +25,7 @@ def res_range_plot(profile: Profile, COM_values: list | deque, **kwargs):
     ----------
     profile : Profile
         Profile object containing Tokamak information.
-    COM_values : list, deque
+    COM_values : list, np.ndarray
         List of COM values :math:`P_{\zeta}`'s or :math:`\mu`'s in [NU].
 
     Other Parameters

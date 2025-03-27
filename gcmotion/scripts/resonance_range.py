@@ -1,7 +1,6 @@
 r"""Script that calculates the frequencies omega_theta and omega_\zeta
 at an O point (center) for multiple 's or mu's"""
 
-import pandas as pd
 from tqdm import tqdm
 import numpy as np
 from collections import deque
@@ -19,7 +18,7 @@ from gcmotion.scripts.fixed_points_bif.XO_points_classification import (
 
 def omegas_max(
     profile: Profile,
-    COM_values: list | deque | np.ndarray,
+    COM_values: list | np.ndarray,
     **kwargs,
 ) -> tuple:
     r"""
@@ -30,7 +29,7 @@ def omegas_max(
     ----------
     profile : Profile
         Profile object containing Tokamak information.
-    COM_values : list, deque
+    COM_values : list, np.ndarray
         List of COM values :math:`P_{\zeta}`'s or :math:`\mu`'s in [NU].
 
     Other Parameters
@@ -187,17 +186,6 @@ def omegas_max(
              O points for res_range script with
              {selected_COMNU_str}={current_COMNU}"""
         )
-
-    # # Convert Omega_zetas_max: Extract the float from the inner deque
-    # Omega_zetas_max_values = [dq[0] for dq in Omega_zetas_max]
-
-    # # Create DataFrame
-    # df = pd.DataFrame(
-    #     {"Omega_zetas_max": Omega_zetas_max_values, "COM_values": COM_values}
-    # )
-
-    # # Export to pickle
-    # df.to_pickle(f"LAR_mu{profile.muNU.m},Pz=-0.028,-0.005,500.pkl")
 
     return Omega_thetas_max, Omega_zetas_max
 
