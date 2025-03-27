@@ -1,6 +1,6 @@
+import numpy as np
 from pathlib import Path
 from dataclasses import dataclass
-import numpy as np
 
 
 @dataclass
@@ -36,6 +36,14 @@ class ParabolasConfig:
     Pzetalim: tuple = (-1.5, 1)
     Pzeta_density: int = 1000
     TPB_density: int = 100
+
+
+@dataclass
+class SinglePeriodSolverConfig:
+    max_step = np.inf
+    vectorized: bool = False
+    atol: float = 1e-9  # Scipy's default is 1e-6
+    rtol: float = 1e-8  # Scipy's default is 1e-3
 
 
 @dataclass
