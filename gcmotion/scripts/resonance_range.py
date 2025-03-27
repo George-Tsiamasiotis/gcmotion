@@ -1,5 +1,5 @@
-r"""Script that calculates the frequencies :math:`\omega_\theta` and :math:`\omega_\zeta`
-at an O point (center) for multiple :math:`P_{\zeta}`'s or :math:`\mu`'s"""
+r"""Script that calculates the frequencies omega_theta and omega_\zeta
+at an O point (center) for multiple 's or mu's"""
 
 import pandas as pd
 from tqdm import tqdm
@@ -26,58 +26,77 @@ def omegas_max(
     Function that calculates :math:`\omega_\theta` and :math:`\omega_\zeta`s at
       O Points for multiple :math:`P_{\zeta}`'s or :math:`\mu`'s.
 
-        Parameters
-        ----------
-        profile : Profile
-            Profile object containing Tokamak information.
-        COM_values : list, deque
-            List of COM values :math:`P_{\zeta}`'s or :math:`\mu`'s in [NU].
+    Parameters
+    ----------
+    profile : Profile
+        Profile object containing Tokamak information.
+    COM_values : list, deque
+        List of COM values :math:`P_{\zeta}`'s or :math:`\mu`'s in [NU].
 
-        Other Parameters
-        ----------
-        thetalim : list, optional
-            Limits of the of the :math:`\theta`, :math:`\psi` search area with respect
-            to the :math:`\theta` variable. Defaults to [-:math:`\pi`, :math:`\pi`].
-        psilim : list, optional
-            Limits of the of the :math:`\theta`, :math:`\psi` search area with respect
-            to the :math:`\psi` variable. Defaults to [0.01 , 1.8]. CUTION: The limits are given
-            normalized to :math:`\psi_{wall}`.
-        method : str, optional
-            String that indicates which method will be used to find the systems fixed
-            points in :py:func:`single_fixed_point`. Can either be "fsolve" (deterministic)
-            or "differential evolution" (stochastic). Defaults to "fsolve".
-        dist_tol : float, optional
-            Tolerance below which two fixed points are not considered distinct. The differences between
-            both :math:`\theta` and :math:`\psi` of the fixed points must be below this tolerance for
-            the fixed points to be considered the same. Defaults to 1e-3.
-        fp_ic_scan_tol : float, optional
-            Tolerance below which the sum of the squares of the time derivatives of the
-            :math:`\theta` and :math:`\psi` variavles is considered zero. It is passed into
-            :py:func:`fp_ic_scan`. Defaults to 5 * 1e-8.
-        ic_theta_grid_density : int, optional
-            Density of the :math:`\theta`, :math:`\psi` 2D grid to be scanned for initial conditiond
-            (fixed points candidates) with respect to the :math:`\theta` variable. It is passed into
-            :py:func:`fp_ic_scan` Defaults to 400.
-        ic_psi_grid_density : int, optional
-            Density of the :math:`\theta`, :math:`\psi` 2D grid to be scanned for initial conditiond
-            (fixed points candidates) with respect to the :math:`\psi` variable. It is passed into
-            :py:func:`fp_ic_scan` Defaults to 400.
-        random_fp_init_cond : bool, optional
-            Boolean determining weather random initial conditions are to be used instead of those
-            provided by :py:func:`fp_ic_scan`. Defaults to ``False``.
-        fp_info : bool, optional
-            Boolean determining weather fixed points' information is to be is to be printed in the log. Defaults to ``False``.
-        bif_info: bool, optional
-            Boolean that determines weather information regarding the bifurcation process is to
-            be is to be printed in the log. Defaults to ``False``.
-        fp_ic_info : bool, optional
-            Boolean determing weather information on the initial condition is to be is to be printed in the log.
-            Defaults to ``False``.
-        fp_only_confined : bool, optional
-            Boolean determining if the search for :math:`\psi_{fixed}` will be conducted only for
-        which_COM : str, optional
-            Determines with regard to which COM (:math:`\mu` or :math:`P_{zeta}`) will the bifurcation
-            analysis take place.
+    Other Parameters
+    ----------------
+    thetalim : list, optional
+        Limits of the of the :math:`\theta`, :math:`\psi` search area with
+        respect to the :math:`\theta` variable.
+        Defaults to [-:math:`\pi`, :math:`\pi`].
+    psilim : list, optional
+        Limits of the of the :math:`\theta`, :math:`\psi` search area with
+        respect to the :math:`\psi` variable. Defaults to [0.01 , 1.8].
+        CΑUTION-> The limits are given normalized to :math:`\psi_{wall}`.
+    method : str, optional
+        String that indicates which method will be used to find the system's
+        fixed points in :py:func:`single_fixed_point`. Can either be "fsolve"
+        (deterministic) or "differential evolution" (stochastic).
+        Defaults to "fsolve".
+    dist_tol : float, optional
+        Tolerance below which two fixed points are not considered distinct.
+        The differences between both :math:`\theta` and :math:`\psi` of the
+        fixed points must be below this tolerance for the fixed points to be
+        considered the same. Defaults to 1e-3.
+    fp_ic_scan_tol : float, optional
+        Tolerance below which the sum of the squares of the time derivatives
+        of the :math:`\theta` and :math:`\psi` variables is considered zero.
+        It is passed into :py:func:`fp_ic_scan`. Defaults to 5 * 1e-8.
+    ic_theta_grid_density : int, optional
+        Density of the :math:`\theta`, :math:`\psi` 2D grid to be scanned for
+        initial conditiond (fixed points candidates) with respect to the
+        :math:`\theta` variable. It is passed into :py:func:`fp_ic_scan`.
+        Defaults to 400.
+    ic_psi_grid_density : int, optional
+        Density of the :math:`\theta`, :math:`\psi` 2D grid to be scanned for
+        initial conditiond (fixed points candidates) with respect to the
+        :math:`\psi` variable. It is passed into :py:func:`fp_ic_scan`.
+        Defaults to 400.
+    random_fp_init_cond : bool, optional
+        Boolean determining weather random initial conditions are to be used
+        instead of those provided by :py:func:`fp_ic_scan`.
+        Defaults to ``False``.
+    fp_info : bool, optional
+        Boolean determining weather fixed points' information is to be is to
+        be printed in the log. Defaults to ``False``.
+    bif_info: bool, optional
+        Boolean that determines weather information regarding the bifurcation
+        process is to be is to be printed in the log. Defaults to ``False``.
+    fp_ic_info : bool, optional
+        Boolean determing weather information on the initial condition is to
+        be is to be printed in the log. Defaults to ``False``.
+    fp_only_confined : bool, optional
+        Boolean determining if the search for :math:`\psi_{fixed}` will be
+        conducted only for :math:`\psi` < :math:`\psi_{wall}`
+        (confined particles). Defaults to ``False``.
+    calc_energies : bool, optional
+        Boolean determining weather the energy of each fixed point of each
+        profile (each :math:`P_{\zeta}`) is to be calculated, stored and
+        returned. Defaults to ``False``.
+    energy_units : str, optional
+        String specifying the unit of the calculated fixed points' energies.
+        Defaults to "NUJoule".
+    energies_info : bool, optional
+        Boolean determining weather information on the fixed points' energies
+        is to be is to be printed in the log. Defaults to ``True``.
+    which_COM : str, optional
+        Determines with regard to which COM (:math:`\mu` or :math:`P_{\zeta}`)
+        will the bifurcation analysis take place. Defaults to 'Pzeta'.
 
         Returns
         -------
@@ -100,7 +119,8 @@ def omegas_max(
     Omega_zetas_max = deque()
 
     logger.info(
-        f"Starting omega_max calculation with hessian_deltas:{config.hessian_dtheta=} and {config.hessian_dpsi=}"
+        f"""Starting omega_max calculation with hessian_deltas:
+         {config.hessian_dtheta=} and {config.hessian_dpsi=}"""
     )
 
     for COM_valueNU in tqdm(COM_values, desc="Processing"):
@@ -118,7 +138,8 @@ def omegas_max(
         current_fp = fixed_points_output["distinct_fixed_points"]
 
         logger.info(
-            f"Calculated fixed points ['NUMagnetic_flux'] for res_range script with {selected_COMNU_str}={current_COMNU}"
+            f"""Calculated fixed points ['NUMagnetic_flux'] for res_range
+             script with {selected_COMNU_str}={current_COMNU}"""
         )
         logger.info(f"Calculated fixed points for res_range {current_fp=}")
 
@@ -129,7 +150,8 @@ def omegas_max(
         )
 
         logger.info(
-            f"Classified fixed points ['NUmf'] for bifurcation script with {selected_COMNU_str}={current_COMNU}"
+            f"""Classified fixed points ['NUmf'] for bifurcation script
+             with {selected_COMNU_str}={current_COMNU}"""
         )
 
         for O_Point in current_O_points:
@@ -155,11 +177,15 @@ def omegas_max(
         Omega_zetas_max.append(current_omega_zetas_max)
 
         logger.info(
-            f"Calculated omegas_theta_max ['{config.freq_units_theta}'] of O points for res_range script with {selected_COMNU_str}={current_COMNU}"
+            f"""Calculated omegas_theta_max ['{config.freq_units_theta}'] of
+             O points for res_range script with
+             {selected_COMNU_str}={current_COMNU}"""
         )
 
         logger.info(
-            f"Calculated omegas_zeta_max ['{config.freq_units_zeta}'] of O points for res_range script with {selected_COMNU_str}={current_COMNU}"
+            f"""Calculated omegas_zeta_max ['{config.freq_units_zeta}'] of
+             O points for res_range script with
+             {selected_COMNU_str}={current_COMNU}"""
         )
 
     # # Convert Omega_zetas_max: Extract the float from the inner deque
@@ -180,10 +206,11 @@ def _omegas_maxNU(
     profile: Profile, O_Point: tuple, dtheta: float = 1e-5, dpsi: float = 1e-5
 ) -> tuple:
     r"""
-    Function that calculates the frequencies :math:`\omega_\theta` and :math:`\omega_\zeta`
-    at an O Point. These frequencies will be the maximum frequency of the family of orbits
-    occupying this "island" of the phase space. Therefore, (because the frequancy is 0
-    at the separatrix) this function provides the :math:`\omega_\theta` and :math:`\omega_\zeta`
+    Function that calculates the frequencies :math:`\omega_\theta` and
+    :math:`\omega_\zeta` at an O Point. These frequencies will be the maximum
+    frequency of the family of orbits occupying this "island" of the phase
+    space. Therefore, (because the frequancy is 0 at the separatrix) this
+    function provides the :math:`\omega_\theta` and :math:`\omega_\zeta`
     frequency range for the entire family of orbits inside this "island".
 
     Parameters
@@ -194,15 +221,18 @@ def _omegas_maxNU(
     O Point where the frequancy will be calculated.
     Has the form (:math:`\theta`, :math:`\psi`).
     dtheta : float
-        Finite difference parameter (very small number) used for the calculation of the
-        derivatives with respect to the :math:`\theta` variables. Deafults to 1e-5.
+        Finite difference parameter (very small number) used for the
+        calculation of the derivatives with respect to the
+        :math:`\theta` variables. Deafults to 1e-5.
     dpsi : float
-        Finite difference parameter (very small number) used for the calculation of the
-        derivatives with respect to the :math:`\psi` variables. Deafults to 1e-5.
+        Finite difference parameter (very small number) used for the
+        calculation of the derivatives with respect to the
+        :math:`\psi` variables. Deafults to 1e-5.
 
     Returns
     -------
-    The :math:`\omega_\theta` and :math:`\omega_\zeta` frequency at the O Point.
+    The :math:`\omega_\theta` and :math:`\omega_\zeta` frequency at the
+    O Point.
 
     """
 
@@ -235,7 +265,8 @@ def _omegas_maxNU(
     d2W_dpsi2 = Hessian[1][1]
     d2W_dtheta_dpsi = Hessian[0][1]
     logger.info(
-        f"Calculated the Hessian values: {d2W_dpsi2=}, {d2W_dtheta2=}, {d2W_dtheta_dpsi=}"
+        f"""Calculated the Hessian values: {d2W_dpsi2=},
+        {d2W_dtheta2=}, {d2W_dtheta_dpsi=}"""
     )
 
     dpsi_dPtheta = _dpsi_dPtheta(
