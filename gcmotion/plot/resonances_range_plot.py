@@ -100,8 +100,6 @@ def res_range_plot(profile: Profile, COM_values: list, **kwargs):
         profile=profile, COM_values=COM_values, **kwargs
     )
 
-    print(f"OMEGAS MAX RUN IN {(time() - start)/60:.1f} mins")
-
     # Here which_COM is always Pzeta because it has to do with how the
     # values are handled inside set_up_bif_plot_values
     COM_plot, omegas_theta_plot = set_up_bif_plot_values(
