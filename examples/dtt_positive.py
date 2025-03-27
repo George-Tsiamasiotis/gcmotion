@@ -23,13 +23,11 @@ tokamak = gcm.Tokamak(
     efield=gcm.efield.Nofield(),
 )
 
-placeholder = -0.02
-
 profile = gcm.Profile(
     tokamak=tokamak,
     species=species,
-    mu=Q(1e-4, "NUMagnetic_moment"),  # 7.67e-6
-    Pzeta=Q(placeholder, "NUCanonical_momentum"),
+    mu=Q(1e-4, "NUMagnetic_moment"),
+    Pzeta=Q(-0.04, "NUCanonical_momentum"),
 )
 
 N = 50
@@ -58,12 +56,11 @@ gplt.bifurcation_plot(
     thetalim=[-np.pi, np.pi],
     psilim=[
         0,
-        1.5,
+        1,
     ],
     fp_ic_scan_tol=1e-6,
     ic_fp_theta_grid_density=101,
     ic_fp_psi_grid_density=200,
     fp_ic_scaling_factor=120,
-    flux_units="psi_wall",
     which_COM="mu",
 )
