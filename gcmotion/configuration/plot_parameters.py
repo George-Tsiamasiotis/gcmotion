@@ -296,3 +296,33 @@ class BifurcationPlotConfig:
     energy_units: str = "NUJoule"
     flux_units: str = "NUmf"
     canmon_units: str = "NUcanmom"
+
+
+@dataclass
+class ResRangePlotConfig:
+    # Figure keywords
+    figsize: tuple = figsize
+    dpi: int = dpi
+    layout: str = "constrained"
+    facecolor: str = "white"
+    # Labels Keywords
+    xlabel_fontsize: float = 13
+    xlabel_rotation: int = 0
+    ylabel_fontsize: float = 13
+    ylabel_rotation: int = 90
+    # Title Keywords
+    titlesize: float = 20
+    titlecolor: str = "black"
+    # Scatter kw
+    marker_size_theta: float = 3
+    marker_color_theta: str = "green"
+    marker_style_theta: str = "o"
+    marker_size_zeta: float = 3
+    marker_color_zeta: str = "red"
+    marker_style_zeta: str = "o"
+    # Omegas Script Keywords
+    freq_units_theta: str = "NUw0"
+    freq_units_zeta: str = "NUw0"
+    which_COM: str = "Pzeta"
+    hessian_dtheta: float = 1e-5
+    hessian_dpsi: float = 1e-5
