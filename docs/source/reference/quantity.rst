@@ -42,12 +42,10 @@ or
 
    All classes make sure that their parameters are instanciated in the correct units internally, no matter how you defined them, as long as they have the correct dimensionality.
 
-Calling the constructor
------------------------
+Defining the Constructor
+------------------------
 
-Here is the Constructor's documentation.
-
-.. autofunction:: QuantityConstructor
+.. autofunction:: QuantityConstructor( R: float, B0: float, species: str, a: float = None)
 
 Defining complex Quantities
 ===========================
@@ -81,7 +79,7 @@ Here, "Magnetic_flux" is but an alias to "Tesla * meter^2"
 
 We can convert "Magnetic_flux" to "psi_wall". That essentially shows us psi's position relative to the wall:
 
->>> print(psi_wall.to("psi_wall")) # doctest: +SKIP
+>>> print(psi.to("psi_wall")) # doctest: +SKIP
 40.0 psi_wall
 
 With that logic, we can easily define initial conditions relative to the device's wall:
@@ -93,11 +91,6 @@ With that logic, we can easily define initial conditions relative to the device'
 .. tip::
 
    Pint's string parser is very powerful: Not only it understands operations between units without needing a very strict syntax, it can also perform operations between Quantities and resolve the resulting dimentionality. Moreover, it offers a method of typechecking, since it doesn't allow for illegal operations (try adding R and B0!). However, avoid using abbreviations like 'mm' or 'kg', since 'kg' actually stands for 'kilogauss' instead of 'kilogram'. Finally, the constructor is case-insensitive and does not distinguish between pluralized forms (e.g. 'meter' and 'meters'.)
-
-
-
-
-
 
 Converting to NU and back
 =========================

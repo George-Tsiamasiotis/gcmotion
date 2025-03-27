@@ -24,6 +24,10 @@ def QuantityConstructor(
     ----------
     R : float
         The tokamak's major radius **in [m]**.
+    B0 : float
+        The magnetic field strength on the magnetic axis **in [T]**.
+    species : str
+        The particle species.
     a : float
         The tokamak's minor radius **in [m]**. Only used to create "psi_wall"
         and "NUpsi_wall" as units of magnetic flux, so it is possible to setup
@@ -31,15 +35,16 @@ def QuantityConstructor(
         guessing. In reconstructed equilibria, a is defined *through* psi_wall
         and has a purely decorative purpose, and is not used in any
         calculations.
-    B0 : float
-        The magnetic field strength on the magnetic axis **in [T]**.
-    species : str
-        The particle species.
 
     Returns
     -------
-    pint.Quantity
+    pint.registry.Quantity
         The updated pint Quantity Constructor
+
+    Note
+    ----
+    The ``_psi_wallNU`` is only used internally when the Constructor is defined
+    inside an :ref:`Initializer <initializers_docs>`.
 
     """
 

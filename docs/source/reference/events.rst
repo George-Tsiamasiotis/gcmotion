@@ -24,7 +24,7 @@ To use an event in a particle, you must pass it to its
 .. code-block:: python
 
    events = [gcm.events.when_theta(theta0, 8)]
-   particle.run(events=events)
+   particle.run(events=[events])
 
 This event will stop the solver after :math:`\theta` was taken its initial
 value 8 times, regardless if the particle turns out to be passing or trapped.
