@@ -1,5 +1,10 @@
 import numpy as np
 from scipy.integrate import OdeSolver, RK45
+from scipy.integrate._ivp.ivp import (
+    prepare_events,
+    find_active_events,
+    handle_events,
+)
 from scipy.integrate._ivp.rk import RkDenseOutput, rk_step
 from scipy.integrate._ivp.common import (
     norm,
@@ -9,7 +14,9 @@ from scipy.integrate._ivp.common import (
 
 from numpy.typing import ArrayLike
 from typing import Callable
+from math import isclose
 
+from .events import when_theta
 from gcmotion.configuration.scripts_configuration import (
     SinglePeriodSolverConfig,
 )
@@ -76,11 +83,53 @@ class SinglePeriodSolver(OdeSolver):
         self.error_exponent = -1 / (self.error_estimator_order + 1)
         self.h_previous = None
 
+        self.theta0 = np.mod(y0[0], 2 * np.pi)
+        self.psi0 = y0[1]
+        events = [when_theta(root=self.theta0, terminal=0)]
+        self.events, self.max_events, self.event_dir = prepare_events(events)
+        # self.events = [
+        #     lambda t, x, event=event: event(t, x) for event in events
+        # ]
+        self.g = [event(t0, y0) for event in self.events]
+        self.t_events = [[] for _ in range(len(self.events))]
+        self.y_events = [[] for _ in range(len(self.events))]
+
+        self.event_count = np.zeros(len(self.events))
+        self.sol = None
+        self.num_steps = 0
+
     def _estimate_error(self, K, h):
         return np.dot(K.T, self.E) * h
 
     def _estimate_error_norm(self, K, h, scale):
         return norm(self._estimate_error(K, h) / scale)
+
+    def _stop(self, y, t, t_new):
+        active_events = find_active_events(self.g, self.g_new, self.event_dir)
+        if active_events.size > 0:
+            if self.num_steps > 0:
+                sol = self.dense_output()
+            else:
+                return
+            self.event_count[active_events] += 1
+            root_indices, roots, terminate = handle_events(
+                sol=sol,
+                events=self.events,
+                active_events=active_events,
+                event_count=self.event_count,
+                max_events=self.max_events,
+                t_old=t,
+                t=t_new,
+            )
+            for e, te in zip(root_indices, roots):
+                self.t_events[e].append(te)
+                self.y_events[e].append(sol(te))
+
+            print(self.y_events[0][-1][1])
+            if isclose(
+                self.y_events[0][-1][1], self.psi0, rel_tol=1e-3, abs_tol=1e-3
+            ):
+                return True
 
     def _step_impl(self):
 
@@ -146,12 +195,20 @@ class SinglePeriodSolver(OdeSolver):
                 )
                 step_rejected = True
 
+        self.g = [event(t, y) for event in self.events]
+        self.g_new = [event(t_new, y_new) for event in self.events]
+        if self._stop(y, t, t_new):
+            self.status = "finished"
+            return False, None
+
         self.h_previous = h
         self.y_old = y
         self.t = t_new
         self.y = y_new
         self.h_abs = h_abs
         self.f = f_new
+
+        self.num_steps += 1
 
         return True, None
 
