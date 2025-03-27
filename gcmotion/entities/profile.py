@@ -24,7 +24,7 @@ type SupportedSpecies = Literal["p", "e", "D", "T", "He3", "He4"]
 
 class Profile:
     r"""A Profile entity describes an unperturbed equilibrium with a given
-    Tokamak configuration and with at least 2/3 fixed Constants of Motion.
+    Tokamak configuration.
 
     By fixing 2 COMs and letting the other one be variable, we can perform many
     useful analyses.

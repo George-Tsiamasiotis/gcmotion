@@ -4,11 +4,8 @@ from pint import UnitRegistry
 byte = UnitRegistry().byte
 
 
-def _get_size(obj, seen=None):
-    """Recursively finds size of objects.
-
-    All of the code is gracefully borrowed from Wissam Jarjoui
-    from `<https://goshippo.com/blog/measure-real-size-any-python-object>`_.
+def _get_size(obj: object, seen=None) -> int:
+    r"""Recursively finds size of objects.
 
     Parameters
     ----------
@@ -23,6 +20,7 @@ def _get_size(obj, seen=None):
     -------
     int
         The size of the object in bytes.
+
     """
 
     size = sys.getsizeof(obj)
@@ -50,6 +48,16 @@ def _get_size(obj, seen=None):
     return size
 
 
-def get_size(obj):
-    r"""Quantifies _get_size() result and prints it."""
+def get_size(obj: object) -> None:
+    r"""Recursively finds size of objects and prints the result.
+
+    All of the code is gracefully borrowed from Wissam Jarjoui
+    from `<https://goshippo.com/blog/measure-real-size-any-python-object>`_.
+
+    Parameters
+    ----------
+    object : object
+        The object to find the size of.
+    """
+
     print(f"{_get_size(obj) * byte:.4g~#P}")

@@ -43,9 +43,17 @@ Essential Entities
    :toctree: generated/
 
    Tokamak
-   Profile
+
+.. toctree:: 
+   :maxdepth: 1
+
+   profile
+   particle
+
+.. autosummary::
+   :toctree: generated/
+
    InitialConditions
-   Particle
 
 Utilities
 =========
