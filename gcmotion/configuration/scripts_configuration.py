@@ -39,11 +39,13 @@ class ParabolasConfig:
 
 
 @dataclass
-class SinglePeriodSolverConfig:
+class NPeriodSolverConfig:
     max_step = np.inf
     vectorized: bool = False
     atol: float = 1e-12  # Scipy's default is 1e-6
     rtol: float = 1e-12  # Scipy's default is 1e-3
+    stop_point_atol: float = 1e-3
+    stop_point_rtol: float = 1e-3
 
 
 @dataclass

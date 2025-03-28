@@ -32,10 +32,10 @@ from scipy.integrate import solve_ivp
 from collections import namedtuple
 
 from gcmotion.entities.profile import Profile
-from .nperiods_solver import NPeriodSolver
+from .nperiod_solver import NPeriodSolver
 
 from gcmotion.configuration.scripts_configuration import (
-    SolverConfig as config,
+    NPeriodSolverConfig as config,
 )
 
 
