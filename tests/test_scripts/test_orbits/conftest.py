@@ -22,8 +22,8 @@ def events(simple_particle, request, terminal):
 
 
 @pytest.fixture(scope="session")
-def long_init(Q):
-    r"""Initial conditions object with very long integration time."""
+def nperiods_init(Q):
+    r"""Initial conditions object without t_eval."""
     return gcm.InitialConditions(
         species="p",
         muB=Q(0.5, "keV"),
@@ -31,20 +31,18 @@ def long_init(Q):
         zeta0=0,
         psi0=Q(0.8, "psi_wall"),
         Pzeta0=Q(0.02, "NUCanonical_momentum"),
-        t_eval=Q(np.linspace(0, 1e-4, 100000), "seconds"),
     )
 
 
 @pytest.fixture(scope="function")
-def long_particle(simple_tokamak, long_init, Q):
-    """Simple Particle object (B=LAR, q=Unity, E=Nofield) with very long
-    integration time."""
-    particle = gcm.Particle(tokamak=simple_tokamak, init=long_init)
-    yield particle
+def nperiods_particle(simple_tokamak, nperiods_init, Q):
+    """Simple particle (B=LAR, q=Unity, E=Nofield) without t_eval."""
+    particle = gcm.Particle(tokamak=simple_tokamak, init=nperiods_init)
+    return particle
 
 
 @pytest.fixture(scope="session")
-def simple_particle_single_period(simple_tokamak, simple_init, Q):
+def particle_single_period(simple_tokamak, simple_init, Q):
     """Simple Particle object (B=LAR, q=Unity, E=Nofield) with very long
     integration time."""
     particle = gcm.Particle(tokamak=simple_tokamak, init=simple_init)
