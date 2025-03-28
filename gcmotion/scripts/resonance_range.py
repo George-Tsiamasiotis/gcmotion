@@ -15,6 +15,10 @@ from gcmotion.scripts.fixed_points_bif.XO_points_classification import (
     XO_points_classification as xoc,
 )
 
+from gcmotion.configuration.scripts_configuration import (
+    BifurcationPbarConfig,
+)
+
 
 def omegas_max(
     profile: Profile,
@@ -122,7 +126,22 @@ def omegas_max(
          {config.hessian_dtheta=} and {config.hessian_dpsi=}"""
     )
 
-    for COM_valueNU in tqdm(COM_values, desc="Processing"):
+    pbar_config = BifurcationPbarConfig()
+    global_pbar_kw = {
+        "ascii": pbar_config.tqdm_ascii,
+        "colour": pbar_config.tqdm_colour,
+        "smoothing": pbar_config.tqdm_smoothing,
+        "dynamic_ncols": pbar_config.tqdm_dynamic_ncols,
+        "disable": not pbar_config.tqdm_enable,
+    }
+    pbar_desc = f"{pbar_config.tqdm_desc} {config.which_COM}s"
+
+    for COM_valueNU in tqdm(
+        iterable=COM_values,
+        desc=pbar_desc,
+        unit=pbar_config.tqdm_unit,
+        **global_pbar_kw,
+    ):
 
         current_omega_thetas_max = deque()
         current_omega_zetas_max = deque()
