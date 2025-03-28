@@ -162,7 +162,8 @@ def _base_fixed_points_plot(
     O_psis = profile.Q(O_psisNU, "NUMagnetic_flux").to(output_units)
 
     logger.info(
-        f"Converted fixed points from 'NUMagnetic_flux' to {output_units}"
+        f"""Converted fixed points psis from 'NUMagnetic_flux' to
+         {output_units}: {X_psis=}, {O_psis=}"""
     )
 
     xX, yX = X_thetas, X_psis.m

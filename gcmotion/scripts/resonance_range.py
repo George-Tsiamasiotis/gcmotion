@@ -77,9 +77,6 @@ def omegas_max(
     fp_info : bool, optional
         Boolean determining weather fixed points' information is to be is to
         be printed in the log. Defaults to ``False``.
-    bif_info: bool, optional
-        Boolean that determines weather information regarding the bifurcation
-        process is to be is to be printed in the log. Defaults to ``False``.
     fp_ic_info : bool, optional
         Boolean determing weather information on the initial condition is to
         be is to be printed in the log. Defaults to ``False``.
@@ -87,16 +84,6 @@ def omegas_max(
         Boolean determining if the search for :math:`\psi_{fixed}` will be
         conducted only for :math:`\psi` < :math:`\psi_{wall}`
         (confined particles). Defaults to ``False``.
-    calc_energies : bool, optional
-        Boolean determining weather the energy of each fixed point of each
-        profile (each :math:`P_{\zeta}`) is to be calculated, stored and
-        returned. Defaults to ``False``.
-    energy_units : str, optional
-        String specifying the unit of the calculated fixed points' energies.
-        Defaults to "NUJoule".
-    energies_info : bool, optional
-        Boolean determining weather information on the fixed points' energies
-        is to be is to be printed in the log. Defaults to ``True``.
     which_COM : str, optional
         Determines with regard to which COM (:math:`\mu` or :math:`P_{\zeta}`)
         will the bifurcation analysis take place. Defaults to 'Pzeta'.
