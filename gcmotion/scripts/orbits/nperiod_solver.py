@@ -43,6 +43,8 @@ from gcmotion.configuration.scripts_configuration import (
     NPeriodSolverConfig,
 )
 
+MAX_RECURSION_DEPTH = NPeriodSolverConfig.max_recursion_depth
+
 
 class NPeriodSolver(OdeSolver):
     r"""Custom OdeSolver modeled after SciPy's RK45 Solver.
@@ -92,6 +94,8 @@ class NPeriodSolver(OdeSolver):
         self.y_old = None
         self.max_step = max_step
         self.rtol, self.atol = rtol, atol
+        self.stop_point_rtol = NPeriodSolverConfig.stop_point_rtol
+        self.stop_point_atol = NPeriodSolverConfig.stop_point_atol
         # Those are initialised in super(), self.t=t0, self.y=y0
         self.f = self.fun(self.t, self.y)
 
@@ -117,20 +121,29 @@ class NPeriodSolver(OdeSolver):
         self.error_exponent = -1 / (self.error_estimator_order + 1)
         self.h_previous = None
 
+        # PERF: From now on, step() and event location work the same as RK45
+        # and solve_ivp respectively. The only difference in our solver (apart
+        # from the _stop() check) is that we've hardcoded our event. This makes
+        # the code much easier to work with, since we've removed the added
+        # abstraction of handling an arbitrary number of events.
         self.theta0 = y0[0]
         self.psi0 = y0[1]
-        events = [when_theta(root=self.theta0, terminal=100000)]
-        self.events, self.max_events, self.event_dir = prepare_events(events)
-        self.g = [event(t0, y0) for event in self.events]
-        self.t_events = [[] for _ in range(len(self.events))]
-        self.y_events = [[] for _ in range(len(self.events))]
+        event = when_theta(root=self.theta0, terminal=100000)
+        events, self.max_events, self.event_dir = prepare_events([event])
+        self.event = events[0]
+        self.ev_value = self.event(t0, y0)
+        self.t_events = []
+        self.y_events = []
 
-        self.event_count = np.zeros(len(self.events))
+        self.event_count = np.zeros(1)
         self.sol = None
         self.num_steps = 0
         self.stop_after = extraneous["stop_after"]
         self.t_periods = extraneous["t_periods"]
+        self.y_final = extraneous["y_final"]
         self.periods_completed = 0
+        self.last_step = False
+        self.recursing = False
 
     def _estimate_error(self, K, h):
         return np.dot(K.T, self.E) * h
@@ -139,18 +152,22 @@ class NPeriodSolver(OdeSolver):
         return norm(self._estimate_error(K, h) / scale)
 
     def _stop(self):
-        active_events = find_active_events(self.g, self.g_new, self.event_dir)
+
+        # self.dense_output() needs at least one completed step
+        if self.num_steps == 0:
+            return
+
+        active_events = find_active_events(
+            [self.ev_value], [self.ev_value_new], self.event_dir
+        )
         if active_events.size > 0:
 
-            if self.num_steps > 0:
-                sol = self.dense_output()
-            else:
-                return
+            sol = self.dense_output()
 
             self.event_count[active_events] += 1
             root_indices, roots, terminate = handle_events(
                 sol=sol,
-                events=self.events,
+                events=[self.event],
                 active_events=active_events,
                 event_count=self.event_count,
                 max_events=self.max_events,
@@ -158,16 +175,48 @@ class NPeriodSolver(OdeSolver):
                 t=self.t,
             )
             for e, te in zip(root_indices, roots):
-                self.t_events[e].append(te)
-                self.y_events[e].append(sol(te))
+                self.t_events.append(te)
+                self.y_events.append(sol(te))
 
+            # When the particle
             if isclose(
-                self.y_events[0][-1][1], self.psi0, rel_tol=1e-3, abs_tol=1e-3
+                self.y_events[-1][1],
+                self.psi0,
+                rel_tol=self.stop_point_rtol,
+                abs_tol=self.stop_point_atol,
             ):
                 self.t_periods.append(roots[0])
                 self.periods_completed += 1
                 if self.periods_completed == self.stop_after:
+                    self.t_goal = roots[0]
+                    self.y_goal = self.y_events[-1]
+                    self._recurse_last_event()
                     return True
+
+    def _recurse_last_event(self):
+        self.recursing = True
+
+        if self.t > self.t_goal:  # Overstepped
+            self.t = self.t_old
+            self.y = self.y_old
+
+        count = 0
+
+        while (
+            not np.all(
+                np.isclose(
+                    self.y,
+                    self.y_goal,
+                    NPeriodSolverConfig.final_y_rtol,
+                )
+            )
+            and count <= MAX_RECURSION_DEPTH
+        ):
+            self.h_abs = abs(self.t - self.t_goal) / 2
+            self.step()
+            count += 1
+
+        self.y_final.append(self.y)
 
     def _step_impl(self):
 
@@ -240,14 +289,15 @@ class NPeriodSolver(OdeSolver):
         self.h_abs = h_abs
         self.f = f_new
 
-        self.g_new = [event(self.t, self.y) for event in self.events]
-        if self._stop():
+        self.ev_value_new = self.event(self.t, self.y)
+        if not self.recursing and self._stop():
             self.status = "finished"
             return False, (
                 "(NPeriods Solver) "
                 f"Solver stopped after {self.stop_after} periods."
             )
-        self.g = self.g_new
+
+        self.ev_value = self.ev_value_new
 
         self.num_steps += 1
 

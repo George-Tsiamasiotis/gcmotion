@@ -32,10 +32,10 @@ from scipy.integrate import solve_ivp
 from collections import namedtuple
 
 from gcmotion.entities.profile import Profile
-from .nperiods_solver import NPeriodSolver
+from .nperiod_solver import NPeriodSolver
 
 from gcmotion.configuration.scripts_configuration import (
-    SolverConfig as config,
+    NPeriodSolverConfig as config,
 )
 
 
@@ -153,7 +153,11 @@ def calculate_orbit(
         method = NPeriodSolver
         t_eval = None
         t_span = (0, np.inf)
-        extra_options = {"stop_after": stop_after, "t_periods": t_periods}
+        extra_options = {
+            "stop_after": stop_after,
+            "t_periods": t_periods,
+            "y_final": [],
+        }
 
     sol = solve_ivp(
         fun=dSdt,
@@ -168,14 +172,22 @@ def calculate_orbit(
         **extra_options,
     )
 
-    theta = sol.y[0]
-    psi = sol.y[1]
-    zeta = sol.y[2]
-    rho = sol.y[3]
     t_solve = sol.t
     t_events = sol.t_events
     y_events = sol.y_events
     message = sol.message
+
+    if method == "RK45":
+        theta = sol.y[0]
+        psi = sol.y[1]
+        zeta = sol.y[2]
+        rho = sol.y[3]
+    elif method is NPeriodSolver:
+        y_final = extra_options["y_final"][0]
+        theta = np.append(sol.y[0], y_final[0])
+        psi = np.append(sol.y[1], y_final[1])
+        zeta = np.append(sol.y[2], y_final[2])
+        rho = np.append(sol.y[3], y_final[3])
 
     # Calculate psip and Canonical Momenta
     _, i, g = bfield.bigNU(psi, theta)
