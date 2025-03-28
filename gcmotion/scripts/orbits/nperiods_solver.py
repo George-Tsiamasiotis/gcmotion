@@ -1,3 +1,19 @@
+r"""
+==============
+NPeriod Solver
+==============
+
+A Custom ODE solver basing SciPy's ``OdeSolver``.
+
+It is essentially identical to SciPy's ``RK45`` method, with a hard-coded
+``when_theta`` event, and an extra check: For every solving step, if
+`when_theta` triggers, it checks if the current :math:`\psi` value is also
+close to the particle's initial :math:`\psi_0`. If so, the Solver treats this
+as a full period of the orbit, and can stop the solving after an arbitrary
+number of full periods, assuming
+
+"""
+
 import numpy as np
 from scipy.integrate import OdeSolver, RK45
 from scipy.integrate._ivp.ivp import (
@@ -16,9 +32,9 @@ from numpy.typing import ArrayLike
 from typing import Callable
 from math import isclose
 
-from .events import when_theta
+from gcmotion.scripts.events import when_theta
 from gcmotion.configuration.scripts_configuration import (
-    SinglePeriodSolverConfig,
+    NPeriodSolverConfig,
 )
 
 
@@ -29,7 +45,7 @@ MIN_FACTOR = 0.2  # Minimum allowed decrease in a step size.
 MAX_FACTOR = 10  # Maximum allowed increase in a step size.
 
 
-class SinglePeriodSolver(OdeSolver):
+class NPeriodSolver(OdeSolver):
 
     # Runge-Kutta Class Attributes (Coefficients and orders)
     C: np.ndarray = RK45.C
@@ -48,15 +64,14 @@ class SinglePeriodSolver(OdeSolver):
         y0: ArrayLike,
         t_bound: float,
         first_step=None,
-        rtol: float = SinglePeriodSolverConfig.rtol,
-        atol: float = SinglePeriodSolverConfig.atol,
-        max_step: float = SinglePeriodSolverConfig.max_step,
-        vectorized: bool = SinglePeriodSolverConfig.vectorized,
+        rtol: float = NPeriodSolverConfig.rtol,
+        atol: float = NPeriodSolverConfig.atol,
+        max_step: float = NPeriodSolverConfig.max_step,
         **extraneous,
     ):
 
         super().__init__(
-            fun, t0, y0, t_bound, vectorized, support_complex=False
+            fun, t0, y0, t_bound, vectorized=False, support_complex=False
         )
         self.y_old = None
         self.max_step = max_step
@@ -83,9 +98,9 @@ class SinglePeriodSolver(OdeSolver):
         self.error_exponent = -1 / (self.error_estimator_order + 1)
         self.h_previous = None
 
-        self.theta0 = np.mod(y0[0], 2 * np.pi)
+        self.theta0 = y0[0]
         self.psi0 = y0[1]
-        events = [when_theta(root=self.theta0, terminal=0)]
+        events = [when_theta(root=self.theta0, terminal=100000)]
         self.events, self.max_events, self.event_dir = prepare_events(events)
         # self.events = [
         #     lambda t, x, event=event: event(t, x) for event in events
@@ -97,6 +112,9 @@ class SinglePeriodSolver(OdeSolver):
         self.event_count = np.zeros(len(self.events))
         self.sol = None
         self.num_steps = 0
+        self.stop_after = extraneous["stop_after"]
+        self.t_periods = extraneous["t_periods"]
+        self.periods_completed = 0
 
     def _estimate_error(self, K, h):
         return np.dot(K.T, self.E) * h
@@ -104,13 +122,15 @@ class SinglePeriodSolver(OdeSolver):
     def _estimate_error_norm(self, K, h, scale):
         return norm(self._estimate_error(K, h) / scale)
 
-    def _stop(self, y, t, t_new):
+    def _stop(self):
         active_events = find_active_events(self.g, self.g_new, self.event_dir)
         if active_events.size > 0:
+
             if self.num_steps > 0:
                 sol = self.dense_output()
             else:
                 return
+
             self.event_count[active_events] += 1
             root_indices, roots, terminate = handle_events(
                 sol=sol,
@@ -118,18 +138,20 @@ class SinglePeriodSolver(OdeSolver):
                 active_events=active_events,
                 event_count=self.event_count,
                 max_events=self.max_events,
-                t_old=t,
-                t=t_new,
+                t_old=self.t_old,
+                t=self.t,
             )
             for e, te in zip(root_indices, roots):
                 self.t_events[e].append(te)
                 self.y_events[e].append(sol(te))
 
-            print(self.y_events[0][-1][1])
             if isclose(
                 self.y_events[0][-1][1], self.psi0, rel_tol=1e-3, abs_tol=1e-3
             ):
-                return True
+                self.t_periods.append(roots[0])
+                self.periods_completed += 1
+                if self.periods_completed == self.stop_after:
+                    return True
 
     def _step_impl(self):
 
@@ -195,18 +217,18 @@ class SinglePeriodSolver(OdeSolver):
                 )
                 step_rejected = True
 
-        self.g = [event(t, y) for event in self.events]
-        self.g_new = [event(t_new, y_new) for event in self.events]
-        if self._stop(y, t, t_new):
-            self.status = "finished"
-            return False, None
-
         self.h_previous = h
         self.y_old = y
         self.t = t_new
         self.y = y_new
         self.h_abs = h_abs
         self.f = f_new
+
+        self.g_new = [event(self.t, self.y) for event in self.events]
+        if self._stop():
+            self.status = "finished"
+            return False, None
+        self.g = self.g_new
 
         self.num_steps += 1
 

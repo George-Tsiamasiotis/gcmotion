@@ -27,20 +27,26 @@ than numpy's when calculating single values (often by a factor of 10 or more)..
 
 """
 
+import numpy as np
 from scipy.integrate import solve_ivp
 from collections import namedtuple
 
 from gcmotion.entities.profile import Profile
+from .nperiods_solver import NPeriodSolver
 
 from gcmotion.configuration.scripts_configuration import (
     SolverConfig as config,
 )
+from gcmotion.utils.logger_setup import logger
 
 
 def orbit(
     parameters: namedtuple,
     profile: Profile,
-    events: list = [],
+    method: str,
+    events: list,
+    stop_after: int = None,
+    t_periods: np.ndarray = None,
 ) -> namedtuple:
     r"""Wrapper function around SciPy's solve_ivp().
 
@@ -51,7 +57,15 @@ def orbit(
         theta_0, psi_0, zeta_0, rho_0, as well as mu and t.
     profile : namedtuple
         Named tuple containing the tokamak configuration objects.
-    events : list, optional
+    method: {"nperiods", "rk45"}
+        The solving method, passed to SciPy's ``solve_ivp``. Options are
+        "RK45" (Runge-Kutta 4th order), "NPeriods" (Stops the orbit after N
+        full :math:`\psi-P_\theta` periods). Events are ignored if the
+        method is "NPeriods". Defaults to "NPeriods"
+    stop_after: int, optional
+        After how many full periods to stop the solving, if the method is
+        "NPeriods". Defaults to None (RK45).
+    events : list
         List containing the independed events to track. Defaults to "SI". Note
         that multiple events trigger independently from one another.
 
@@ -131,6 +145,13 @@ def orbit(
 
         return [theta_dot, psi_dot, z_dot, rho_dot]
 
+    if method == "RK45":
+        method = "RK45"
+        extraneous = {}
+    elif method == "NPeriods":
+        method = NPeriodSolver
+        extraneous = {"stop_after": stop_after, "t_periods": t_periods}
+
     t_span = (t[0], t[-1])
     sol = solve_ivp(
         fun=dSdt,
@@ -140,7 +161,9 @@ def orbit(
         atol=config.atol,
         rtol=config.rtol,
         events=events,
+        method=method,
         dense_output=True,
+        **extraneous,
     )
 
     theta = sol.y[0]

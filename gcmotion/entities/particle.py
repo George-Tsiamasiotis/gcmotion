@@ -9,6 +9,7 @@ White, to calculate its orbit.
 """
 
 import pint
+import warnings
 import numpy as np
 from collections import namedtuple
 from termcolor import colored
@@ -16,7 +17,7 @@ from time import time
 
 from gcmotion.utils.logger_setup import logger
 from gcmotion.utils.pprint_dict import pprint_dict
-from gcmotion.scripts.orbit import orbit
+from gcmotion.scripts.orbits.orbit import orbit
 
 from gcmotion.entities.tokamak import Tokamak
 from gcmotion.entities.profile import Profile
@@ -167,9 +168,10 @@ class Particle:
 
     def run(
         self,
-        orbit=True,
-        info: bool = False,
+        method: str = "RK45",
+        stop_after: int = None,
         events: list = [],
+        info: bool = False,
     ):
         r"""
         Calculates the particle's orbit. The results are stored in both SI and
@@ -177,23 +179,34 @@ class Particle:
 
         Parameters
         ----------
+        method: {"NPeriods", "RK45"}, optional
+            The solving method, passed to SciPy's ``solve_ivp``. Options are
+            "RK45" (Runge-Kutta 4th order), "NPeriods" (Stops the orbit after N
+            full :math:`\psi-P_\theta` periods). Events are ignored if the
+            method is "NPeriods". Defaults to "RK45"
+        stop_after: int, optional
+            After how many full periods to stop the solving, if the method is
+            "NPeriods". Defaults to None.
+        events : list, optional
+            The list of events to be passed to the solver. if the method is
+            "RK45". Defaults to [ ].
         info : bool, optional
             Whether or not to print an output message. Defaults to False.
-        events : list, optional
-            The list of events to be passed to the solver. Defaults to [ ].
 
         """
         logger.info("\tParticle's 'run' routine is called.")
 
-        if events == []:
-            logger.info("\tRunning without events.")
-        else:
-            logger.info(f"\tActive events: {[x.name for x in events]}")
+        self._process_run_args(method, stop_after, events)
+        self.method = method
 
         logger.info("\tCalculating orbit in NU...")
         # Orbit Calculation
         start = time()
-        solution = self._orbit(events=events)
+        solution = self._orbit(
+            method=self.method,
+            events=events,
+            stop_after=stop_after,
+        )
         end = time()
         solve_time = self.Q(end - start, "seconds")
         logger.info(
@@ -252,16 +265,43 @@ class Particle:
         if info:
             print(self.__str__())
 
-    def _orbit(self, events: list = []):
+    EVENTS_IGNORED = """
+    Warning: events are ignored when 'NPeriods' method is used
+    """
+    ILLEGAL_STOP_AFTER = """
+    Error: 'stop_after' must be a positive integer.
+    """
+
+    def _process_run_args(self, method: str, stop_after: int, events: list):
+        r"""Processes run()'s args before passed to the solver."""
+
+        stop_after = stop_after
+        events = events
+        if method == "RK45":
+            logger.info("\tSolver method: RK45")
+            if events == []:
+                logger.info("\tRunning without events.")
+            else:
+                logger.info(f"\tActive events: {[x.name for x in events]}")
+
+        elif method == "NPeriods":
+            logger.info(f"\tSolver method: NPeriods, stop after {stop_after}.")
+            if events != []:
+                logger.warning(self.EVENTS_IGNORED)
+                warnings.warn(self.EVENTS_IGNORED)
+
+            if (
+                (stop_after is None)
+                or (not isinstance(stop_after, int))
+                or (stop_after < 1)
+            ):
+                logger.error(self.ILLEGAL_STOP_AFTER)
+                raise ValueError(self.ILLEGAL_STOP_AFTER)
+
+    def _orbit(self, method: str, events: list, stop_after: int):
         """Groups the particle's initial conditions and passes them to the
         solver script :py:mod:`~gcmotion.scripts.orbit`. The unpacking takes
         place in :py:meth:`~gcmotion.Particle.run`.
-
-        Parameters
-        ----------
-        events : list, optional
-            List containing the :py:mod:`~gcmotion.scripts.events`. Defaults to
-            []
 
         Returns
         -------
@@ -282,9 +322,15 @@ class Particle:
             mu=self.muNU.magnitude,
         )
 
-        profile = self.profile
-
-        return orbit(parameters, profile, events=events)
+        self.t_periods = []
+        return orbit(
+            parameters,
+            self.profile,
+            method=method,
+            events=events,
+            stop_after=stop_after,
+            t_periods=self.t_periods,
+        )
 
     def __str__(self):
         string = self.tokamak.__str__()

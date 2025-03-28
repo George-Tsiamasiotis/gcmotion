@@ -11,11 +11,12 @@ from math import isclose, tau, fmod
 )
 @pytest.mark.parametrize(
     "terminal",
-    [2, 3, 4],
+    [1, 2, 3, 4],
     indirect=False,
 )
 def test_events(simple_particle, events, terminal):
-    simple_particle.run(events=[events])
+    simple_particle.run(method="RK45", events=[events])
+    assert simple_particle.method == "RK45"
     # gcm.plot.particle_evolution(simple_particle, which="theta, psi, zeta, rho")
     last_value = getattr(simple_particle, events.variable)[-1].m
     variable0 = getattr(simple_particle, events.variable + "0")
@@ -33,5 +34,5 @@ def test_events(simple_particle, events, terminal):
         tau - abs(fmod(last_value, tau)),
         abs_tol=0.08,
     )
-    assert simple_particle.orbit_percentage < 100
+    assert simple_particle.orbit_percentage < 95  # Avoid floating point errors
     assert simple_particle.t_events.m.flatten().shape[0] == events.terminal
