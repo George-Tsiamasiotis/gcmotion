@@ -45,9 +45,6 @@ class InitialConditions:
         defined to be the Magnetic flux of the last closed surface. This way we
         can set the :math:`\psi_0` initial value with respect to the tokamak's
         :math:`\psi_{wall}`.
-    t_eval : Quantity (1D array)
-        The time interval return values, [:math:`t_0, t_f, steps`],
-        in dimensions of [time].
     muB : Quantity
         This parameter will be parsed differently depending on its
         dimensionality. If its dimensions are [energy], then it is parsed as
@@ -57,6 +54,11 @@ class InitialConditions:
         motion.
     Pzeta0 : Quantity
         The particle's initial :math:`P_{\zeta 0}`.
+    t_eval : Quantity (ArrayLike), optional
+         (To be used with "RK45" method) The times at which to store the
+         completed solution, [:math:`t_0, t_f, steps`], in dimensions of
+         [time]. If None, the method ``NPeriods`` is selected and the points
+         selected by the solver are returned. Defaults to None.
 
     Examples
     --------
@@ -92,7 +94,7 @@ class InitialConditions:
         psi0: Quantity,
         muB: Quantity,
         Pzeta0: Quantity,
-        t_eval: QuantityArray,
+        t_eval: QuantityArray = None,
     ):
         r"""Initializes parameters and corresponding NU Quantities"""
         logger.info("==> Initializing 1st step InitialConditions...")
@@ -123,12 +125,15 @@ class InitialConditions:
 
         self.psi0 = psi0.to("Magnetic_flux")
         self.Pzeta0 = Pzeta0.to("Canonical_momentum")
-        self.t_eval = t_eval.to("seconds")
+        if t_eval is not None:
+            self.t_eval = t_eval.to("seconds")
+            self.t_evalNU = self.t_eval.to("NUseconds")
+        else:
+            self.t_eval = None
 
         # Corresponding NU values
         self.psi0NU = self.psi0.to("NUMagnetic_flux")
         self.Pzeta0NU = Pzeta0.to("NUCanonical_momentum")
-        self.t_evalNU = self.t_eval.to("NUseconds")
 
         self._full_set_calculated = False
         logger.info("--> InitialConditions 1st step Initialization Complete")
@@ -190,30 +195,45 @@ class InitialConditions:
         logger.info("--> InitialConditions 2nd step Initialization Complete")
 
     def __repr__(self):
-        t0 = self.t_eval[0].m
-        dt = self.t_eval[1].m - t0
-        tf = self.t_eval[-1].m
+        if self.t_eval is not None:
+            t0 = self.t_eval[0].m
+            dt = self.t_eval[1].m - t0
+            tf = self.t_eval[-1].m
+            t_eval_str = (
+                f"t_eval: [t0, tf, dt]=[{t0:.4g}, {tf:.4g}, {dt:.4g}]s, "
+            )
+        else:
+            t_eval_str = ""
+
         muB = f"{self.muB:.4g~P}" if self._full_set_calculated else None
 
-        return (
+        final = (
             "InitialConditions: "
             f"theta0 = {self.theta0:.4g}, "
             f"zeta0 = {self.zeta0:.4g}, "
             f"psi0 = {self.psi0:.4g~P}, "
-            f"t_eval: [t0, tf, dt]=[{t0:.4g}, {tf:.4g}, {dt:.4g}]s, "
             f"muB = {muB}"
         )
+        final += t_eval_str
+        return final
 
     def __str__(self):
 
         if not self._full_set_calculated:
             return self.__repr__()
 
-        t0 = self.t_eval[0].m
-        dt = self.t_eval[1].m - t0
-        tf = self.t_eval[-1].m
+        if self.t_eval is not None:
+            t0 = self.t_eval[0].m
+            dt = self.t_eval[1].m - t0
+            tf = self.t_eval[-1].m
+            t_eval_str = (
+                f"{"t_eval":>23} : "
+                f"{f'[t0, tf, dt] = [{t0:.4g}, {tf:.4g}, {dt:.4g}]s':<16}\n"
+            )
+        else:
+            t_eval_str = ""
 
-        return (
+        final = (
             colored("\nInitial Conditions :\n", "green")
             + f"{"Particle species":>23} : "
             f"{colored(self.species_name, "light_blue"):<16}\n"
@@ -228,6 +248,6 @@ class InitialConditions:
             f"({self.muNU:4g~})\n"
             f"{"muB(initial)":>23} : {f'{self.muB:.4g~}':<16} "
             f"({self.muBNU:4g~})\n"
-            f"{"t_eval":>23} : "
-            f"{f'[t0, tf, dt] = [{t0:.4g}, {tf:.4g}, {dt:.4g}]s':<16}\n"
         )
+        final += t_eval_str
+        return final
