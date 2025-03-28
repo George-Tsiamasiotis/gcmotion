@@ -84,9 +84,8 @@ def simple_init(Q):
     )
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def simple_particle(simple_tokamak, simple_init, Q):
     """Simplest particle object (B=LAR, q=Unity, E=Nofield)"""
     particle = gcm.Particle(tokamak=simple_tokamak, init=simple_init)
-    particle.run()
     return particle
