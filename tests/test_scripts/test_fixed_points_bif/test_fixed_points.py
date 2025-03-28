@@ -8,40 +8,14 @@ from gcmotion.scripts.fixed_points_bif.XO_points_classification import (
 )
 
 
-# ======================FIXTURES========================
-
-
-@pytest.fixture(scope="module")
-def _fp_output(giorgos_efield_profile):
-    r"""Returns the fixed points for the profile created in this
-    folder's conftest (cross checked efield)."""
-    fixed_points_output = gcm.fixed_points(
-        profile=giorgos_efield_profile,
-        thetalim=[-np.pi, np.pi],
-        psilim=[
-            0,
-            1.5,
-        ],
-        flux_units="psi_wall",
-        fp_method="fsolve",
-        dist_tol=5e-4,
-        fp_ic_scan_tol=1e-8,
-        ic_fp_theta_grid_density=101,
-        ic_fp_psi_grid_density=500,
-        fp_ic_scaling_factor=90,
-    )
-
-    return fixed_points_output
-
-
 # ======================TESTING FUNCTIONS========================
 
 
-def test_fixed_points_efield(_fp_output, giorgos_efield_profile):
+def test_fixed_points_efield(fp_output, giorgos_efield_profile):
     r"""Tests/Compares fixed points' theta, psi coordinates
     against verified results."""
 
-    fixed_points_output = _fp_output
+    fixed_points_output = fp_output
 
     fixed_points = fixed_points_output["distinct_fixed_points"]
 
@@ -82,10 +56,10 @@ def test_fixed_points_efield(_fp_output, giorgos_efield_profile):
     assert isclose(O_psis[2], 1.211453, abs_tol=1e-5)
 
 
-def test_fixed_points_init_conds(_fp_output):
+def test_fixed_points_init_conds(fp_output):
     r"""Tests that no more fixed points where found than there where
     initial conditions."""
-    fixed_points_output = _fp_output
+    fixed_points_output = fp_output
 
     fixed_points = fixed_points_output["distinct_fixed_points"]
     initial_conditions = fixed_points_output["initial_conditions"]
@@ -93,9 +67,9 @@ def test_fixed_points_init_conds(_fp_output):
     assert len(fixed_points) <= len(initial_conditions)
 
 
-def test_fixed_points_type(_fp_output, giorgos_efield_profile):
+def test_fixed_points_type(fp_output, giorgos_efield_profile):
     r"""Tests X O Points classification algorithm essentially."""
-    fixed_points_output = _fp_output
+    fixed_points_output = fp_output
 
     fixed_points = fixed_points_output["distinct_fixed_points"]
 

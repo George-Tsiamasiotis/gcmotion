@@ -8,7 +8,7 @@ from gcmotion.scripts.utils.hessian import hessian
 # ============================TESTING FUNCTIONS==============================
 
 
-def test_res_range_intantiation(simple_profile):
+def test_res_range_instantiation(simple_profile):
     r"""Tests res_range module correct instantiation essentally."""
     N = 5
     musNU = np.linspace(1e-5, 1e-4, N)
