@@ -21,7 +21,13 @@ from scipy.integrate._ivp.ivp import (
     find_active_events,
     handle_events,
 )
-from scipy.integrate._ivp.rk import RkDenseOutput, rk_step
+from scipy.integrate._ivp.rk import (
+    RkDenseOutput,
+    rk_step,
+    SAFETY,
+    MIN_FACTOR,
+    MAX_FACTOR,
+)
 from scipy.integrate._ivp.common import (
     norm,
     select_initial_step,
@@ -38,20 +44,29 @@ from gcmotion.configuration.scripts_configuration import (
 )
 
 
-# Multiply steps computed from asymptotic behaviour of errors by this.
-SAFETY = 0.9
-
-MIN_FACTOR = 0.2  # Minimum allowed decrease in a step size.
-MAX_FACTOR = 10  # Maximum allowed increase in a step size.
-
-
 class NPeriodSolver(OdeSolver):
+    r"""Custom OdeSolver modeled after SciPy's RK45 Solver.
 
-    # Runge-Kutta Class Attributes (Coefficients and orders)
-    C: np.ndarray = RK45.C
-    A: np.ndarray = RK45.A
-    B: np.ndarray = RK45.B
-    E: np.ndarray = RK45.E
+    The coefficients belong to the `Dormand-Prince method
+    <https://en.wikipedia.org/wiki/Dormand%E2%80%93Prince_method>`_, which is a
+    member of the Runge-Kutta family.
+
+    References
+    ----------
+    .. [1] J. R. Dormand, P. J. Prince, "A family of embedded Runge-Kutta
+           formulae", Journal of Computational and Applied Mathematics, Vol. 6,
+           No. 1, pp. 19-26, 1980.
+    .. [2] L. W. Shampine, "Some Practical Runge-Kutta Formulas", Mathematics
+           of Computation,, Vol. 46, No. 173, pp. 135-150, 1986.
+    """
+
+    # RK45 Class Attributes (Coefficients and orders)
+    C: np.ndarray = RK45.C  # Butcher Tableu Coefficients
+    A: np.ndarray = RK45.A  # Butcher Tableu Coefficients
+    B: np.ndarray = RK45.B  # Butcher Tableu Coefficients
+    E: np.ndarray = RK45.E  # Used for error estimation
+    # Used in _dense_output_impl(), which is called by solve_ivp after the
+    # integration is complete.
     P: np.ndarray = RK45.P
     order: int = RK45.order
     error_estimator_order: int = RK45.error_estimator_order
@@ -73,12 +88,14 @@ class NPeriodSolver(OdeSolver):
         super().__init__(
             fun, t0, y0, t_bound, vectorized=False, support_complex=False
         )
+
         self.y_old = None
         self.max_step = max_step
         self.rtol, self.atol = rtol, atol
+        # Those are initialised in super(), self.t=t0, self.y=y0
         self.f = self.fun(self.t, self.y)
 
-        # first step size
+        # "Empirically" selects a good first step
         if first_step is None:
             self.h_abs = select_initial_step(
                 self.fun,
@@ -94,6 +111,8 @@ class NPeriodSolver(OdeSolver):
             )
         else:
             self.h_abs = validate_first_step(first_step, t0, t_bound)
+
+        # Storage array for putting RK stages
         self.K = np.empty((self.n_stages + 1, self.n), dtype=self.y.dtype)
         self.error_exponent = -1 / (self.error_estimator_order + 1)
         self.h_previous = None
@@ -102,9 +121,6 @@ class NPeriodSolver(OdeSolver):
         self.psi0 = y0[1]
         events = [when_theta(root=self.theta0, terminal=100000)]
         self.events, self.max_events, self.event_dir = prepare_events(events)
-        # self.events = [
-        #     lambda t, x, event=event: event(t, x) for event in events
-        # ]
         self.g = [event(t0, y0) for event in self.events]
         self.t_events = [[] for _ in range(len(self.events))]
         self.y_events = [[] for _ in range(len(self.events))]
@@ -227,7 +243,10 @@ class NPeriodSolver(OdeSolver):
         self.g_new = [event(self.t, self.y) for event in self.events]
         if self._stop():
             self.status = "finished"
-            return False, None
+            return False, (
+                "(NPeriods Solver) "
+                f"Solver stopped after {self.stop_after} periods."
+            )
         self.g = self.g_new
 
         self.num_steps += 1

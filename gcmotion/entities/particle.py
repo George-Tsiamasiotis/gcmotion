@@ -10,21 +10,33 @@ White, to calculate its orbit.
 
 import pint
 import warnings
-import numpy as np
 from collections import namedtuple
 from termcolor import colored
 from time import time
 
 from gcmotion.utils.logger_setup import logger
 from gcmotion.utils.pprint_dict import pprint_dict
-from gcmotion.scripts.orbits.orbit import orbit
+from gcmotion.scripts.orbits.calculate_orbit import calculate_orbit
 
-from gcmotion.entities.tokamak import Tokamak
-from gcmotion.entities.profile import Profile
-from gcmotion.entities.initial_conditions import InitialConditions
+from .tokamak import Tokamak
+from .profile import Profile
+from .initial_conditions import InitialConditions
 
 # Quantity alias for type annotations
 type Quantity = pint.UnitRegistry.Quantity
+
+EVENTS_IGNORED = """
+Warning: events are ignored when 'NPeriods' method is used.
+"""
+ILLEGAL_STOP_AFTER = """
+Error: 'stop_after' must be a positive integer.
+"""
+T_EVAL_IGNORED = """
+Warning: 't_eval' arguement is ignored when 'NPeriods' method is used.
+    """
+STOP_AFTER_IGNORED = """
+Warning: 'stop_after' arguement is ignored when "RK45" method is used.
+"""
 
 
 class Particle:
@@ -49,8 +61,7 @@ class Particle:
 
     Examples
     --------
-    Here is how a particle is created:
-
+    Creating a Particle:
 
     >>> import gcmotion as gcm
     >>> import numpy as np
@@ -79,7 +90,7 @@ class Particle:
     ...     efield=gcm.efield.Radial(a, Ea, B0, peak=0.98, rw=1 / 50),
     ... )
     >>>
-    >>> # Setup Initial Conditions
+    >>> # Setup Initial Conditions for "RK45" method
     >>> init = gcm.InitialConditions(
     ...     species="p",
     ...     muB=Q(0.5, "keV"),
@@ -90,9 +101,25 @@ class Particle:
     ...     t_eval=Q(np.linspace(0, 1e-3, 1000), "seconds"),
     ... )
     >>>
-    >>> # Create the particle and calculate its obrit
+    >>> # Create the particle
     >>> particle = gcm.Particle(tokamak=tokamak, init=init)
+
+    Running the particle with the *RK45* method:
+
     >>> particle.run()
+    >>>
+    >>> events = [gcm.events.when_theta(init.theta0, 3)]
+    >>> particle.run(events=events)
+
+    Running the particle with the *NPeriods* method:
+
+    >>> particle.run(method="NPeriods", stop_after=1)
+    >>> particle.run(method="NPeriods", stop_after=4)
+
+    .. note::
+
+        The InitialCondition's ``t_eval`` arguement is ignored when the method
+        `NPeriods` is used.
 
     """
 
@@ -186,32 +213,34 @@ class Particle:
             method is "NPeriods". Defaults to "RK45"
         stop_after: int, optional
             After how many full periods to stop the solving, if the method is
-            "NPeriods". Defaults to None.
+            "NPeriods". Ignored if the method is "RK45". Defaults to None.
         events : list, optional
             The list of events to be passed to the solver. if the method is
-            "RK45". Defaults to [ ].
+            "RK45". Ignored if the method is "NPeriods". Defaults to [].
         info : bool, optional
             Whether or not to print an output message. Defaults to False.
+
+        Notes
+        -----
+        See :py:class:`~gcmotion.Particle` documentation for examples
 
         """
         logger.info("\tParticle's 'run' routine is called.")
 
         self._process_run_args(method, stop_after, events)
         self.method = method
+        self.stop_after = stop_after
+        self.events = events
 
         logger.info("\tCalculating orbit in NU...")
         # Orbit Calculation
         start = time()
-        solution = self._orbit(
-            method=self.method,
-            events=events,
-            stop_after=stop_after,
-        )
+        solution = self._run_orbit()
         end = time()
-        solve_time = self.Q(end - start, "seconds")
+        self.solve_time = self.Q(end - start, "seconds")
         logger.info(
             f"\tCalculation complete. Took {
-                solve_time:.4g~#P}."
+                self.solve_time:.4g~#P}."
         )
 
         self.theta = self.Q(solution.theta, "radians")
@@ -224,8 +253,8 @@ class Particle:
         self.t_solveNU = self.Q(solution.t_eval, "NUseconds")
         self.t_eventsNU = self.Q(solution.t_events, "NUseconds")
         self.y_events = solution.y_events
-        message = solution.message
-        logger.info(f"\tSolver message: '{message}'")
+        self.message = solution.message
+        logger.info(f"\tSolver message: '{self.message}'")
 
         # Converting back to SI
         logger.info("\tConverting results to SI...")
@@ -238,67 +267,76 @@ class Particle:
         self.t_solve = self.t_solveNU.to("seconds")
         self.t_events = self.t_eventsNU.to("seconds")
         end = time()
-        conversion_time = self.Q(end - start, "seconds")
+        self.conversion_time = self.Q(end - start, "seconds")
 
         logger.info(
             f"\tConversion completed. Took {
-                conversion_time:.4g~#P}."
+                self.conversion_time:.4g~#P}."
         )
 
-        # Percentage of t_eval
-        tfinal = self.t_eval[-1]
-        self.orbit_percentage = float(100 * (self.t_solve[-1] / tfinal).m)
-        logger.info(
-            f"'t_eval' percentage calculated: {self.orbit_percentage:.4g}%"
-        )
-
-        self.solver_output = (
-            colored("\nSolver output: ", "red") + f"{message}\n"
-            f"{'Percentage':>23} : "
-            f"{self.orbit_percentage:.1f}%\n"
-            f"{'Orbit calculation time':>23} : "
-            f"{solve_time:.4g~#P}\n"
-            f"{'Conversion to SI time':>23} : "
-            f"{conversion_time:.4g~#P}\n"
-        )
+        self.solver_output = self._solver_output_str()
 
         if info:
             print(self.__str__())
 
-    EVENTS_IGNORED = """
-    Warning: events are ignored when 'NPeriods' method is used
-    """
-    ILLEGAL_STOP_AFTER = """
-    Error: 'stop_after' must be a positive integer.
-    """
-
     def _process_run_args(self, method: str, stop_after: int, events: list):
         r"""Processes run()'s args before passed to the solver."""
 
-        stop_after = stop_after
-        events = events
         if method == "RK45":
             logger.info("\tSolver method: RK45")
             if events == []:
                 logger.info("\tRunning without events.")
             else:
                 logger.info(f"\tActive events: {[x.name for x in events]}")
+            if stop_after is not None:
+                logger.warning(STOP_AFTER_IGNORED)
+                warnings.warn(STOP_AFTER_IGNORED)
 
         elif method == "NPeriods":
             logger.info(f"\tSolver method: NPeriods, stop after {stop_after}.")
+            if self.t_eval is not None:
+                logger.warning(T_EVAL_IGNORED)
+                warnings.warn(T_EVAL_IGNORED)
             if events != []:
-                logger.warning(self.EVENTS_IGNORED)
-                warnings.warn(self.EVENTS_IGNORED)
+                logger.warning(EVENTS_IGNORED)
+                warnings.warn(EVENTS_IGNORED)
 
             if (
                 (stop_after is None)
                 or (not isinstance(stop_after, int))
                 or (stop_after < 1)
             ):
-                logger.error(self.ILLEGAL_STOP_AFTER)
-                raise ValueError(self.ILLEGAL_STOP_AFTER)
+                logger.error(ILLEGAL_STOP_AFTER)
+                raise ValueError(ILLEGAL_STOP_AFTER)
 
-    def _orbit(self, method: str, events: list, stop_after: int):
+    def _solver_output_str(self):
+
+        output_str = colored("\nSolver output: ", "red") + f"{self.message}\n"
+
+        if self.method == "RK45":
+            # Percentage of t_eval
+            tfinal = self.t_eval[-1]
+            self.orbit_percentage = float(100 * (self.t_solve[-1] / tfinal).m)
+            logger.info(
+                f"'t_eval' percentage calculated: {self.orbit_percentage:.4g}%"
+            )
+
+            output_str += (
+                f"{'Percentage':>23} : " f"{self.orbit_percentage:.1f}%\n"
+            )
+
+        elif self.method == "NPeriods":
+            pass
+
+        output_str += (
+            f"{'Orbit calculation time':>23} : "
+            f"{self.solve_time:.4g~#P}\n"
+            f"{'Conversion to SI time':>23} : "
+            f"{self.conversion_time:.4g~#P}\n"
+        )
+        return output_str
+
+    def _run_orbit(self):
         """Groups the particle's initial conditions and passes them to the
         solver script :py:mod:`~gcmotion.scripts.orbit`. The unpacking takes
         place in :py:meth:`~gcmotion.Particle.run`.
@@ -318,17 +356,20 @@ class Particle:
             zeta0=self.zeta0,
             psi0=self.psi0NU.magnitude,
             rho0=self.rho0NU.magnitude,
-            t=self.t_evalNU.magnitude,
             mu=self.muNU.magnitude,
+            t=self.t_evalNU.magnitude if self.method == "RK45" else None,
         )
 
+        # HACK: The solver really has no way of interacting with the Particle
+        # Class directly, but we can exploit Python's "Pass by Object
+        # Reference" by passing a mutable list and let the solver fill it.
         self.t_periods = []
-        return orbit(
-            parameters,
-            self.profile,
-            method=method,
-            events=events,
-            stop_after=stop_after,
+        return calculate_orbit(
+            parameters=parameters,
+            profile=self.profile,
+            method=self.method,
+            events=self.events,
+            stop_after=self.stop_after,
             t_periods=self.t_periods,
         )
 

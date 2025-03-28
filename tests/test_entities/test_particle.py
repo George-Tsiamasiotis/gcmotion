@@ -1,8 +1,10 @@
 import pytest
 
 
-def test_particle_run(simple_particle):
-    simple_particle.run(info=True)
+def test_particle_run_no_args(simple_particle):
+    simple_particle.run()
+    assert simple_particle.method == "RK45"
+    # assert simple_particle.== "RK45"
     pass
 
 
