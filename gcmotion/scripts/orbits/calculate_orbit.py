@@ -37,10 +37,9 @@ from .nperiods_solver import NPeriodSolver
 from gcmotion.configuration.scripts_configuration import (
     SolverConfig as config,
 )
-from gcmotion.utils.logger_setup import logger
 
 
-def orbit(
+def calculate_orbit(
     parameters: namedtuple,
     profile: Profile,
     method: str,
@@ -147,23 +146,26 @@ def orbit(
 
     if method == "RK45":
         method = "RK45"
-        extraneous = {}
+        t_eval = t
+        t_span = (t[0], t[-1])
+        extra_options = {}
     elif method == "NPeriods":
         method = NPeriodSolver
-        extraneous = {"stop_after": stop_after, "t_periods": t_periods}
+        t_eval = None
+        t_span = (0, np.inf)
+        extra_options = {"stop_after": stop_after, "t_periods": t_periods}
 
-    t_span = (t[0], t[-1])
     sol = solve_ivp(
         fun=dSdt,
         t_span=t_span,
         y0=S0,
-        t_eval=t,
+        t_eval=t_eval,
         atol=config.atol,
         rtol=config.rtol,
         events=events,
         method=method,
         dense_output=True,
-        **extraneous,
+        **extra_options,
     )
 
     theta = sol.y[0]

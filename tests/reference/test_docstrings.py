@@ -1,3 +1,4 @@
+import pytest
 import doctest
 from gcmotion.scripts import events
 from gcmotion.entities import (
@@ -27,7 +28,8 @@ def test_profile_docstring():
 
 
 def test_particle_docstring():
-    doctest_results = doctest.testmod(m=particle, verbose=V)
+    with pytest.warns(UserWarning):
+        doctest_results = doctest.testmod(m=particle, verbose=V)
     assert doctest_results.failed == 0
 
 
