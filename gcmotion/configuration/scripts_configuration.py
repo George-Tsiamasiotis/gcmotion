@@ -27,8 +27,8 @@ class ProgressBarStyle:
 
 @dataclass
 class SolverConfig:
-    atol: float = 1e-9  # Scipy's default is 1e-6
-    rtol: float = 1e-8  # Scipy's default is 1e-3
+    atol: float = 1e-10  # Scipy's default is 1e-6
+    rtol: float = 1e-10  # Scipy's default is 1e-3
 
 
 @dataclass
@@ -39,11 +39,15 @@ class ParabolasConfig:
 
 
 @dataclass
-class SinglePeriodSolverConfig:
-    max_step = np.inf
+class NPeriodSolverConfig:
+    max_step = 40
     vectorized: bool = False
     atol: float = 1e-12  # Scipy's default is 1e-6
     rtol: float = 1e-12  # Scipy's default is 1e-3
+    stop_point_atol: float = 1e-3
+    stop_point_rtol: float = 1e-3
+    final_y_rtol: float = 1e-4
+    max_recursion_depth: int = 40
 
 
 @dataclass
