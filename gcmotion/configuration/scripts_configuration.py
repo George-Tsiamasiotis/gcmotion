@@ -40,6 +40,7 @@ class ParabolasConfig:
 
 @dataclass
 class NPeriodSolverConfig:
+    event_variable: str = "theta"
     max_step = 40
     vectorized: bool = False
     atol: float = 1e-12  # Scipy's default is 1e-6
