@@ -82,6 +82,7 @@ addopts = """
 --benchmark-skip
 --import-mode=importlib
 --benchmark-name=short
+--log-disable=pint.util
 """
 console_output_style = "progress-even-when-capture-no"
 markers = [
