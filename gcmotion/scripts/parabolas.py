@@ -188,7 +188,7 @@ def calc_parabolas_tpb(
             profiles. Calculated energies in 'NUJoule'"""
         )
 
-    else:
+    elif calc_TPB and profile.bfield.plain_name == "LAR":
         # 0 <psi<psi_wall and at trapped - passing boundary
         #     E_O/(μΒ0)=B(θ=0,psi)/B0
         # and E_X/(μΒ0)=B(θ=π,psi)/B0
