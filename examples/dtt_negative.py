@@ -1,6 +1,5 @@
 import gcmotion as gcm
 import gcmotion.plot as gplt
-import numpy as np
 
 # Quantity Constructor
 species = "p"
@@ -28,18 +27,25 @@ init = gcm.InitialConditions(
     theta0=0,
     zeta0=0,
     psi0=Q(0.05411, "NUMagnetic_flux"),
-    t_eval=Q(np.linspace(0, 1e-4, 100000), "seconds"),
 )
 
 # Create the particle and calculate its obrit
 particle = gcm.Particle(tokamak=tokamak, init=init)
-event = gcm.events.when_theta(particle.theta0, 20)
-particle.run(events=[event])
-print(particle)
+particle.run(method="NPeriods", stop_after=4, info=True)
 
 # Some Plots
 gplt.qfactor_profile(particle.profile)
-gplt.magnetic_profile(particle.profile, coord="rho")
+gplt.machine_coords_profile(
+    entity=particle.profile,
+    which="b",
+    parametric_density=250,
+    mode="filled",
+    flux_units="Tesla * m^2",
+    E_units="keV",
+    B_units="Tesla",
+    I_units="NUpc",
+    g_units="NUpc",
+)
 gplt.particle_evolution(particle, units="NU")
 gplt.particle_poloidal_drift(
     particle,
@@ -55,16 +61,4 @@ gplt.particle_poloidal_drift(
     canmon_units="NUCanonical_momentum",
     E_units="keV",
     projection="polar",
-)
-
-gplt.machine_coords_profile(
-    entity=particle.profile,
-    which="e b i g",
-    parametric_density=250,
-    mode="filled",
-    flux_units="Tesla * m^2",
-    E_units="keV",
-    B_units="Tesla",
-    I_units="NUpc",
-    g_units="NUpc",
 )
