@@ -29,6 +29,7 @@ from . import triplet_analysis
 from .triplet_analysis import (
     profile_triplet_analysis,
 )
+from .contour_orbit import ContourOrbit
 from .contour_generators import main_contour
 from gcmotion.utils.logger_setup import logger
 
@@ -199,6 +200,7 @@ class FrequencyAnalysis:
         muspan: np.ndarray,
         Pzetaspan: np.ndarray,
         Espan: np.ndarray = None,
+        method: str = "contour",
         **kwargs,
     ):
         logger.info("==> Setting up Frequency Analysis...")
@@ -214,7 +216,7 @@ class FrequencyAnalysis:
         )
         self.psilim = self.profile.Q(psilim, "psi_wall").to("NUmf").m
 
-        self._process_arguements(muspan, Pzetaspan, Espan)
+        self._process_arguements(muspan, Pzetaspan, Espan, method)
         self.analysis_completed = False
         log_init(self.config)
 
@@ -223,6 +225,7 @@ class FrequencyAnalysis:
         muspan: np.ndarray,
         Pzetaspan: np.ndarray,
         Espan: np.ndarray,
+        method: str,
     ):
         r"""
         Decides the iteration mode depending on the shape of the input arrays.
@@ -250,6 +253,7 @@ class FrequencyAnalysis:
         self.muspan = muspan
         self.Pzetaspan = Pzetaspan
         self.Espan = Espan
+        self.method = method
 
         # Select Mode
         match (self.muspan, self.Pzetaspan, self.Espan):
@@ -285,6 +289,11 @@ class FrequencyAnalysis:
             case _:
                 logger.error(messages[0])
                 raise ValueError(messages[0])
+
+        if self.method.lower() in ("orbit", "orbits"):
+            self.method = "orbits"
+        if self.method.lower() in ("contour", "contours"):
+            self.method = "contour"
 
         log_method_selection(self.mode, self.config)
 
@@ -335,6 +344,18 @@ class FrequencyAnalysis:
 
         self.analysis_completed = True
 
+    def _triplet_analysis(
+        self, main_contour: dict, profile: Profile
+    ) -> list[ContourOrbit]:
+
+        if self.method == "contour":
+            return profile_triplet_analysis(
+                main_contour=main_contour,
+                profile=profile,
+                psilim=self.psilim,
+                config=self.config,
+            )
+
     def _start_cartesian(self, pbar: bool):
         r"""Cartesian Method: Used if all input arrays are 1D."""
 
@@ -364,11 +385,9 @@ class FrequencyAnalysis:
                     # =========================================================
                     # Profile Analysis returs either a list with found orbits,
                     # or an empty list.
-                    found_orbits = profile_triplet_analysis(
+                    found_orbits = self._triplet_analysis(
                         main_contour=MainContour,
                         profile=profile,
-                        psilim=self.psilim,
-                        config=self.config,
                     )
 
                     # Avoid floating point precision errors
@@ -420,11 +439,9 @@ class FrequencyAnalysis:
 
             MainContour = main_contour(profile, self.psilim, self.config)
 
-            found_orbits = profile_triplet_analysis(
+            found_orbits = self._triplet_analysis(
                 main_contour=MainContour,
                 profile=profile,
-                psilim=self.psilim,
-                config=self.config,
             )
             # Avoid floating point precision errors
             for orb in found_orbits:
@@ -483,11 +500,9 @@ class FrequencyAnalysis:
 
                     # Profile Analysis returs either a list with found orbits,
                     # or None
-                    found_orbits = profile_triplet_analysis(
+                    found_orbits = self._triplet_analysis(
                         main_contour=MainContour,
                         profile=profile,
-                        psilim=self.psilim,
-                        config=self.config,
                     )
 
                     # Avoid floating point precision errors

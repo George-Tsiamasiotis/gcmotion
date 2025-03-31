@@ -33,7 +33,7 @@ from gcmotion.entities.profile import Profile
 
 from .contour_orbit import ContourOrbit
 from .lines_processing import generate_valid_contour_orbits
-from .frequency_calculations import (
+from .contour_calculations import (
     calculate_orbit_omegatheta_single,
     calculate_orbit_omegatheta_double,
     calculate_orbit_qkinetic_single,
