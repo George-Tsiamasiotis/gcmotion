@@ -1,4 +1,5 @@
 from gcmotion.configuration.scripts_configuration import ContourOrbitConfig
+from gcmotion.configuration.scripts_configuration import ResRangeConfig
 
 from dataclasses import dataclass
 from numpy import pi
@@ -296,3 +297,27 @@ class BifurcationPlotConfig:
     energy_units: str = "NUJoule"
     flux_units: str = "NUmf"
     canmon_units: str = "NUcanmom"
+
+
+@dataclass
+class ResRangePlotConfig(ResRangeConfig):
+    # Figure keywords
+    figsize: tuple = figsize
+    dpi: int = dpi
+    layout: str = "constrained"
+    facecolor: str = "white"
+    # Labels Keywords
+    xlabel_fontsize: float = 13
+    xlabel_rotation: int = 0
+    ylabel_fontsize: float = 13
+    ylabel_rotation: int = 90
+    # Title Keywords
+    titlesize: float = 20
+    titlecolor: str = "black"
+    # Scatter kw
+    marker_size_theta: float = 7
+    marker_color_theta: str = "green"
+    marker_style_theta: str = "o"
+    marker_size_zeta: float = 7
+    marker_color_zeta: str = "red"
+    marker_style_zeta: str = "o"

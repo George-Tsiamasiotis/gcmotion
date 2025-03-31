@@ -41,6 +41,7 @@ from gcmotion.scripts.frequency_analysis.frequency_analysis import (
 )
 from gcmotion.scripts.fixed_points_bif.fixed_points import fixed_points
 from gcmotion.scripts.fixed_points_bif.bifurcation import bifurcation
+from gcmotion.scripts.resonance_range import omegas_max
 
 # main namespace
 __all__ = [
@@ -66,4 +67,5 @@ __all__ = [
     "FrequencyAnalysis",
     "fixed_points",
     "bifurcation",
+    "omegas_max",
 ]
