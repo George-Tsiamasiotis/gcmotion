@@ -33,7 +33,7 @@ Error: 'stop_after' must be a positive integer.
 """
 T_EVAL_IGNORED = """
 Warning: 't_eval' arguement is ignored when 'NPeriods' method is used.
-    """
+"""
 STOP_AFTER_IGNORED = """
 Warning: 'stop_after' arguement is ignored when "RK45" method is used.
 """
@@ -215,7 +215,7 @@ class Particle:
             After how many full periods to stop the solving, if the method is
             "NPeriods". Ignored if the method is "RK45". Defaults to None.
         events : list, optional
-            The list of events to be passed to the solver. if the method is
+            The list of events to be passed to the solver, if the method is
             "RK45". Ignored if the method is "NPeriods". Defaults to [].
         info : bool, optional
             Whether or not to print an output message. Defaults to False.

@@ -38,6 +38,24 @@ from gcmotion.configuration.scripts_configuration import (
     NPeriodSolverConfig as config,
 )
 
+# Returned object
+Solution = namedtuple(
+    "Orbit_solutionNU",
+    [
+        "theta",
+        "psi",
+        "zeta",
+        "rho",
+        "psip",
+        "Ptheta",
+        "Pzeta",
+        "t_eval",
+        "t_events",
+        "y_events",
+        "message",
+    ],
+)
+
 
 def calculate_orbit(
     parameters: namedtuple,
@@ -45,7 +63,7 @@ def calculate_orbit(
     method: str,
     events: list,
     stop_after: int = None,
-    t_periods: np.ndarray = None,
+    t_periods: list[()] = None,
 ) -> namedtuple:
     r"""Wrapper function around SciPy's solve_ivp().
 
@@ -67,6 +85,12 @@ def calculate_orbit(
     events : list
         List containing the independed events to track. Defaults to "SI". Note
         that multiple events trigger independently from one another.
+    t_periods: empty list, optional
+        Reference to a Particle's attribute that stores the times of the
+        calculated periods. Only used with "NPeriods" method. This is
+        necessarry due to the fact that the custom Solver cannot directly
+        communicate with the Particle Class. Defaults to None (RK45).
+
 
     Returns
     -------
@@ -168,7 +192,7 @@ def calculate_orbit(
         rtol=config.rtol,
         events=events,
         method=method,
-        dense_output=True,
+        dense_output=False,
         **extra_options,
     )
 
@@ -182,6 +206,7 @@ def calculate_orbit(
         psi = sol.y[1]
         zeta = sol.y[2]
         rho = sol.y[3]
+    # Add the last y points calculated from the final recursion
     elif method is NPeriodSolver:
         y_final = extra_options["y_final"][0]
         theta = np.append(sol.y[0], y_final[0])
@@ -196,23 +221,6 @@ def calculate_orbit(
     Pzeta = rho * g - psip
 
     # Pack results and return them
-    Solution = namedtuple(
-        "Orbit_solutionNU",
-        [
-            "theta",
-            "psi",
-            "zeta",
-            "rho",
-            "psip",
-            "Ptheta",
-            "Pzeta",
-            "t_eval",
-            "t_events",
-            "y_events",
-            "message",
-        ],
-    )
-
     return Solution(
         theta=theta,
         psi=psi,
