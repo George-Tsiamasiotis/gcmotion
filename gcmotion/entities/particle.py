@@ -10,6 +10,7 @@ White, to calculate its orbit.
 
 import pint
 import warnings
+import numpy as np
 from collections import namedtuple
 from termcolor import colored
 from time import time
@@ -274,6 +275,9 @@ class Particle:
                 self.conversion_time:.4g~#P}."
         )
 
+        if self.method == "NPeriods":
+            self._calculate_frequencies()
+
         self.solver_output = self._solver_output_str()
 
         if info:
@@ -311,7 +315,10 @@ class Particle:
 
     def _solver_output_str(self):
 
-        output_str = colored("\nSolver output: ", "red") + f"{self.message}\n"
+        output_str = (
+            colored("\nSolver output\n", "red")
+            + f"{'Solver message':>23} : {self.message:<16}\n"
+        )
 
         if self.method == "RK45":
             # Percentage of t_eval
@@ -326,7 +333,16 @@ class Particle:
             )
 
         elif self.method == "NPeriods":
-            pass
+            frequency_str = (
+                colored("\nFrequencies:\n", "red")
+                + f"{'Poloidal Frequency ωθ':>23} : "
+                f"{f'{self.omega_theta : .4g#~}':<16}"
+                f"({self.omega_thetaNU.m :.4g} [ω0])\n"
+                f"{'Toroidal Frequency ωζ':>23} : "
+                f"{f'{self.omega_zeta :.4g#~}':<16}"
+                f"({self.omega_zetaNU.m :.4g} [ω0])\n"
+                f"{'qkinetic':>23} : {f'{self.qkinetic :.4g}':<16}"
+            )
 
         output_str += (
             f"{'Orbit calculation time':>23} : "
@@ -334,6 +350,10 @@ class Particle:
             f"{'Conversion to SI time':>23} : "
             f"{self.conversion_time:.4g~#P}\n"
         )
+
+        if self.method == "NPeriods":
+            output_str += frequency_str
+
         return output_str
 
     def _run_orbit(self):
@@ -372,6 +392,28 @@ class Particle:
             stop_after=self.stop_after,
             t_periods=self.t_periods,
         )
+
+    def _calculate_frequencies(self):
+        r"""Calculates the particle's ωθ, ωζ and qkinetic, if the orbit was
+        calculated with the 'NPeriods' method.
+        """
+
+        if self.stop_after == 1:
+            _T_theta = self.t_periods[0]
+        else:
+            _T_theta = np.mean(np.diff(self.t_periods))
+
+        _omega_theta = 2 * np.pi / _T_theta
+        _delta_zeta = self.zeta[-1].m - self.zeta[0].m
+        _omega_zeta = _delta_zeta / _T_theta
+        _qkinetic = _omega_zeta / _omega_theta
+
+        self.omega_thetaNU = self.Q(_omega_theta, "NUw0")
+        self.omega_zetaNU = self.Q(_omega_zeta, "NUw0")
+        self.qkinetic = _qkinetic
+
+        self.omega_theta = self.omega_thetaNU.to("Hertz")
+        self.omega_zeta = self.omega_zetaNU.to("Hertz")
 
     def __str__(self):
         string = self.tokamak.__str__()
