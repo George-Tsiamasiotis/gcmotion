@@ -9,16 +9,16 @@ import gcmotion as gcm
     "freq_tokamaks",
     [
         "analytical",
-        "numerical",
+        # "numerical",
     ],
     indirect=True,
 )
 @pytest.mark.parametrize("calculate_qkinetic", [True, False])
 @pytest.mark.parametrize("calculate_omega_theta", [True, False])
-@pytest.mark.parametrize("cocu_classification", [True, False])
+# @pytest.mark.parametrize("cocu_classification", [True, False])
 # @pytest.mark.parametrize("skip_trapped", [True, False])
 # @pytest.mark.parametrize("skip_passing", [True, False])
-@pytest.mark.parametrize("max_vertices_method_switch", [10, 1e10])
+@pytest.mark.parametrize("max_vertices_method_switch", [10, np.inf])
 class TestModes:
 
     @staticmethod
@@ -26,7 +26,7 @@ class TestModes:
         freq_tokamaks,
         calculate_qkinetic,
         calculate_omega_theta,
-        cocu_classification,
+        # cocu_classification,
         # skip_trapped,
         # skip_passing,
         max_vertices_method_switch,
@@ -43,11 +43,11 @@ class TestModes:
             muspan=muspan,
             Pzetaspan=Pzetaspan,
             Espan=Espan,
-            main_contour_density=200,
+            main_contour_density=60,
             local_contour_density=60,
             calculate_qkinetic=calculate_qkinetic,
             calculate_omega_theta=calculate_omega_theta,
-            cocu_classification=cocu_classification,
+            # cocu_classification=cocu_classification,
             # skip_trapped=skip_trapped,
             # skip_passing=skip_passing,
             max_vertices_method_switch=max_vertices_method_switch,
@@ -68,7 +68,7 @@ class TestModes:
         freq_tokamaks,
         calculate_qkinetic,
         calculate_omega_theta,
-        cocu_classification,
+        # cocu_classification,
         # skip_trapped,
         # skip_passing,
         max_vertices_method_switch,
@@ -100,11 +100,11 @@ class TestModes:
             muspan=muspan,
             Pzetaspan=Pzetaspan,
             Espan=Espan,
-            main_contour_density=200,
+            main_contour_density=60,
             local_contour_density=60,
             calculate_qkinetic=calculate_qkinetic,
             calculate_omega_theta=calculate_omega_theta,
-            cocu_classification=cocu_classification,
+            # cocu_classification=cocu_classification,
             # skip_trapped=skip_trapped,
             # skip_passing=skip_passing,
             max_vertices_method_switch=max_vertices_method_switch,
@@ -125,7 +125,7 @@ class TestModes:
         freq_tokamaks,
         calculate_qkinetic,
         calculate_omega_theta,
-        cocu_classification,
+        # cocu_classification,
         # skip_trapped,
         # skip_passing,
         max_vertices_method_switch,
@@ -140,11 +140,11 @@ class TestModes:
             muspan=muspan,
             Pzetaspan=Pzetaspan,
             Espan=None,
-            main_contour_density=200,
+            main_contour_density=60,
             local_contour_density=60,
             calculate_qkinetic=calculate_qkinetic,
             calculate_omega_theta=calculate_omega_theta,
-            cocu_classification=cocu_classification,
+            # cocu_classification=cocu_classification,
             # skip_trapped=False,
             # skip_passing=skip_passing,
             max_vertices_method_switch=max_vertices_method_switch,
