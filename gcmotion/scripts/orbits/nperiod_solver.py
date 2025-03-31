@@ -10,7 +10,6 @@ event, and an extra check: For every solving step, if the event triggers, it
 checks if the current value of its conjugate variable is also close to its
 initial value. If so, the Solver treats this as a full period of the orbit,
 and can stop the solving after an arbitrary number of full periods.
-
 """
 
 import numpy as np
@@ -141,9 +140,9 @@ class NPeriodSolver(OdeSolver):
 
         # PERF: From now on, step() and event location work the same as RK45
         # and solve_ivp respectively. The only difference in our solver (apart
-        # from the period_check() check) is that we've hardcoded our event. This makes
-        # the code much easier to work with, since we've removed the added
-        # abstraction of handling an arbitrary number of events.
+        # from the period_check() check) is that we've hardcoded our event.
+        # This makes the code much easier to work with, since we've removed the
+        # added abstraction of handling an arbitrary number of events.
         self.theta0 = fmod(y0[0], tau)
         self.psi0 = y0[1]
         self.event_root, self.conjugate_root = (
@@ -166,6 +165,7 @@ class NPeriodSolver(OdeSolver):
         self.event_count = np.zeros(1)
         self.sol = None
         self.num_steps = 0
+
         # HACK:These are references to the corresponing Particle's attributes,
         # since there is no other way for the solver to pass data to Particle.
         self.stop_after = extraneous["stop_after"]
@@ -223,7 +223,7 @@ class NPeriodSolver(OdeSolver):
             y_new, f_new = rk_step(
                 self.fun, t, y, self.f, h, self.A, self.B, self.C, self.K
             )
-            # ?????
+
             scale = atol + np.maximum(np.abs(y), np.abs(y_new)) * rtol
             error_norm = self._estimate_error_norm(self.K, h, scale)
 
