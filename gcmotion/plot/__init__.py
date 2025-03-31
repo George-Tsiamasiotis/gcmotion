@@ -14,6 +14,7 @@ from .fixed_points_profile_contour import (
 )
 from .bifurcation_plot import bifurcation_plot
 from .parabolas_plot import parabolas_diagram
+from .resonances_range_plot import res_range_plot
 
 __all__ = [
     "qfactor_profile",
@@ -27,7 +28,7 @@ __all__ = [
     "fixed_points_energy_contour",
     "particle_evolution",
     "particle_poloidal_drift",
-    "machine_coords_profile",
     "bifurcation_plot",
     "parabolas_diagram",
+    "res_range_plot",
 ]
