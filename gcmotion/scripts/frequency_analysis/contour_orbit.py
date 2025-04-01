@@ -18,7 +18,7 @@ config = ContourOrbitConfig()
 tau = 2 * np.pi
 
 
-class ContourOrbit:
+class Orbit:
     r"""Path-like object containing the vertices as well as calculated
     frequencies, flags and methods needed to classify the orbit.
 
@@ -73,46 +73,10 @@ class ContourOrbit:
         # (bottom left point, top right point)
         self.bbox = ((self.xmin, self.ymin), (self.xmax, self.ymax))
 
-    def validate(self, psilim: tuple) -> None:
-        r"""Checks if the bbox of the contour line touches the upper or lower
-        walls, which means the orbit gets cut off and must be discarded.
-        """
-
-        self.valid = is_inbounds(self, psilim) and not is_cutoff_trapped(self)
-
-    def distance_from(self, bbox: tuple[tuple, tuple]) -> float:
-        r"""Returns a distance-like quantity of the origin point from self's
-        origin point. The closest bbox is the correct contour to calculate J.
-        """
-        return abs(self.xmin - bbox[0][0]) + abs(self.ymin - bbox[0][1])
-
     def classify_as_tp(self):
         r"""Classifies orbit as trapped or passing."""
 
         self.passing, self.trapped = tp_classify(self)
-
-    def close_segment(self):
-        r"""If the segment is passing, figure out if the points are
-        left-to-right or right-to-left and append the two bottom points
-        coorectly.
-
-        Also append the first point to the end to close the orbit, even though
-        it doesn't affect the shoelace algorithm.
-        """
-        if self.trapped or self.segment_closed:
-            return
-
-        left_to_right = is_left_to_right(self)
-
-        closeoff_point = [self.vertices[0]]  # same for both cases
-        if left_to_right:
-            extra = [[tau, 0], [-tau, 0]] + closeoff_point
-            self.vertices = np.append(self.vertices, extra, axis=0)
-        else:
-            extra = [[-tau, 0], [tau, 0]] + closeoff_point
-            self.vertices = np.append(self.vertices, extra, axis=0)
-
-        self.segment_closed = True
 
     def convert_to_ptheta(self, findPtheta: Profile, Q):
         r"""Converts all ycoords of the vertices from ψ to Pθ."""
@@ -130,13 +94,6 @@ class ContourOrbit:
             )
         ).T
         self.ptheta_converted = True
-
-    def calculate_Jtheta(self):
-        r"""Calculates the action J."""
-        self.area = shoelace(*self.vertices.T)
-        if self.passing:
-            self.area /= 2  # because theta span = 4π
-        self.Jtheta = self.area / (tau)
 
     def classify_as_cocu(self, profile: Profile):
         r"""Classifies orbit as co-/counter-passing."""
@@ -174,6 +131,67 @@ class ContourOrbit:
                     "cu" * bool(self.cupassing),
                 )
             )
+
+
+class ContourOrbit(Orbit):
+    r"""Path-like object containing the vertices as well as calculated
+    frequencies, flags and methods needed to classify the orbit.
+
+    The methods should be called in a specific order, which is done inside
+    profile_triplet_analysis() since some extra parameters are needed.
+    """
+
+    def __init__(
+        self,
+        E: float,
+        vertices: np.ndarray,
+    ):
+
+        self.vertices = vertices
+        self.E = E
+
+    def validate(self, psilim: tuple) -> None:
+        r"""Checks if the bbox of the contour line touches the upper or lower
+        walls, which means the orbit gets cut off and must be discarded.
+        """
+
+        self.valid = is_inbounds(self, psilim) and not is_cutoff_trapped(self)
+
+    def distance_from(self, bbox: tuple[tuple, tuple]) -> float:
+        r"""Returns a distance-like quantity of the origin point from self's
+        origin point. The closest bbox is the correct contour to calculate J.
+        """
+        return abs(self.xmin - bbox[0][0]) + abs(self.ymin - bbox[0][1])
+
+    def close_segment(self):
+        r"""If the segment is passing, figure out if the points are
+        left-to-right or right-to-left and append the two bottom points
+        coorectly.
+
+        Also append the first point to the end to close the orbit, even though
+        it doesn't affect the shoelace algorithm.
+        """
+        if self.trapped or self.segment_closed:
+            return
+
+        left_to_right = is_left_to_right(self)
+
+        closeoff_point = [self.vertices[0]]  # same for both cases
+        if left_to_right:
+            extra = [[tau, 0], [-tau, 0]] + closeoff_point
+            self.vertices = np.append(self.vertices, extra, axis=0)
+        else:
+            extra = [[-tau, 0], [tau, 0]] + closeoff_point
+            self.vertices = np.append(self.vertices, extra, axis=0)
+
+        self.segment_closed = True
+
+    def calculate_Jtheta(self):
+        r"""Calculates the action J."""
+        self.area = shoelace(*self.vertices.T)
+        if self.passing:
+            self.area /= 2  # because theta span = 4π
+        self.Jtheta = self.area / (tau)
 
 
 # ================================ Validation ================================

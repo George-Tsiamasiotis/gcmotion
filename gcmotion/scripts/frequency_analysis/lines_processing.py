@@ -15,6 +15,20 @@ from collections import deque
 from .contour_orbit import ContourOrbit
 
 
+def generate_contour_initial_conditions(
+    main_contour: dict,
+    level: float,
+):
+
+    # Generate lines and return if none found
+    isoenergy_lines = main_contour["C"].lines(level=level)
+
+    # Grab first point of every line
+    initial_conditions = [isoenergy_lines[n][0] for n in isoenergy_lines]
+
+    return initial_conditions
+
+
 def generate_valid_contour_orbits(
     main_contour: dict,
     level: float,

@@ -52,10 +52,9 @@ single_contour_orbits = 0
 double_contour_orbits = 0
 
 
-def profile_triplet_analysis(
+def contour_triplet_analysis(
     main_contour: dict,
     profile: Profile,
-    psilim: tuple,
     config: FrequencyAnalysisConfig,
 ) -> list[ContourOrbit]:
     r"""Top level function: Generates the main θ-Ρθ-E contour for a given

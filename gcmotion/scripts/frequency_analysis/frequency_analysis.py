@@ -25,10 +25,7 @@ from matplotlib.patches import Patch
 from gcmotion.entities.tokamak import Tokamak
 from gcmotion.entities.profile import Profile
 
-from . import triplet_analysis
-from .triplet_analysis import (
-    profile_triplet_analysis,
-)
+from . import contour_triplet_analysis 
 from .contour_orbit import ContourOrbit
 from .contour_generators import main_contour
 from gcmotion.utils.logger_setup import logger
@@ -349,12 +346,13 @@ class FrequencyAnalysis:
     ) -> list[ContourOrbit]:
 
         if self.method == "contour":
-            return profile_triplet_analysis(
+            return contour_triplet_analysis.contour_triplet_analysis(
                 main_contour=main_contour,
                 profile=profile,
-                psilim=self.psilim,
                 config=self.config,
             )
+        elif self.method == "orbit":
+            return
 
     def _start_cartesian(self, pbar: bool):
         r"""Cartesian Method: Used if all input arrays are 1D."""
@@ -776,21 +774,21 @@ def log_contour_method():
     """
     logger.info(
         "\tFrequencies calculated with single contouring: "
-        f"{triplet_analysis.single_contour_orbits}"
+        f"{contour_triplet_analysis.single_contour_orbits}"
     )
     logger.info(
         "\tFrequencies calculated with double contouring: "
-        f"{triplet_analysis.double_contour_orbits}"
+        f"{contour_triplet_analysis.double_contour_orbits}"
     )
 
     return_tuple = (
-        triplet_analysis.single_contour_orbits,
-        triplet_analysis.double_contour_orbits,
+        contour_triplet_analysis.single_contour_orbits,
+        contour_triplet_analysis.double_contour_orbits,
     )
 
     # Reset them to allow many frequency analysis to run without restarting the
     # interpreter
-    triplet_analysis.single_contour_orbits = 0
-    triplet_analysis.double_contour_orbits = 0
+    contour_triplet_analysis.single_contour_orbits = 0
+    contour_triplet_analysis.double_contour_orbits = 0
 
     return return_tuple
