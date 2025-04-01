@@ -25,6 +25,7 @@ from matplotlib.patches import Patch
 from gcmotion.entities.tokamak import Tokamak
 from gcmotion.entities.profile import Profile
 
+from . import orbit_triplet_analysis
 from . import contour_triplet_analysis 
 from .contour_orbit import ContourOrbit
 from .contour_generators import main_contour
@@ -288,7 +289,7 @@ class FrequencyAnalysis:
                 raise ValueError(messages[0])
 
         if self.method.lower() in ("orbit", "orbits"):
-            self.method = "orbits"
+            self.method = "orbit"
         if self.method.lower() in ("contour", "contours"):
             self.method = "contour"
 
@@ -352,7 +353,11 @@ class FrequencyAnalysis:
                 config=self.config,
             )
         elif self.method == "orbit":
-            return
+            return orbit_triplet_analysis.orbit_triplet_analysis(
+                main_contour=main_contour,
+                profile=profile,
+                config=self.config,
+            )
 
     def _start_cartesian(self, pbar: bool):
         r"""Cartesian Method: Used if all input arrays are 1D."""

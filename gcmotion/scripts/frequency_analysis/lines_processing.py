@@ -11,8 +11,10 @@ Lines Processing
 
 """
 
+import numpy as np
 from collections import deque
-from .contour_orbit import ContourOrbit
+from gcmotion.entities.particle import Particle
+from .contour_orbit import Orbit, ContourOrbit
 
 
 def generate_contour_initial_conditions(
@@ -24,9 +26,23 @@ def generate_contour_initial_conditions(
     isoenergy_lines = main_contour["C"].lines(level=level)
 
     # Grab first point of every line
-    initial_conditions = [isoenergy_lines[n][0] for n in isoenergy_lines]
+    initial_conditions = [line[0] for line in isoenergy_lines]
 
     return initial_conditions
+
+
+def generate_orbits(particle: Particle):
+
+    orbit = Orbit(
+        E=particle.ENU.m,
+        vertices=np.array((particle.theta.m, particle.psiNU.m)).T,
+    )
+
+    orbit.omega_theta = particle.omega_thetaNU.m
+    orbit.omega_zeta = particle.omega_zetaNU.m
+    orbit.qkinetic = particle.qkinetic
+
+    return orbit
 
 
 def generate_valid_contour_orbits(
