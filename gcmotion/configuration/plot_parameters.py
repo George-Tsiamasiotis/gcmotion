@@ -53,7 +53,7 @@ class QfactorProfileConfig:
     qwall_style: str = "--"
     psip_wall_color: str = "black"
     psip_wall_style: str = "--"
-    labelsize: float = 10
+    labelsize: float = 20
     ax_title_size: float = 20
 
 
@@ -72,7 +72,7 @@ class EfieldProfileConfig:
     # Plot options
     points: int = 400
     wall_color: str = "red"
-    labelsize: float = 10
+    labelsize: float = 20
     ax_title_size: float = 20
     linewidths: float = 2
     wall_linewidth: float = 1.5
@@ -109,7 +109,7 @@ class MagneticProfileConfig:
     derivative_color: str = "r"
     linewidth: float = 2
     # Label options
-    labelsize: float = 15
+    labelsize: float = 20
     ax_title_size: float = 20
     ax_title_pad: float = 25
 
@@ -132,7 +132,7 @@ class PsiPthetaConfig:
     points: int = 600
     wall_color: str = "red"
     wall_style: str = "--"
-    labelsize: float = 15
+    labelsize: float = 20
     ax_title_size: float = 15
 
 
@@ -154,7 +154,7 @@ class ParticleEvolutionConfig:
     s: float = 0.2
     color: str = "blue"
     marker: str = "o"
-    labelsize: int = 10
+    labelsize: int = 20
     labelpad: float = 8
 
 
@@ -248,9 +248,9 @@ class ParabolasPlotConfig:
     title_fontsize: float = 15
     title_color: str = "black"
     # Labels keywords
-    xlabel_fontsize: float = 13
+    xlabel_fontsize: float = 20
     xlabel_rotation: int = 0
-    ylabel_fontsize: float = 13
+    ylabel_fontsize: float = 20
     ylabel_rotation: int = 0
     # Legend keywords
     parabolas_legend: bool = True
@@ -283,7 +283,7 @@ class BifurcationPlotConfig:
     facecolor: str = "white"
     sharex: bool = True
     # x Label keywords
-    xlabel_fontsize: float = 10
+    xlabel_fontsize: float = 20
     # Suptitle keywords
     suptitle_fontsize: float = 15
     suptitle_color: str = "black"
@@ -307,9 +307,9 @@ class ResRangePlotConfig(ResRangeConfig):
     layout: str = "constrained"
     facecolor: str = "white"
     # Labels Keywords
-    xlabel_fontsize: float = 13
+    xlabel_fontsize: float = 20
     xlabel_rotation: int = 0
-    ylabel_fontsize: float = 13
+    ylabel_fontsize: float = 20
     ylabel_rotation: int = 90
     # Title Keywords
     titlesize: float = 20

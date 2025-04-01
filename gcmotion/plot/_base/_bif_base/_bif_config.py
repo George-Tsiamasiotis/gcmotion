@@ -19,7 +19,7 @@ class _ThetasFixedPlotConfig:
     thetas_O_markersize: float = 8
     thetas_O_markercolor: str = "#1f77b4"
     # Label keywords
-    theta_ylabel_fontsize: float = 10
+    theta_ylabel_fontsize: float = 20
     theta_ylabel_rotation: int = 90
     # Legend keywords
     theta_legend: bool = False
@@ -37,7 +37,7 @@ class _PsisFixedPlotConfig:
     psis_O_markercolor: str = "#1f77b4"
     # Label keywords
     psi_ylabel_rotation: int = 90
-    psi_ylabel_fontsize: float = 10
+    psi_ylabel_fontsize: float = 20
     # Legend keywords
     psi_legend: bool = True
     psi_legend_loc: str = "lower left"
@@ -61,7 +61,7 @@ class _NDFPlotConfig:
     ndfp_O_markersize: float = 8
     ndfp_O_markercolor: str = "#1f77b4"
     # Label keywords
-    ndfp_ylabel_fontsize: float = 10
+    ndfp_ylabel_fontsize: float = 20
     ndfp_ylabel_rotation: int = 90
     # Legend keywords
     ndfp_legend: bool = True
@@ -86,7 +86,7 @@ class _TPBPlotConfig:
     tpb_title_fontsize: float = 15
     tpb_title_color: str = "black"
     # Labels keywords
-    tpb_ylabel_fontzise: float = 10
+    tpb_ylabel_fontzise: float = 20
     tpb_xlabel_fontzise: float = 13
     tpb_ylabel_rotation: int = 90
     # Legend keywords

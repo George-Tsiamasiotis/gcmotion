@@ -33,7 +33,7 @@ class _ProfileEnergyContourConfig:
     Pthetaax: bool = True
     cursor: bool = True
     # Labels
-    labelsize: float = 15
+    labelsize: float = 20
     ticknum: int = 10
     ticksize: float = 12
 
@@ -93,8 +93,8 @@ class _MachineCoordsContourConfig:
     stat_curves_linewidth: float = 1
     stat_curves_linestyle: str = "dashed"
     # Labels - Title keywords
-    xlabel_fontsize: float = 15
-    ylabel_fontsize: float = 15
+    xlabel_fontsize: float = 20
+    ylabel_fontsize: float = 20
     title_fontsize: float = 15
     # Colorbar keywords
     cbarlabel_fontsize: float = 10
