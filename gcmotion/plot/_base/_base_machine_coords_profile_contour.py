@@ -152,6 +152,9 @@ def _base_machine_coords_profile_contour(
     ax.set_xlabel("R [m]", fontsize=config.xlabel_fontsize)
     ax.set_ylabel("Z [m]", fontsize=config.ylabel_fontsize)
 
+    ax.tick_params(axis="x", labelsize=config.x_ticksize)
+    ax.tick_params(axis="y", labelsize=config.y_ticksize)
+
     # Set title
     title_Q = _get_title_format(which_Q)
     ax.set_title(f"{title_Q}", fontsize=config.title_fontsize)

@@ -61,6 +61,12 @@ def qfactor_profile(entity: Tokamak | Profile | Particle, **kwargs):
     axq.margins(0)
     axp.margins(0)
 
+    axq.tick_params(axis="x", labelsize=config.x_ticksize)
+    axq.tick_params(axis="y", labelsize=config.y_ticksize)
+
+    axp.tick_params(axis="x", labelsize=config.x_ticksize)
+    axp.tick_params(axis="y", labelsize=config.y_ticksize)
+
     # Calculate values
     psi = psi_wallNU * np.linspace(
         config.span[0], config.span[1], config.points

@@ -163,6 +163,9 @@ def parabolas_diagram(profile: Profile, **kwargs):
     )
     par_ax.set_ylim(config.enlim)
 
+    par_ax.tick_params(axis="x", labelsize=config.x_ticksize)
+    par_ax.tick_params(axis="y", labelsize=config.y_ticksize)
+
     if config.parabolas_legend:
         par_ax.legend()
 

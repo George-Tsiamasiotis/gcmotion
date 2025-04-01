@@ -126,11 +126,12 @@ def _base_profile_energy_contour(profile: Profile, ax: Axes, **kwargs):
         rf"${ylabel}$ [{ycoordgrid.units:.4g~P}]", size=config.labelsize
     )
     ax.set_xlabel(r"$\theta$ [radians]", size=config.labelsize)
-    ax.tick_params(labelsize=config.ticksize)
+    ax.tick_params(axis="x", labelsize=config.x_ticksize)
+    ax.tick_params(axis="y", labelsize=config.y_ticksize)
     ax.set_xticks(
         np.linspace(-2 * np.pi, 2 * np.pi, 9),
         ["-2π", "-3π/2", "-π", "-π/2", "0", "π/2", "π", "3π/2", "2π"],
-        size=config.ticksize,
+        size=config.x_ticksize,
     )
     ax.set_xlim(thetalim.m)
     ax.yaxis.set_major_locator(ticker.MaxNLocator(config.ticknum))
@@ -152,11 +153,12 @@ def _base_profile_energy_contour(profile: Profile, ax: Axes, **kwargs):
             psiticks.max(), units=config.canmon_units
         )
         ax2.set_ylabel(
-            rf"$P_\theta$ [{Pthetamax.units:.4g~P}]", size=config.labelsize
+            rf"$P_\theta$ [{Pthetamax.units:.4g~P}]",
+            size=config.labelsize_Ptheta,
         )
         ax2.yaxis.set_major_locator(ticker.MaxNLocator(config.ticknum))
         ax2.set_ylim([Pthetamin.m, Pthetamax.m])
-        ax2.tick_params(labelsize=config.ticksize)
+        ax2.tick_params(labelsize=config.y_Ptheta_ticksize)
     logger.info(f"\t\tpsilim = [{psilim[0].m:.4g}, {psilim[1].m:.4g}]")
 
     if twin_ax_condition:
@@ -194,7 +196,7 @@ def _base_profile_energy_contour(profile: Profile, ax: Axes, **kwargs):
         ax.set_xticks(
             np.linspace(-np.pi, np.pi, 5),
             [" ", "3π/2", "0", "π/2", " "],
-            size=config.ticksize,
+            size=config.x_ticksize,
         )
 
     # Format cursor

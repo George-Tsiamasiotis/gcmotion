@@ -55,6 +55,12 @@ def efield_profile(entity: Tokamak | Profile | Particle, **kwargs):
     axf.margins(x=0, y=0.02)
     axp.margins(x=0, y=0.01)
 
+    axf.tick_params(axis="x", labelsize=config.x_ticksize)
+    axf.tick_params(axis="y", labelsize=config.y_ticksize)
+
+    axp.tick_params(axis="x", labelsize=config.x_ticksize)
+    axp.tick_params(axis="y", labelsize=config.y_ticksize)
+
     # Calculate values
     psi = psi_wallNU * np.linspace(
         config.span[0], config.span[1], config.points

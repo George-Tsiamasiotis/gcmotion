@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from numpy import pi
 import numpy as np
 
-figsize = 13, 7  # Global window size
+figsize = 10, 7  # Global window size
 dpi = 100  # Global dpi
 facecolor = "white"  # Global figure background color
 
@@ -21,7 +21,7 @@ class ProfileEnergyContourConfig:
     # Default parameter values
     thetalim: tuple = (-pi, pi)
     psilim: tuple = (0, 1.2)  # times psi_wall
-    levels: int = 30
+    levels: int = 20
     E_units: str = "keV"
     flux_units: str = "NUMagnetic_flux"
     canmon_units: str = "NUCanonical_momentum"
@@ -32,6 +32,9 @@ class ProfileEnergyContourConfig:
     # Colorbar
     numticks: int = 10
     cbarlabelsize: int = 12
+    # Ticks
+    x_ticksize: float = 20
+    y_ticksize: float = 20
 
 
 @dataclass
@@ -55,6 +58,9 @@ class QfactorProfileConfig:
     psip_wall_style: str = "--"
     labelsize: float = 20
     ax_title_size: float = 20
+    # Ticks
+    x_ticksize: float = 20
+    y_ticksize: float = 20
 
 
 @dataclass
@@ -79,12 +85,15 @@ class EfieldProfileConfig:
     # Units options
     field_units: str = "kiloVolt/meters"
     potential_units: str = "kiloVolt"
+    # Ticks
+    x_ticksize: float = 20
+    y_ticksize: float = 20
 
 
 @dataclass
 class MagneticProfileConfig:
     # Figure keywords
-    figsize: tuple = (13, 7)
+    figsize: tuple = (10, 7)
     dpi: int = dpi
     layout: str = "constrained"
     facecolor: str = facecolor
@@ -112,6 +121,9 @@ class MagneticProfileConfig:
     labelsize: float = 20
     ax_title_size: float = 20
     ax_title_pad: float = 25
+    # Ticks
+    x_ticksize: float = 20
+    y_ticksize: float = 20
 
 
 @dataclass
@@ -134,6 +146,9 @@ class PsiPthetaConfig:
     wall_style: str = "--"
     labelsize: float = 20
     ax_title_size: float = 15
+    # Ticks
+    x_ticksize: float = 20
+    y_ticksize: float = 20
 
 
 @dataclass()
@@ -154,8 +169,11 @@ class ParticleEvolutionConfig:
     s: float = 0.2
     color: str = "blue"
     marker: str = "o"
-    labelsize: int = 20
+    labelsize: int = 10
     labelpad: float = 8
+    # Ticks
+    x_ticksize: float = 10
+    y_ticksize: float = 10
 
 
 @dataclass()
@@ -169,7 +187,7 @@ class ParticlePoloidalDrift:
     projection: str | None = None  # None = default
     thetalim: tuple = (-pi, pi)
     psilim: str | tuple = "auto"  # times psi_wall, or "auto"
-    levels: int = 30
+    levels: int = 20
     E_units: str = "keV"
     flux_units: str = "Tesla * meter^2"
     potential: bool = True
@@ -180,6 +198,9 @@ class ParticlePoloidalDrift:
     # Colorbar
     numticks: int = 10
     cbarlabelsize: int = 12
+    # Ticks
+    x_ticksize: float = 20
+    y_ticksize: float = 20
 
 
 @dataclass
@@ -226,6 +247,9 @@ class MachineCoordsContoursConfig:
     parametric_density: int = 500
     # Contours keywords
     levels: int = 20
+    # Ticks
+    x_ticksize: float = 20
+    y_ticksize: float = 20
 
 
 @dataclass
@@ -239,7 +263,7 @@ class FrequencyAnalysisPlotConfig(ContourOrbitConfig):
 @dataclass
 class ParabolasPlotConfig:
     # Figure keywords
-    figsize: tuple = figsize
+    figsize: tuple = (13, 7)
     dpi: int = dpi
     layout: str = "constrained"
     facecolor: str = "white"
@@ -265,13 +289,16 @@ class ParabolasPlotConfig:
     TPB_O_color: str = "#1f77b4"
     TPB_X_linestyle: str = "solid"
     TPB_O_linestyle: str = "solid"
-    TPB_X_markersize: float = 2
-    TPB_O_markersize: float = 2
+    TPB_X_markersize: float = 8
+    TPB_O_markersize: float = 8
     # Dashed line keywords
     show_d_line: bool = True
     d_line_color: str = "black"
     d_linewidth: int = 1
     d_line_alplha: float = 0.5
+    # Ticks
+    x_ticksize: float = 20
+    y_ticksize: float = 20
 
 
 @dataclass()
@@ -297,6 +324,9 @@ class BifurcationPlotConfig:
     energy_units: str = "NUJoule"
     flux_units: str = "NUmf"
     canmon_units: str = "NUcanmom"
+    # Ticks
+    x_ticksize: float = 20
+    y_ticksize: float = 20
 
 
 @dataclass
@@ -321,3 +351,6 @@ class ResRangePlotConfig(ResRangeConfig):
     marker_size_zeta: float = 7
     marker_color_zeta: str = "red"
     marker_style_zeta: str = "o"
+    # Ticks
+    x_ticksize: float = 20
+    y_ticksize: float = 20

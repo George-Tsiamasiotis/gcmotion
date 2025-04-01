@@ -164,6 +164,9 @@ def res_range_plot(profile: Profile, COM_values: list, **kwargs):
     ax_theta.ticklabel_format(style="sci", axis="x", scilimits=(0, 0))
     ax_theta.ticklabel_format(style="sci", axis="y", scilimits=(0, 0))
 
+    ax_theta.tick_params(axis="x", labelsize=config.x_ticksize)
+    ax_theta.tick_params(axis="y", labelsize=config.y_ticksize)
+
     # -----------------OMEGA ZETA AX--------------------------
 
     ax_zeta.scatter(
@@ -182,6 +185,9 @@ def res_range_plot(profile: Profile, COM_values: list, **kwargs):
 
     ax_zeta.ticklabel_format(style="sci", axis="x", scilimits=(0, 0))
     ax_zeta.ticklabel_format(style="sci", axis="y", scilimits=(0, 0))
+
+    ax_zeta.tick_params(axis="x", labelsize=config.x_ticksize)
+    ax_zeta.tick_params(axis="y", labelsize=config.y_ticksize)
 
     plt.ion()
     plt.show(block=True)

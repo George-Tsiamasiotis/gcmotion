@@ -34,8 +34,12 @@ class _ProfileEnergyContourConfig:
     cursor: bool = True
     # Labels
     labelsize: float = 20
+    labelsize_Ptheta: float = 15
     ticknum: int = 10
-    ticksize: float = 12
+    # Ticks
+    x_ticksize: float = 20
+    y_ticksize: float = 20
+    y_Ptheta_ticksize: float = 15
 
 
 @dataclass
@@ -66,6 +70,9 @@ class _ParticlePoloidalDrift:
     init_s: float = 30
     init_color: str = "k"
     init_marker: str = "."
+    # Ticks
+    x_ticksize: float = 20
+    y_ticksize: float = 20
 
 
 @dataclass
@@ -103,12 +110,15 @@ class _MachineCoordsContourConfig:
     parametric_density: int = 500
     xmargin_perc: float = 0.1
     ymargin_perc: float = 0.1
+    # Ticks
+    x_ticksize: float = 20
+    y_ticksize: float = 20
 
 
 @dataclass()
 class _FixedPointsPlotConfig:
     # Figure keywords
-    figsize: tuple = (13, 7)
+    figsize: tuple = (10, 7)
     dpi: int = 100
     layout: str = "constrained"
     facecolor: str = "white"

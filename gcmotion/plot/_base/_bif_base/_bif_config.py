@@ -87,9 +87,12 @@ class _TPBPlotConfig:
     tpb_title_color: str = "black"
     # Labels keywords
     tpb_ylabel_fontzise: float = 20
-    tpb_xlabel_fontzise: float = 13
+    tpb_xlabel_fontzise: float = 20
     tpb_ylabel_rotation: int = 90
     # Legend keywords
     tpb_legend: bool = True
     # Units keywords
     energy_units: str = "NUJoule"
+    # Ticks
+    x_ticksize: float = 20
+    y_ticksize: float = 20

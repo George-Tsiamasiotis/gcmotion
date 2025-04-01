@@ -166,8 +166,17 @@ def bifurcation_plot(profile: Profile, COM_values: list, **kwargs):
 
     ax_theta = ax[0]
     ax_psi = ax[1]
+
+    ax_theta.tick_params(axis="x", labelsize=config.x_ticksize)
+    ax_theta.tick_params(axis="y", labelsize=config.y_ticksize)
+
+    ax_psi.tick_params(axis="x", labelsize=config.x_ticksize)
+    ax_psi.tick_params(axis="y", labelsize=config.y_ticksize)
+
     if config.plot_ndfp:
         ax_ndfp = ax[2]
+        ax_ndfp.tick_params(axis="x", labelsize=config.x_ticksize)
+        ax_ndfp.tick_params(axis="y", labelsize=config.y_ticksize)
 
     # Fixed thetas bifurcation diagram
     _thetas_bif_plot(

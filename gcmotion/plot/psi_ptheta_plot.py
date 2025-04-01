@@ -67,6 +67,9 @@ def psi_ptheta_plot(entity: Profile | Particle, **kwargs):
     ax.grid(True)
     ax.margins(0)
 
+    ax.tick_params(axis="x", labelsize=config.x_ticksize)
+    ax.tick_params(axis="y", labelsize=config.y_ticksize)
+
     # Calculate values
     # Configurable span is really not necessary
     _psi = psi_wallNU * np.linspace(0, 1.05, config.points)

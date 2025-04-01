@@ -122,6 +122,9 @@ def _plot_trapped_passing_boundary(
     ax.ticklabel_format(style="sci", axis="x", scilimits=(0, 0))
     ax.ticklabel_format(style="sci", axis="y", scilimits=(0, 0))
 
+    ax.tick_params(axis="x", labelsize=config.x_ticksize)
+    ax.tick_params(axis="y", labelsize=config.y_ticksize)
+
     ax.scatter(
         xX_values,
         yX_values,
