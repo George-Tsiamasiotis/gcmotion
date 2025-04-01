@@ -45,15 +45,13 @@ PzetasNU = np.linspace(PzetaNUmin, PzetaNUmax, N)
 gplt.fixed_points_energy_contour(
     profile,
     thetalim=[-np.pi, np.pi],
-    psilim=[
-        0,
-        1,
-    ],
+    psilim=[0, 1],
     # flux_units="NUmf",
     fp_ic_scan_tol=1e-8,
     ic_fp_theta_grid_density=101,
     ic_fp_psi_grid_density=500,
     fp_ic_scaling_factor=90,
+    separatrices=True,
 )
 
 # Draw fixed point bifurcation diagram with respect to Pzeta
@@ -61,10 +59,7 @@ gplt.bifurcation_plot(
     profile=profile,
     COM_values=PzetasNU,
     thetalim=[-np.pi, np.pi],
-    psilim=[
-        0,
-        1.5,
-    ],
+    psilim=[0, 1.5],
     fp_ic_scan_tol=1e-8,
     ic_fp_theta_grid_density=101,
     ic_fp_psi_grid_density=500,

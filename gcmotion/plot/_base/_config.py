@@ -29,7 +29,12 @@ class _ProfileEnergyContourConfig:
     locator: str = "log"
     log_base: float = 1.0001
     zorder: int = 0
+    bold_lines: bool = True
     linewidths: float = 1
+    linecolors: str = "black"
+    plot_level_lines: bool = True
+    separatrix_linewidth: float = 4
+    separatrix_linecolor: str = "red"
     Pthetaax: bool = True
     cursor: bool = True
     # Labels
@@ -40,6 +45,12 @@ class _ProfileEnergyContourConfig:
     x_ticksize: float = 20
     y_ticksize: float = 20
     y_Ptheta_ticksize: float = 15
+    # Colorbar
+    numticks: int = 10
+    cbarlabelsize: int = 12
+    # Polar Projection
+    polar_ytick_num: int = 5
+    polar_ytick_size: float = 12
 
 
 @dataclass
@@ -88,6 +99,7 @@ class _MachineCoordsContourConfig:
     mode: str = None
     units: str = "NUmf"
     which_Q: str = "flux"
+    plot_parabolas: bool = True
     # Locator keywords
     log_base: float = 1.0001
     locator: str = "linear"
@@ -136,3 +148,4 @@ class _FixedPointsPlotConfig:
     ic_markersize: float = 100
     # RZ coords
     RZ_coords: bool = False
+    separatrices: bool = False

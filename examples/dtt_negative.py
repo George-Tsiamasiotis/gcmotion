@@ -1,3 +1,4 @@
+import numpy as np
 import gcmotion as gcm
 import gcmotion.plot as gplt
 
@@ -22,11 +23,11 @@ tokamak = gcm.Tokamak(
 # Setup Initial Conditions
 init = gcm.InitialConditions(
     species="p",
-    muB=Q(1e-4, "NUMagnetic_moment"),
-    Pzeta0=Q(-0.05, "NUCanonical_momentum"),
+    muB=Q(2e-4, "NUMagnetic_moment"),
+    Pzeta0=Q(-0.042, "NUCanonical_momentum"),
     theta0=0,
     zeta0=0,
-    psi0=Q(0.05411, "NUMagnetic_flux"),
+    psi0=Q(0.0625, "NUMagnetic_flux"),
 )
 
 # Create the particle and calculate its obrit
@@ -46,10 +47,26 @@ gplt.machine_coords_profile(
     I_units="NUpc",
     g_units="NUpc",
 )
+gplt.fixed_points_energy_contour(
+    particle.profile,
+    thetalim=[-np.pi, np.pi],
+    flux_units="NUMagnetic_flux",
+    psilim=[1e-5, 1],
+    E_units="keV",
+    levels=20,
+    dist_tol=1e-4,
+    fp_ic_scan_tol=1e-6,
+    ic_fp_theta_grid_density=201,
+    ic_fp_psi_grid_density=300,
+    fp_ic_scaling_factor=120,
+    separatrices=True,
+    separatrix_linewidth=2,
+    projection="polar",
+)
 gplt.particle_evolution(particle, units="NU")
 gplt.particle_poloidal_drift(
     particle,
-    psilim=[0.5, 1],
+    psilim=[1e-5, 1],
     flux_units="NUMagnetic_flux",
     canmon_units="NUCanonical_momentum",
     E_units="keV",

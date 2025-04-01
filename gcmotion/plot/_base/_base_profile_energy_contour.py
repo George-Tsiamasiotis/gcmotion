@@ -3,6 +3,8 @@ from matplotlib import ticker
 from matplotlib.patches import Rectangle
 from matplotlib.axes import Axes
 from scipy.interpolate import RectBivariateSpline
+import contourpy
+from math import isclose
 
 from gcmotion.utils.logger_setup import logger
 
@@ -92,32 +94,86 @@ def _base_profile_energy_contour(profile: Profile, ax: Axes, **kwargs):
     kw = {
         "cmap": config.cmap,
         "locator": locator,
-        "zorder": config.zorder,  # Keep user-defined zorder for contourf
+        "zorder": config.zorder,
     }
 
+    # Contour plot
+    if config.mode == "lines":
+        C = ax.contour(
+            "theta",
+            "ycoord",
+            "Energy",
+            data=data,
+            linewidths=config.linewidths,
+            **kw,
+        )
+    else:
+        C = ax.contourf(
+            "theta",
+            "ycoord",
+            "Energy",
+            data=data,
+            **kw,
+        )
     # Contour lines overlay (without cmap, ensuring it's on top)
     kw_contour = kw.copy()
     kw_contour.pop("cmap", None)  # Remove cmap to avoid conflict
     kw_contour["zorder"] = config.zorder + 1  # Ensure contour lines are on top
+    if config.bold_lines and config.mode == "filled":
+        ax.contour(
+            "theta",
+            "ycoord",
+            "Energy",
+            data=data,
+            linewidths=config.linewidths,
+            colors=config.linecolors,
+            **kw_contour,
+        )
 
-    C = ax.contour(
-        "theta",
-        "ycoord",
-        "Energy",
-        data=data,
-        linewidths=config.linewidths * 1.5,  # Make lines more visible
-        colors="black",  # Ensures contour lines are black
-        **kw_contour,
-    )
-    # Filled contour plot (with colormap) - ensures correct colorbar
-    C = ax.contourf(
-        "theta",
-        "ycoord",
-        "Energy",
-        data=data,
-        **kw,
-    )
-    logger.debug("\t\tContour mode: filled")
+    # ============
+    # Separatrices
+    # ============
+    # try:
+    #     Xpoints_data = kwargs["Xpoints_data"]
+    # except (KeyError, TypeError):
+    #     pass
+    # else:
+    if kwargs.get("separatrices", False):
+        Xpoints_data = kwargs["Xpoints_data"]
+        energies = Xpoints_data["Xpoints_energies"].to(config.E_units).m
+        coords = Xpoints_data["Xpoints_coords"]
+        # Replicate Xpoints on π to exist on -π as well, so the whole
+        # separatrix is plotted if it gets cutoff by the contour's upper and
+        # lower walls. These extra points are not plotted.
+        for point in coords:
+            theta, psi = point
+            if isclose(theta, np.pi, rel_tol=1e-3, abs_tol=np.pi / 100):
+                coords.append((-theta, psi))
+        SeparatrixContour = contourpy.contour_generator(
+            x=data["theta"],
+            y=data["ycoord"],
+            z=data["Energy"],
+            line_type="Separate",
+        )
+        for i, energy in enumerate(energies):
+            lines = SeparatrixContour.lines(level=energy)
+            for line in lines:
+                # HACK:Check if the separatrix is "close" to the corresponding
+                # Xpoint. This cause issues if the separatrix is cutoff by the
+                # contour's vertical limits.
+                for coord in coords:
+                    theta = coord[0]
+                    psi = coord[1].to(config.flux_units).m
+                    # theta = coords[i][0]
+                    # psi = coords[i][1].to(config.flux_units).m
+                    if close_to_line(line, (theta, psi), psilim):
+                        logger.info(f"\tFound separatrix at {coords}")
+                        ax.plot(
+                            *line.T,
+                            color=config.separatrix_linecolor,
+                            ls="dashed",
+                            lw=config.separatrix_linewidth,
+                        )
 
     # Setup labels.
     # Also add a second axis for Ptheta
@@ -198,6 +254,9 @@ def _base_profile_energy_contour(profile: Profile, ax: Axes, **kwargs):
             [" ", "3π/2", "0", "π/2", " "],
             size=config.x_ticksize,
         )
+        ylower, yupper = ax.get_ylim()
+        ax.set_yticks(np.linspace(ylower, yupper, config.polar_ytick_num))
+        ax.tick_params(axis="y", labelsize=config.polar_ytick_size)
 
     # Format cursor
     # The format must be applied to the second ax for some reason. This means
@@ -248,3 +307,18 @@ def _base_profile_energy_contour(profile: Profile, ax: Axes, **kwargs):
     # Return the contour object
     logger.info("\t--> Contour object succesfully created and returned.")
     return C
+
+
+def close_to_line(line, point, psilim):
+    r"""Checks if a point is close to curve. This is a half-measure to pick the
+    correct separatrix, since in more shaped equilibria the separatrix energy
+    may amount to more than one contour.
+    """
+
+    for theta, psi in line:
+        if isclose(
+            theta, point[0], rel_tol=1e-2, abs_tol=2 * np.pi / 100
+        ) and isclose(psi, point[1], rel_tol=1e-2, abs_tol=psilim[1].m / 100):
+            return True
+
+    return False

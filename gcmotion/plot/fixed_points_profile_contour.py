@@ -48,6 +48,8 @@ def fixed_points_energy_contour(profile: Profile, **kwargs):
     wall : bool, optional
         Whether or not to shade the area above :math:`\psi_wall`. Defaults to
         True.
+    separatrices: bool, optional
+        Whether or not to plot the separatrices. Defaults to False.
     grid_density: int, optional
         The contour's grid density. Defaults to 200.
     psilim : list, optional
@@ -124,13 +126,20 @@ def fixed_points_energy_contour(profile: Profile, **kwargs):
     contourax = fig.add_subplot(projection=config.projection)
 
     # Here will go fixed points plot
-    _base_fixed_points_plot(
+    # If separatrices=True, returns a dict with the X point coordinates and
+    # their energies, else None. The plotting is done in
+    # _base_profile_energy_contour
+    Xpoints_data = _base_fixed_points_plot(
         profile=profile,
         ax=contourax,
         **kwargs,
     )
 
+    # ============
+    # Main Contour
+    # ============
     # Draw the contour and get the contour object
+    kwargs["Xpoints_data"] = Xpoints_data
     Contour = _base_profile_energy_contour(
         profile=profile, ax=contourax, **kwargs
     )

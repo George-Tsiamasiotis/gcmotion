@@ -41,6 +41,9 @@ def profile_energy_contour(profile: Profile, **kwargs):
     wall : bool, optional
         Whether or not to shade the area above :math:`\psi_wall`. Defaults to
         True.
+    bold_lines: bool, optional
+        Whether or not to color the contour lines separately. Only works on
+        mode="filled". Defaults to True.
     grid_density: int, optional
         The contour's grid density. Defaults to 200.
 

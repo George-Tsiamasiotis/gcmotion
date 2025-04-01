@@ -40,7 +40,14 @@ print(particle)
 
 # Some plots
 gplt.qfactor_profile(particle.profile)
-gplt.magnetic_profile(particle.profile, coord="rho")
+gplt.machine_coords_profile(
+    entity=particle.profile,
+    which="b",
+    parametric_density=250,
+    mode="filled",
+    flux_units="Tesla * m^2",
+    B_units="Tesla",
+)
 gplt.psi_ptheta_plot(particle)
 gplt.particle_evolution(particle, units="NU")
 gplt.particle_poloidal_drift(
@@ -50,6 +57,7 @@ gplt.particle_poloidal_drift(
     canmon_units="NUCanonical_momentum",
     E_units="keV",
     levels=80,
+    bold_lines=False,
 )
 gplt.particle_poloidal_drift(
     particle,
@@ -59,4 +67,5 @@ gplt.particle_poloidal_drift(
     E_units="keV",
     projection="polar",
     levels=80,
+    bold_lines=False,
 )

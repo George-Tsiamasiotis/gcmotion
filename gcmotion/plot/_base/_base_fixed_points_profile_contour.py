@@ -225,6 +225,25 @@ def _base_fixed_points_plot(
 
         logger.info("Plotted initial conditions for fixed points")
 
+    if config.separatrices:
+
+        Xpoint_coords = []
+        X_point_energies = []
+        for fp in X_points:
+            # Coords are in NU
+            theta, psi = fp
+            X_point_energies.append(
+                profile._findEnergyNU(theta=theta, psi=psi, potential=True)
+            )
+            Xpoint_coords.append((theta, profile.Q(psi, "NUmf")))
+
+        Xpoint_energies = profile.Q(X_point_energies, "NUJoule")
+        Xpoints_data = {
+            "Xpoints_energies": Xpoint_energies,
+            "Xpoints_coords": Xpoint_coords,
+        }
+        return Xpoints_data
+
 
 def _get_RZ_coords(
     profile: Profile,

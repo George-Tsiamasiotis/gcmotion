@@ -33,12 +33,13 @@ profile = gcm.Profile(
     mu=Q(1.9173e-6, "NUMagnetic_moment"),
     Pzeta=Q(-0.025, "NUCanonical_momentum"),
 )
-gplt.profile_energy_contour(
+gplt.fixed_points_energy_contour(
     profile,
-    psilim=(0.85, 1.3),
+    psilim=(0.85, 1.30),
     log_base=1 + 1e-15,
     levels=50,
     E_units="NUJoule",
+    separatrices=True,
 )
 
 # =========================== Frequency Analysis ===========================
@@ -47,12 +48,12 @@ muspan = np.array([profile.muNU.m])
 Pzetaspan = np.array([profile.PzetaNU.m])
 Espan = np.concat(
     (
-        np.linspace(5.1e-6, 1e-5, 700),
+        np.linspace(5.1e-6, 1e-5, 600),
         # Zoom in to specific Energy "areas" that are close to O and X points,
         # as seen by simple contouring or bifurcation analysis
-        np.linspace(6.25e-6, 6.4e-6, 200),
-        np.linspace(5.65e-6, 5.9e-6, 200),
-        np.linspace(7.48e-6, 7.68e-6, 200),
+        np.linspace(6.25e-6, 6.4e-6, 100),
+        np.linspace(5.65e-6, 5.9e-6, 100),
+        np.linspace(7.48e-6, 7.68e-6, 100),
     )
 )
 

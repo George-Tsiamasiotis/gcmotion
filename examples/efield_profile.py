@@ -38,5 +38,6 @@ print(profile)
 # Some Plots
 gplt.qfactor_profile(profile)
 gplt.efield_profile(profile)
-gplt.profile_energy_contour(profile)
-gplt.profile_energy_contour(profile, projection="polar")
+gplt.fixed_points_energy_contour(
+    profile, projection="polar", psilim=(0, 1.3), separatrices=True
+)

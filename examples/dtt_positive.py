@@ -39,14 +39,12 @@ musNU = np.linspace(muNUmin, muNUmax, N)
 gplt.fixed_points_energy_contour(
     profile,
     thetalim=[-np.pi, np.pi],
-    psilim=[
-        0,
-        1,
-    ],
+    psilim=[0, 1],
     fp_ic_scan_tol=1e-6,
     ic_fp_theta_grid_density=101,
     ic_fp_psi_grid_density=200,
     fp_ic_scaling_factor=120,
+    separatrices=True,
 )
 
 # # Draw fixed point bifurcation diagram with respect to mu

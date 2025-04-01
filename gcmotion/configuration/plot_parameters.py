@@ -29,12 +29,9 @@ class ProfileEnergyContourConfig:
     wall: bool = True
     cursor: bool = True  # Mild performance hit
     show: bool = True
+    separatrices: bool = False
     # Colorbar
-    numticks: int = 10
     cbarlabelsize: int = 12
-    # Ticks
-    x_ticksize: float = 20
-    y_ticksize: float = 20
 
 
 @dataclass
