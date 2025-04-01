@@ -78,23 +78,6 @@ class Orbit:
 
         self.passing, self.trapped = tp_classify(self)
 
-    def convert_to_ptheta(self, findPtheta: Profile, Q):
-        r"""Converts all ycoords of the vertices from ψ to Pθ."""
-        # Could not find a better way, but this isn't as slow as I thought.
-        if self.ptheta_converted:
-            return
-
-        self.vertices = np.vstack(
-            (
-                self.vertices.T[0],  # Thetas as they were
-                findPtheta(
-                    Q(self.vertices.T[1], "NUMagnetic_flux"),
-                    "NUCanonical_momentum",
-                ).magnitude,
-            )
-        ).T
-        self.ptheta_converted = True
-
     def classify_as_cocu(self, profile: Profile):
         r"""Classifies orbit as co-/counter-passing."""
         if self.trapped:
@@ -186,6 +169,23 @@ class ContourOrbit(Orbit):
 
         self.segment_closed = True
 
+    def convert_to_ptheta(self, findPtheta: Profile, Q):
+        r"""Converts all ycoords of the vertices from ψ to Pθ."""
+        # Could not find a better way, but this isn't as slow as I thought.
+        if self.ptheta_converted:
+            return
+
+        self.vertices = np.vstack(
+            (
+                self.vertices.T[0],  # Thetas as they were
+                findPtheta(
+                    Q(self.vertices.T[1], "NUMagnetic_flux"),
+                    "NUCanonical_momentum",
+                ).magnitude,
+            )
+        ).T
+        self.ptheta_converted = True
+
     def calculate_Jtheta(self):
         r"""Calculates the action J."""
         self.area = shoelace(*self.vertices.T)
@@ -235,6 +235,8 @@ def tp_classify(orbit: ContourOrbit) -> list[bool, bool]:
 
     # NOTE: isclose() is needed here
     if isclose(orbit.xmin, -tau) and isclose(orbit.xmax, tau):
+        return True, False
+    if abs(orbit.xmin - orbit.xmax) > 0.98 * tau:
         return True, False
     else:
         return False, True

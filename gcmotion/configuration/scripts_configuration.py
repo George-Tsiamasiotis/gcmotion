@@ -45,8 +45,8 @@ class NPeriodSolverConfig:
     vectorized: bool = False
     atol: float = 1e-12  # Scipy's default is 1e-6
     rtol: float = 1e-12  # Scipy's default is 1e-3
-    stop_point_atol: float = 1e-3
-    stop_point_rtol: float = 1e-3
+    stop_point_atol: float = 1e-4
+    stop_point_rtol: float = 1e-4
     final_y_rtol: float = 1e-4
     max_recursion_depth: int = 40
 

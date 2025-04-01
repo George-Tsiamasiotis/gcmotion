@@ -33,11 +33,15 @@ def generate_contour_initial_conditions(
 
 def generate_orbits(particle: Particle):
 
+    from gcmotion.plot.particle_evolution import particle_evolution
+
     orbit = Orbit(
         E=particle.ENU.m,
         vertices=np.array((particle.theta.m, particle.psiNU.m)).T,
     )
+    # particle_evolution(particle, which="theta psi rho")
 
+    orbit.rho = particle.rhoNU.m
     orbit.omega_theta = particle.omega_thetaNU.m
     orbit.omega_zeta = particle.omega_zetaNU.m
     orbit.qkinetic = particle.qkinetic

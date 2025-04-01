@@ -13,6 +13,26 @@ from gcmotion.entities.initial_conditions import InitialConditions
 from gcmotion.configuration.scripts_configuration import (
     FrequencyAnalysisConfig,
 )
+import signal
+from contextlib import contextmanager
+
+
+class TimeoutException(Exception):
+    pass
+
+
+@contextmanager
+def time_limit(seconds):
+    def signal_handler(signum, frame):
+        raise TimeoutException("Timed out!")
+
+    signal.signal(signal.SIGALRM, signal_handler)
+    signal.alarm(seconds)
+    try:
+        yield
+    finally:
+        signal.alarm(0)
+
 
 type Quantity = pint.registry.Quantity
 
@@ -33,7 +53,14 @@ def orbit_triplet_analysis(
         psi0 = profile.Q(_psi0, "NUMagnetic_flux")
 
         particle = create_particle(profile, theta0, psi0)
-        particle.run(method="NPeriods", stop_after=1)
+        try:
+            with time_limit(2):
+                particle.run(method="NPeriods", stop_after=1)
+        except TimeoutException as e:
+            continue
+            print("Timed out!")
+        except IndexError:
+            continue
         particles.append(particle)
 
     orbits = deque()
