@@ -54,7 +54,7 @@ class NPeriodSolverConfig:
 @dataclass
 class NumericalDatasetsConfig:
     # Above 10-20 orbits seem to not conserve energy
-    boozer_theta_downsampling_factor: int = 6
+    boozer_theta_downsampling_factor: int = 1
     currents_spline_order: int = 3
     qfactor_spline_order: int = 3
 

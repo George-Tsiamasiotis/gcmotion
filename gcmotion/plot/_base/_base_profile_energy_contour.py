@@ -92,29 +92,32 @@ def _base_profile_energy_contour(profile: Profile, ax: Axes, **kwargs):
     kw = {
         "cmap": config.cmap,
         "locator": locator,
-        "zorder": config.zorder,
+        "zorder": config.zorder,  # Keep user-defined zorder for contourf
     }
 
-    # Contour plot
-    if config.mode == "lines":
-        C = ax.contour(
-            "theta",
-            "ycoord",
-            "Energy",
-            data=data,
-            linewidths=config.linewidths,
-            **kw,
-        )
-        logger.debug("\t\tContour mode: lines")
-    else:
-        C = ax.contourf(
-            "theta",
-            "ycoord",
-            "Energy",
-            data=data,
-            **kw,
-        )
-        logger.debug("\t\tContour mode: filled")
+    # Contour lines overlay (without cmap, ensuring it's on top)
+    kw_contour = kw.copy()
+    kw_contour.pop("cmap", None)  # Remove cmap to avoid conflict
+    kw_contour["zorder"] = config.zorder + 1  # Ensure contour lines are on top
+
+    C = ax.contour(
+        "theta",
+        "ycoord",
+        "Energy",
+        data=data,
+        linewidths=config.linewidths * 1.5,  # Make lines more visible
+        colors="black",  # Ensures contour lines are black
+        **kw_contour,
+    )
+    # Filled contour plot (with colormap) - ensures correct colorbar
+    C = ax.contourf(
+        "theta",
+        "ycoord",
+        "Energy",
+        data=data,
+        **kw,
+    )
+    logger.debug("\t\tContour mode: filled")
 
     # Setup labels.
     # Also add a second axis for Ptheta
