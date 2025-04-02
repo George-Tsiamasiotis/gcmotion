@@ -233,13 +233,13 @@ def machine_coords_profile(entity: Tokamak | Profile, **kwargs):
         }
 
         fig_I.suptitle(
-            f"I Profile in R-Z Coordinates ({plain_name})", **tit_kw
+            f"Currents Profile in R-Z Coordinates ({plain_name})", **tit_kw
         )
 
-        fig_i, fig_ider = fig_I.subfigures(1, 2)
+        fig_i, fig_g = fig_I.subfigures(1, 2)
 
         ax_i = fig_i.subplots(1, 1)
-        ax_ider = fig_ider.subplots(1, 1)
+        ax_g = fig_g.subplots(1, 1)
 
         # -----------I---------------
 
@@ -254,48 +254,6 @@ def machine_coords_profile(entity: Tokamak | Profile, **kwargs):
 
         ax_i.set_title("Toroidal Current 'I'")
 
-        # ----------dI/dψ----------------
-
-        _base_machine_coords_profile_contour(
-            entity=entity,
-            fig=fig_ider,
-            ax=ax_ider,
-            which_Q="ider",
-            units="",
-            **kwargs,
-        )
-
-        ax_ider.set_title(r"$\partial I / \partial \psi$")
-
-        logger.info("Plotted I, dI_dpsi in RZ_contours")
-
-    # -----------------g Figure--------------------
-
-    if "g" in config.which.lower():
-        # Create figure
-        fig_kw = {
-            "figsize": config.figsize_g,
-            "dpi": config.dpi,
-            "layout": config.layout,
-            "facecolor": config.facecolor,
-        }
-
-        fig_g = plt.figure(**fig_kw)
-
-        tit_kw = {
-            "fontsize": config.g_suptitle_fontsize,
-            "color": config.g_suptitle_color,
-        }
-
-        fig_g.suptitle(
-            f"g Profile in R-Z Coordinates ({plain_name})", **tit_kw
-        )
-
-        fig_g, fig_gder = fig_g.subfigures(1, 2)
-
-        ax_g = fig_g.subplots(1, 1)
-        ax_gder = fig_gder.subplots(1, 1)
-
         # ------------g--------------
 
         _base_machine_coords_profile_contour(
@@ -309,20 +267,62 @@ def machine_coords_profile(entity: Tokamak | Profile, **kwargs):
 
         ax_g.set_title("Poloidal Current 'g'")
 
-        # ----------dg/dψ----------------
+        logger.info("Plotted I, dI_dpsi in RZ_contours")
 
-        _base_machine_coords_profile_contour(
-            entity=entity,
-            fig=fig_gder,
-            ax=ax_gder,
-            which_Q="gder",
-            units="",
-            **kwargs,
-        )
+    # # -----------------g Figure--------------------
 
-        ax_gder.set_title(r"$\partial g / \partial \psi$")
+    # if "g" in config.which.lower():
+    #     # Create figure
+    #     fig_kw = {
+    #         "figsize": config.figsize_g,
+    #         "dpi": config.dpi,
+    #         "layout": config.layout,
+    #         "facecolor": config.facecolor,
+    #     }
 
-        logger.info("Plotted g, dg_dpsi in RZ_contours")
+    #     fig_g = plt.figure(**fig_kw)
+
+    #     tit_kw = {
+    #         "fontsize": config.g_suptitle_fontsize,
+    #         "color": config.g_suptitle_color,
+    #     }
+
+    #     fig_g.suptitle(
+    #         f"g Profile in R-Z Coordinates ({plain_name})", **tit_kw
+    #     )
+
+    #     fig_g, fig_gder = fig_g.subfigures(1, 2)
+
+    #     ax_g = fig_g.subplots(1, 1)
+    #     ax_gder = fig_gder.subplots(1, 1)
+
+    # # ------------g--------------
+
+    # _base_machine_coords_profile_contour(
+    #     entity=entity,
+    #     fig=fig_g,
+    #     ax=ax_g,
+    #     which_Q="g",
+    #     units=config.g_units,
+    #     **kwargs,
+    # )
+
+    # ax_g.set_title("Poloidal Current 'g'")
+
+    #     # ----------dg/dψ----------------
+
+    #     _base_machine_coords_profile_contour(
+    #         entity=entity,
+    #         fig=fig_gder,
+    #         ax=ax_gder,
+    #         which_Q="gder",
+    #         units="",
+    #         **kwargs,
+    #     )
+
+    #     ax_gder.set_title(r"$\partial g / \partial \psi$")
+
+    #     logger.info("Plotted g, dg_dpsi in RZ_contours")
 
     # -----------------Fixed Points Figure--------------------
 
