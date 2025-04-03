@@ -95,7 +95,7 @@ def fp_ic_scan(
         Tolerance that determines weather the time derivatives of the
         :math:`\theta` and :math:`\psi` variables can be considered
         zero. Defaults to 1e-8.
-    psi_dot_scaling_factor : float,optional
+    psi_dot_scaling_factor : float, optional
         Scaling factor that is used in the sum of squares of the time
         derivatives of the :math:`\theta` and :math:`\psi` values like so -->
         :math:`\dot{\theta}^2` + (psi_dot_scaling_factor:math:`\dot{\psi})^2`
@@ -107,7 +107,8 @@ def fp_ic_scan(
     -------
     List of all the fixed points candidates fould after the 2D grid scan.
     They are to be passed in the numerical solver as initial conditions to
-    find all the true fixed points.
+    find all the true fixed points. If no local minima are fould an empty
+    list is returned, and random initial conditions are used instead.
 
     """
 
@@ -150,7 +151,16 @@ def fp_ic_scan(
                 )
 
     # Find local minima
-    indices = _find_local_minima(system_values)
+    try:
+        indices = _find_local_minima(system_values)
+    except IndexError:
+        print(
+            """\n\n WARNING: fp_ic_scan DID NOT LOCATE ANY LOCAL MINIMA OF THE
+            HAMILTONIAN WITHIN THE GIVEN psilim AND thetalim. TRY 
+            ADJUSTING THEM IN ORDER TO SEARCH AN ERA THAT CONTAINS LOACAL
+            MINIMA AND THEREFORE FIXED POINTS\n\n"""
+        )
+        return []
 
     filtered_minima = [
         (i, j) for (i, j) in indices if system_values[i, j] < tol

@@ -28,11 +28,11 @@ def hessian(
     psi : float
         :math:`\psi` value in [NU] for which second order derivatives are
         to be calculated.
-    dtheta : float
+    dtheta : float, optional
         Finite difference parameter (very small number) used for the
         calculation of the derivatives with respect to the :math:`\theta`
         variables. Deafults to 1e-5.
-    dpsi : float
+    dpsi : float, optional
         Finite difference parameter (very small number) used for the
         calculation of the derivatives with respect to the :math:`\psi`
         variables. Deafults to 1e-5.
@@ -41,7 +41,6 @@ def hessian(
     -------
     2x2 np.ndarray containing the elements of the Hessian of the GCM
     Hamiltonian calculated at a point [:math:`\theta`, :math:`\psi`].
-
 
     """
 
