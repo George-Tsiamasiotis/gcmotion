@@ -93,9 +93,8 @@ def particle_poloidal_drift(particle: Particle, **kwargs):
     # ==============
     # Draw the contour and get the contour object
     logger.debug("\tCalling base contour...")
-    kwargs |= {"psilim": config.psilim}
     Contour = _base_profile_energy_contour(
-        profile=particle.profile, ax=driftax, **kwargs
+        profile=particle.profile, ax=driftax, **asdict(config)
     )
 
     # ==============
