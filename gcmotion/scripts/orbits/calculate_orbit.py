@@ -64,6 +64,8 @@ def calculate_orbit(
     events: list,
     stop_after: int = None,
     t_periods: list[()] = None,
+    psi_wallNU: float = np.inf,
+    flags: dict = {},
 ) -> namedtuple:
     r"""Wrapper function around SciPy's solve_ivp().
 
@@ -90,7 +92,12 @@ def calculate_orbit(
         calculated periods. Only used with "NPeriods" method. This is
         necessarry due to the fact that the custom Solver cannot directly
         communicate with the Particle Class. Defaults to None (RK45).
-
+    psi_wallNU: float, optional
+        The ψ value at the wall. Only used by the NPeriods solver to halt the
+        integration in cases the particle escapes the wall.
+    flags: dict, optional
+        Dict containg flags about the solver termination, to be passed back to
+        the Particle.
 
     Returns
     -------
@@ -181,6 +188,8 @@ def calculate_orbit(
             "stop_after": stop_after,
             "t_periods": t_periods,
             "y_final": [],
+            "psi_wallNU": psi_wallNU,
+            "flags": flags,
         }
 
     sol = solve_ivp(
@@ -207,12 +216,16 @@ def calculate_orbit(
         zeta = sol.y[2]
         rho = sol.y[3]
     # Add the last y points calculated from the final recursion
-    elif method is NPeriodSolver:
+    elif method is NPeriodSolver and extra_options["flags"]["succeded"]:
         y_final = extra_options["y_final"][0]
         theta = np.append(sol.y[0], y_final[0])
         psi = np.append(sol.y[1], y_final[1])
         zeta = np.append(sol.y[2], y_final[2])
         rho = np.append(sol.y[3], y_final[3])
+    else:
+        # In this case, the message cannot be return, so we need to add it
+        # manually inside Particle.
+        return
 
     # Calculate psip and Canonical Momenta
     _, i, g = bfield.bigNU(psi, theta)

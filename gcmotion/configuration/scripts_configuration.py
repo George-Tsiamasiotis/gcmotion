@@ -42,13 +42,17 @@ class ParabolasConfig:
 class NPeriodSolverConfig:
     event_variable: str = "theta"
     max_step = 40
-    vectorized: bool = False
+    min_step_num = 50
     atol: float = 1e-12  # Scipy's default is 1e-6
     rtol: float = 1e-12  # Scipy's default is 1e-3
     stop_point_atol: float = 1e-3
     stop_point_rtol: float = 1e-3
     final_y_rtol: float = 1e-4
     max_recursion_depth: int = 40
+    # NOTE: Time in NU to time out the solver, in case the initial conditions
+    # are very close to a separatrix. This number is empirically derived and is
+    # only checked during the first period.
+    tstopNU: float = 3000
 
 
 @dataclass

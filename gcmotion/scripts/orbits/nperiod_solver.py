@@ -12,6 +12,7 @@ initial value. If so, the Solver treats this as a full period of the orbit,
 and can stop the solving after an arbitrary number of full periods.
 """
 
+import warnings
 import numpy as np
 from math import isclose, fmod
 from scipy.integrate import OdeSolver, RK45
@@ -45,8 +46,12 @@ from gcmotion.configuration.scripts_configuration import (
 MAX_RECURSION_DEPTH = NPeriodSolverConfig.max_recursion_depth
 HARDCODED_TERMINAL = np.iinfo(np.int64).max
 EVENT_VARIABLE = NPeriodSolverConfig.event_variable
+T_STOP = NPeriodSolverConfig.tstopNU
 
 tau = 2 * np.pi
+
+ESCAPED_WALL = "Halted: The particle escaped the wall."
+TIMED_OUT = "Halted: The integration timed out."
 
 
 class NPeriodSolver(OdeSolver):
@@ -166,11 +171,13 @@ class NPeriodSolver(OdeSolver):
         self.sol = None
         self.num_steps = 0
 
+        self.psi_wall = extraneous["psi_wallNU"]
         # HACK:These are references to the corresponing Particle's attributes,
         # since there is no other way for the solver to pass data to Particle.
         self.stop_after = extraneous["stop_after"]
         self.t_periods = extraneous["t_periods"]
         self.y_final = extraneous["y_final"]
+        self.flags = extraneous["flags"]
 
         self.periods_completed = 0
 
@@ -208,6 +215,24 @@ class NPeriodSolver(OdeSolver):
             # Calculate step size
             if h_abs < min_step:
                 return False, self.TOO_SMALL_STEP
+            # Halt if the particle hits the wall
+            if y[1] > self.psi_wall:
+                self.status = "failed"
+                self.flags["escaped_wall"] = True
+                self.flags["timed_out"] = False
+                self.flags["succeded"] = False
+                logger.warning(ESCAPED_WALL)
+                warnings.warn(ESCAPED_WALL)
+                return False, ESCAPED_WALL
+            # Halt if the particle takes too much time
+            if abs(t) > T_STOP and self.periods_completed == 0:
+                self.status = "failed"
+                self.flags["escaped_wall"] = False
+                self.flags["timed_out"] = True
+                self.flags["succeded"] = False
+                logger.warning(TIMED_OUT)
+                warnings.warn(TIMED_OUT)
+                return False, TIMED_OUT
 
             h = h_abs * self.direction
             t_new = t + h
@@ -289,8 +314,9 @@ class NPeriodSolver(OdeSolver):
         step back and call last_step_recursion().
 
         """
-        # self.dense_output() needs at least one completed step
-        if self.num_steps == 0:
+        # Avoid stoping slow-starting orbits the moment they start. Also
+        # dense_output() needs at least 1 completed step.
+        if self.num_steps < NPeriodSolverConfig.min_step_num:
             return
 
         active_events = find_active_events(
@@ -367,6 +393,9 @@ class NPeriodSolver(OdeSolver):
             count += 1
 
         self.y_final.append(self.y)
+        self.flags["escaped_wall"] = False
+        self.flags["timed_out"] = False
+        self.flags["succeded"] = True
 
     def _isclose_to_period(self):
         r"""If ψ is the event variable, then we must mod theta to 2π"""

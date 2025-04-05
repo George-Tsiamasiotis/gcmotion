@@ -3,9 +3,25 @@ import numpy as np
 import gcmotion as gcm
 
 
+@pytest.fixture(scope="session")
+def events_particle(simple_tokamak, Q):
+    r"""Particle used for events testing."""
+    events_init = gcm.InitialConditions(
+        species="p",
+        muB=Q(0.5, "keV"),
+        theta0=1,
+        zeta0=0,
+        psi0=Q(0.5, "psi_wall"),
+        Pzeta0=Q(0.02, "NUCanonical_momentum"),
+        t_eval=Q(np.linspace(0, 1e-5, 10000), "seconds"),
+    )
+    particle = gcm.Particle(tokamak=simple_tokamak, init=events_init)
+    return particle
+
+
 @pytest.fixture(scope="function")
 def events(simple_particle, request, terminal):
-    r"""All availiable events with simple_particle's parameters."""
+    r"""Requested events."""
     theta = simple_particle.theta0
     psi = simple_particle.psi0NU
     zeta = simple_particle.zeta0
@@ -21,30 +37,41 @@ def events(simple_particle, request, terminal):
         return gcm.events.when_rho(root=rho, terminal=terminal)
 
 
-@pytest.fixture(scope="session")
-def nperiods_init(Q):
-    r"""Initial conditions object without t_eval."""
-    return gcm.InitialConditions(
+# =============================================================================
+
+
+def nperiods_particle_trapped(simple_tokamak, Q):
+    """Trapped particle to be used with NPeriods Solver testing."""
+    init = gcm.InitialConditions(
         species="p",
-        muB=Q(0.5, "keV"),
+        muB=Q(50, "keV"),
         theta0=1,
         zeta0=0,
-        psi0=Q(0.8, "psi_wall"),
-        Pzeta0=Q(0.02, "NUCanonical_momentum"),
+        psi0=Q(0.53, "psi_wall"),
+        Pzeta0=Q(-0.02, "NUCanonical_momentum"),
     )
+    particle = gcm.Particle(tokamak=simple_tokamak, init=init)
+    return particle
+
+
+def nperiods_particle_passing(simple_tokamak, Q):
+    """Passing particle to be used with NPeriods Solver testing."""
+    init = gcm.InitialConditions(
+        species="p",
+        muB=Q(50, "keV"),
+        theta0=1,
+        zeta0=0,
+        psi0=Q(0.7, "psi_wall"),
+        Pzeta0=Q(-0.02, "NUCanonical_momentum"),
+    )
+    particle = gcm.Particle(tokamak=simple_tokamak, init=init)
+    return particle
 
 
 @pytest.fixture(scope="function")
-def nperiods_particle(simple_tokamak, nperiods_init, Q):
-    """Simple particle (B=LAR, q=Unity, E=Nofield) without t_eval."""
-    particle = gcm.Particle(tokamak=simple_tokamak, init=nperiods_init)
-    return particle
-
-
-@pytest.fixture(scope="session")
-def particle_single_period(simple_tokamak, simple_init, Q):
-    """Simple Particle object (B=LAR, q=Unity, E=Nofield) with very long
-    integration time."""
-    particle = gcm.Particle(tokamak=simple_tokamak, init=simple_init)
-    particle.run(method="NPeriods", stop_after=1)
-    return particle
+def nperiods_particle(simple_tokamak, Q, request):
+    r"""Requested trapped and passing NPeriod Solver particles."""
+    if request.param == "trapped":
+        return nperiods_particle_trapped(simple_tokamak, Q)
+    if request.param == "passing":
+        return nperiods_particle_passing(simple_tokamak, Q)

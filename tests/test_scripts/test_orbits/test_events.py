@@ -1,6 +1,6 @@
 import pytest
 
-from pint import Quantity
+from pint.registry import Quantity
 from math import isclose, tau, fmod
 
 
@@ -14,12 +14,13 @@ from math import isclose, tau, fmod
     [1, 2, 3, 4],
     indirect=False,
 )
-def test_events(simple_particle, events, terminal):
-    simple_particle.run(method="RK45", events=[events])
-    assert simple_particle.method == "RK45"
-    # gcm.plot.particle_evolution(simple_particle, which="theta, psi, zeta, rho")
-    last_value = getattr(simple_particle, events.variable)[-1].m
-    variable0 = getattr(simple_particle, events.variable + "0")
+def test_events(events_particle, events, terminal):
+    r"""Test that all events halt the integration"""
+
+    events_particle.run(method="RK45", events=[events])
+    last_value = getattr(events_particle, events.variable)[-1].m
+
+    variable0 = getattr(events_particle, events.variable + "0")
     if isinstance(variable0, Quantity):
         variable0 = variable0.m
 
@@ -34,5 +35,6 @@ def test_events(simple_particle, events, terminal):
         tau - abs(fmod(last_value, tau)),
         abs_tol=0.08,
     )
-    assert simple_particle.orbit_percentage < 95  # Avoid floating point errors
-    assert simple_particle.t_events.m.flatten().shape[0] == events.terminal
+    assert events_particle.method == "RK45"
+    assert events_particle.orbit_percentage < 99  # Avoid floating point errors
+    assert events_particle.t_events.m.flatten().shape[0] == events.terminal

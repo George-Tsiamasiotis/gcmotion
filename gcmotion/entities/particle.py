@@ -23,20 +23,23 @@ from .tokamak import Tokamak
 from .profile import Profile
 from .initial_conditions import InitialConditions
 
+# NPeriodSolver messages
+from gcmotion.scripts.orbits.nperiod_solver import ESCAPED_WALL, TIMED_OUT
+
 # Quantity alias for type annotations
 type Quantity = pint.UnitRegistry.Quantity
 
-EVENTS_IGNORED = """
-Warning: events are ignored when 'NPeriods' method is used.
+EVENTS_IGNORED = """\
+Warning: events are ignored when 'NPeriods' method is used.\
 """
-ILLEGAL_STOP_AFTER = """
-Error: 'stop_after' must be a positive integer.
+ILLEGAL_STOP_AFTER = """\
+Error: 'stop_after' must be a positive integer.\
 """
-T_EVAL_IGNORED = """
-Warning: 't_eval' arguement is ignored when 'NPeriods' method is used.
+T_EVAL_IGNORED = """\
+Warning: 't_eval' arguement is ignored when 'NPeriods' method is used.\
 """
-STOP_AFTER_IGNORED = """
-Warning: 'stop_after' arguement is ignored when "RK45" method is used.
+STOP_AFTER_IGNORED = """\
+Warning: 'stop_after' arguement is ignored when "RK45" method is used.\
 """
 
 
@@ -189,7 +192,7 @@ class Particle:
 
         units = "NU" if "NU" in which else "SI" if "SI" in which else ""
 
-        if "init" in which:  # TODO: maybe use regex instead
+        if "init" in which:
             pprint_dict(self.input_vars, everything=everything, units=units)
         else:
             pprint_dict(self.__dict__, everything=everything, units=units)
@@ -238,6 +241,15 @@ class Particle:
         start = time()
         solution = self._run_orbit()
         end = time()
+
+        # Do not attempt to store and convert solver results if the integration
+        # failed.
+        if self.method == "NPeriods" and not self.flags["succeded"]:
+            self.solver_output = self._solver_output_str_failed()
+            if info:
+                print(self.__str__())
+            return
+
         self.solve_time = self.Q(end - start, "seconds")
         logger.info(
             f"\tCalculation complete. Took {
@@ -278,7 +290,7 @@ class Particle:
         if self.method == "NPeriods":
             self._calculate_frequencies()
 
-        self.solver_output = self._solver_output_str()
+        self.solver_output = self._solver_output_str_succeded()
 
         if info:
             print(self.__str__())
@@ -313,7 +325,24 @@ class Particle:
                 logger.error(ILLEGAL_STOP_AFTER)
                 raise ValueError(ILLEGAL_STOP_AFTER)
 
-    def _solver_output_str(self):
+    def _solver_output_str_failed(self):
+        r"""Message printed in case NPeriodSolver halted for any reason. This
+        is needed since solve_ivp() returns prematurely in the case the
+        integration fails and the message can't be optained."""
+        # Falied messaged
+        if self.method == "NPeriods" and self.flags["timed_out"]:
+            return (
+                colored("\nSolver output\n", "red")
+                + f"{'Solver message':>23} : {TIMED_OUT:<16}\n"
+            )
+        if self.method == "NPeriods" and self.flags["escaped_wall"]:
+            return (
+                colored("\nSolver output\n", "red")
+                + f"{'Solver message':>23} : {ESCAPED_WALL:<16}\n"
+            )
+
+    def _solver_output_str_succeded(self):
+        r"""Message printed if any solver finished succesfully."""
 
         output_str = (
             colored("\nSolver output\n", "red")
@@ -332,16 +361,16 @@ class Particle:
                 f"{'Percentage':>23} : " f"{self.orbit_percentage:.1f}%\n"
             )
 
-        elif self.method == "NPeriods":
+        elif self.method == "NPeriods" and self.flags["succeded"]:
             frequency_str = (
                 colored("\nFrequencies:\n", "red")
                 + f"{'Poloidal Frequency ωθ':>23} : "
-                f"{f'{self.omega_theta : .4g#~}':<16}"
-                f"({self.omega_thetaNU.m :.4g} [ω0])\n"
+                f"{f'{self.omega_theta:.4g#~}':<16}"
+                f"({self.omega_thetaNU.m:.4g} [ω0])\n"
                 f"{'Toroidal Frequency ωζ':>23} : "
-                f"{f'{self.omega_zeta :.4g#~}':<16}"
-                f"({self.omega_zetaNU.m :.4g} [ω0])\n"
-                f"{'qkinetic':>23} : {f'{self.qkinetic :.4g}':<16}"
+                f"{f'{self.omega_zeta:.4g#~}':<16}"
+                f"({self.omega_zetaNU.m:.4g} [ω0])\n"
+                f"{'qkinetic':>23} : {f'{self.qkinetic:.4g}':<16}"
             )
 
         output_str += (
@@ -384,6 +413,11 @@ class Particle:
         # Class directly, but we can exploit Python's "Pass by Object
         # Reference" by passing a mutable list and let the solver fill it.
         self.t_periods = []
+        self.flags = {
+            "escaped_wall": None,
+            "timed_out": None,
+            "succeded": None,
+        }
         return calculate_orbit(
             parameters=parameters,
             profile=self.profile,
@@ -391,6 +425,8 @@ class Particle:
             events=self.events,
             stop_after=self.stop_after,
             t_periods=self.t_periods,
+            psi_wallNU=self.tokamak.psi_wallNU.m,
+            flags=self.flags,
         )
 
     def _calculate_frequencies(self):
