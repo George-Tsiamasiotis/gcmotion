@@ -153,12 +153,47 @@ class NumericalMagneticField(MagneticField):
         axis_values = np.full((b_values.shape[0], 1), 1)
         b_values = np.hstack((axis_values, b_values))
 
-        # Create splines
+        # For certain datasets, in order for B and Hamiltonian θ derivatives
+        # to be calculated correctly (numerically) some padding is required
+        # if those quantities are to be calculated near θ=0 or 2π to avoid
+        # discontinuities.
+        # Number of points to pad on each side
+        pad = NumericalDatasetsConfig.theta_padding  # increase if needed
+
+        # Original arrays
+        theta = theta_values
+        b = b_values  # shape: (n_theta, n_psi)
+
+        if np.isclose(theta[-1], 2 * np.pi):
+            theta = theta[:-1]
+            b = b[:-1, :]
+
+        theta_left = theta[-pad:] - 2 * np.pi
+        theta_right = theta[:pad] + 2 * np.pi
+
+        b_left = b[-pad:, :]
+        b_right = b[:pad, :]
+
+        theta_padded = np.concatenate([theta_left, theta, theta_right])
+        b_padded = np.vstack([b_left, b, b_right])
+
+        # Remove any accidental duplicates
+        mask = np.diff(theta_padded) > 0
+        mask = np.insert(mask, 0, True)
+
+        theta_padded = theta_padded[mask]
+        b_padded = b_padded[mask, :]
+
+        print(f"{theta_values.shape=}")
+        print(f"{theta_padded.shape=}")
+
+        # Create Splines
         self.b_spline = RectBivariateSpline(
-            x=theta_values,
+            x=theta_padded,
             y=psi_values,
-            z=b_values,
+            z=b_padded,
         )
+
         # NOTE: Do not use the dataset bfield derivatives. They introduce small
         # non-Hamiltonian terms, resulting in a noticeable fluxuation and even
         # loss of Energy, due to error propagation through 2 different splines.
