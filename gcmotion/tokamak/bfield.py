@@ -187,7 +187,9 @@ class NumericalMagneticField(MagneticField):
         # Create Splines
         self.b_spline = RectBivariateSpline(
             x=theta_padded,
+            x=theta_padded,
             y=psi_values,
+            z=b_padded,
             z=b_padded,
         )
 
